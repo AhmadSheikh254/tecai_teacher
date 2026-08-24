@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Homework Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#e1e2e4",
+                      "surface-container": "#e8edff",
+                      "on-secondary-fixed": "#191c1e",
+                      "surface-container-high": "#e0e8ff",
+                      "tertiary-container": "#a33500",
+                      "surface-dim": "#cadaff",
+                      "on-primary-container": "#c4d2ff",
+                      "outline-variant": "#c3c6d6",
+                      "on-tertiary-fixed-variant": "#812800",
+                      "primary-fixed-dim": "#b2c5ff",
+                      "surface-container-highest": "#d7e2ff",
+                      "secondary": "#5c5f60",
+                      "on-secondary-container": "#606365",
+                      "tertiary": "#7b2600",
+                      "secondary-fixed-dim": "#c5c6c8",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#ffc6b2",
+                      "tertiary-fixed": "#ffdbcf",
+                      "on-surface": "#041b3c",
+                      "primary-container": "#0052cc",
+                      "surface-variant": "#d7e2ff",
+                      "background": "#f9f9ff",
+                      "on-primary": "#ffffff",
+                      "inverse-on-surface": "#edf0ff",
+                      "inverse-primary": "#b2c5ff",
+                      "surface-tint": "#0c56d0",
+                      "tertiary-fixed-dim": "#ffb59b",
+                      "on-error": "#ffffff",
+                      "primary-fixed": "#dae2ff",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed": "#001848",
+                      "on-tertiary-fixed": "#380d00",
+                      "on-background": "#041b3c",
+                      "primary": "#003d9b",
+                      "on-tertiary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "outline": "#737685",
+                      "secondary-container": "#dee0e2",
+                      "on-surface-variant": "#434654",
+                      "surface-container-low": "#f1f3ff",
+                      "on-secondary-fixed-variant": "#444749",
+                      "inverse-surface": "#1d3052",
+                      "on-primary-fixed-variant": "#0040a2",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#f9f9ff",
+                      "surface": "#f9f9ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "xl": "32px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "base": "8px",
+                      "sm": "8px",
+                      "card-gap": "12px",
+                      "container-margin": "20px"
+              },
+              "fontFamily": {
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "display": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "label-md": ["Inter"]
+              },
+              "fontSize": {
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        /* Soft, ambient shadows for cards */
+        .ambient-shadow { box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background font-body-lg text-on-surface antialiased min-h-screen relative">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-container-margin h-16">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container shrink-0">
+<img alt="Teacher profile picture" class="w-full h-full object-cover" data-alt="A close-up portrait of a professional teacher in a bright, modern classroom setting, smiling warmly. Soft, diffused lighting highlights their approachable demeanor. Corporate modern aesthetic, high resolution, light and airy feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1i52RUiYjnZNw5u3mEDw1pn2cvRl_5gHtHHWP7a4-TFG3-P3so0vx4JTb6CHS--9HPDefQbQECk7bxQZ_mb1VAepxdt3Fw7JAHwGrpNQnJXgmPKs3OpxLtjRoukziQ1m2oVHOxDoztHh-ILUBYhFWOjTn6YZCVLd5jk5yJKQkIXOBW4AloqvNCYaOw8AKK5izKXsqpjhPZ7DnXNRi_tcPRyy40I23FaYvGhLPeKwgQAjunBbgqBJ9PQ"/>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">Teacher Hub</h1>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors duration-200 active:scale-95 shrink-0 group">
+<span class="material-symbols-outlined text-primary" data-icon="notifications" data-weight="regular">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-[88px] pb-[96px] px-container-margin flex flex-col gap-6">
+<!-- Page Title & Search -->
+<div class="flex flex-col gap-4">
+<h2 class="font-display text-display text-on-surface">Homework</h2>
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant z-10" data-icon="search" data-weight="regular">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-on-surface font-body-md placeholder:text-on-surface-variant/70 transition-shadow" placeholder="Search assignments..." type="text"/>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-2">
+<button class="px-4 py-2 bg-primary-container text-on-primary-container font-label-md text-label-md rounded-full whitespace-nowrap active:scale-95 transition-transform">All</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant font-label-md text-label-md rounded-full whitespace-nowrap active:scale-95 transition-transform hover:bg-surface-container-high">Pending</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant font-label-md text-label-md rounded-full whitespace-nowrap active:scale-95 transition-transform hover:bg-surface-container-high">Graded</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant font-label-md text-label-md rounded-full whitespace-nowrap active:scale-95 transition-transform hover:bg-surface-container-high">Drafts</button>
+</div>
+<!-- Skeleton Grid (Loading State / Empty Structure) -->
+<div class="flex flex-col gap-card-gap animate-pulse">
+<!-- Skeleton Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="h-6 bg-surface-container rounded-DEFAULT w-2/3"></div>
+<div class="h-6 w-16 bg-surface-container rounded-full"></div>
+</div>
+<div class="h-4 bg-surface-container rounded-DEFAULT w-1/2 mt-1"></div>
+<div class="flex gap-2 mt-2">
+<div class="h-8 w-24 bg-surface-container rounded-lg"></div>
+<div class="h-8 w-20 bg-surface-container rounded-lg"></div>
+</div>
+<div class="w-full h-px bg-surface-container-high mt-2"></div>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-6 h-6 rounded-full bg-surface-container"></div>
+<div class="h-3 bg-surface-container rounded-DEFAULT w-1/4"></div>
+</div>
+</div>
+<!-- Skeleton Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="h-6 bg-surface-container rounded-DEFAULT w-3/4"></div>
+<div class="h-6 w-16 bg-surface-container rounded-full"></div>
+</div>
+<div class="h-4 bg-surface-container rounded-DEFAULT w-2/5 mt-1"></div>
+<div class="flex gap-2 mt-2">
+<div class="h-8 w-20 bg-surface-container rounded-lg"></div>
+</div>
+<div class="w-full h-px bg-surface-container-high mt-2"></div>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-6 h-6 rounded-full bg-surface-container"></div>
+<div class="h-3 bg-surface-container rounded-DEFAULT w-1/3"></div>
+</div>
+</div>
+<!-- Skeleton Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow p-md flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="h-6 bg-surface-container rounded-DEFAULT w-1/2"></div>
+<div class="h-6 w-16 bg-surface-container rounded-full"></div>
+</div>
+<div class="h-4 bg-surface-container rounded-DEFAULT w-1/3 mt-1"></div>
+<div class="flex gap-2 mt-2">
+<div class="h-8 w-32 bg-surface-container rounded-lg"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB (Floating Action Button) -->
+<button class="fixed bottom-24 right-container-margin w-14 h-14 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.12)] active:scale-90 transition-transform duration-200 z-40 hover:bg-surface-tint">
+<span class="material-symbols-outlined" data-icon="add" data-weight="regular" style="font-size: 28px;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface rounded-t-xl shadow-lg shadow-[0px_-4px_12px_rgba(0,0,0,0.05)]">
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:bg-surface-container rounded-xl transition-all active:scale-90 duration-200 group">
+<span class="material-symbols-outlined text-[24px]" data-icon="home" data-weight="regular">home</span>
+<span class="font-label-md text-label-md mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:bg-surface-container rounded-xl transition-all active:scale-90 duration-200 group">
+<span class="material-symbols-outlined text-[24px]" data-icon="assignment" data-weight="regular">assignment</span>
+<span class="font-label-md text-label-md mt-1">Assignment</span>
+</button>
+<!-- Active Tab: Homework -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-3 py-1.5 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined text-[24px]" data-icon="menu_book" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-label-md text-label-md mt-1 font-bold">Homework</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:bg-surface-container rounded-xl transition-all active:scale-90 duration-200 group">
+<span class="material-symbols-outlined text-[24px]" data-icon="quiz" data-weight="regular">quiz</span>
+<span class="font-label-md text-label-md mt-1">CBTS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:bg-surface-container rounded-xl transition-all active:scale-90 duration-200 group">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_horiz" data-weight="regular">more_horiz</span>
+<span class="font-label-md text-label-md mt-1">More</span>
+</button>
+</nav>
+</body></html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Teacher Hub - Splash Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e1e2e4",
+                        "surface-container": "#e8edff",
+                        "on-secondary-fixed": "#191c1e",
+                        "surface-container-high": "#e0e8ff",
+                        "tertiary-container": "#a33500",
+                        "surface-dim": "#cadaff",
+                        "on-primary-container": "#c4d2ff",
+                        "outline-variant": "#c3c6d6",
+                        "on-tertiary-fixed-variant": "#812800",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "surface-container-highest": "#d7e2ff",
+                        "secondary": "#5c5f60",
+                        "on-secondary-container": "#606365",
+                        "tertiary": "#7b2600",
+                        "secondary-fixed-dim": "#c5c6c8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#ffc6b2",
+                        "tertiary-fixed": "#ffdbcf",
+                        "on-surface": "#041b3c",
+                        "primary-container": "#0052cc",
+                        "surface-variant": "#d7e2ff",
+                        "background": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#edf0ff",
+                        "inverse-primary": "#b2c5ff",
+                        "surface-tint": "#0c56d0",
+                        "tertiary-fixed-dim": "#ffb59b",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#dae2ff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#001848",
+                        "on-tertiary-fixed": "#380d00",
+                        "on-background": "#041b3c",
+                        "primary": "#003d9b",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "outline": "#737685",
+                        "secondary-container": "#dee0e2",
+                        "on-surface-variant": "#434654",
+                        "surface-container-low": "#f1f3ff",
+                        "on-secondary-fixed-variant": "#444749",
+                        "inverse-surface": "#1d3052",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f9f9ff",
+                        "surface": "#f9f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "8px",
+                        "sm": "8px",
+                        "card-gap": "12px",
+                        "container-margin": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .pulse-ring {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: .5;
+                transform: scale(1.05);
+            }
+        }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUpAnim 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeUpAnim {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-dot {
+            animation: dotBounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-primary flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
+<!-- Ambient Background Elements -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary-fixed-dim mix-blend-screen filter blur-[100px] pulse-ring"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-surface-tint mix-blend-screen filter blur-[120px] pulse-ring" style="animation-delay: 1s;"></div>
+</div>
+<!-- Main Content Container -->
+<div class="z-10 flex flex-col items-center justify-center flex-1 w-full px-container-margin fade-up">
+<!-- Logo Icon Container -->
+<div class="relative mb-lg">
+<div class="absolute inset-0 bg-on-primary opacity-10 rounded-full blur-xl animate-pulse"></div>
+<div class="w-24 h-24 bg-on-primary rounded-full flex items-center justify-center shadow-lg relative z-10 transition-transform duration-500 hover:scale-105">
+<span class="material-symbols-outlined text-primary text-[48px]" style="font-variation-settings: 'FILL' 1;">
+                    menu_book
+                </span>
+</div>
+</div>
+<!-- Brand Name -->
+<h1 class="font-display text-display text-on-primary mb-xs tracking-tight text-center">
+            Teacher Hub
+        </h1>
+<!-- Subtitle -->
+<p class="font-body-lg text-body-lg text-primary-fixed-dim text-center max-w-[280px] opacity-90">
+            Empowering education, simplifying management.
+        </p>
+</div>
+<!-- Loading Indicator Area -->
+<div class="z-10 pb-xl w-full flex flex-col items-center justify-end fade-up" style="animation-delay: 0.3s;">
+<div class="flex space-x-2">
+<div class="w-2.5 h-2.5 bg-on-primary rounded-full loading-dot"></div>
+<div class="w-2.5 h-2.5 bg-on-primary rounded-full loading-dot"></div>
+<div class="w-2.5 h-2.5 bg-on-primary rounded-full loading-dot"></div>
+</div>
+<span class="font-label-md text-label-md text-primary-fixed mt-md uppercase tracking-widest opacity-70">
+            Initializing Workspaces
+        </span>
+</div>
+<!-- Subtle version indicator -->
+<div class="absolute bottom-sm right-sm z-10">
+<span class="font-label-md text-label-md text-primary-fixed-dim opacity-50">v2.4.1</span>
+</div>
+</body></html>
