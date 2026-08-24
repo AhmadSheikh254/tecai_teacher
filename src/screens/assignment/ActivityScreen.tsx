@@ -451,7 +451,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   const [datePickerTitle, setDatePickerTitle] = useState('');
 
   // Custom step states
-  const [createStep, setCreateStep] = useState<'details' | 'blanks' | 'match' | 'crossword' | 'theme' | 'generate' | 'partsCreator' | 'partsLayout' | 'partsTheme' | 'truefalse'>('details');
+  const [createStep, setCreateStep] = useState<'details' | 'blanks' | 'match' | 'crossword' | 'theme' | 'generate' | 'partsCreator' | 'partsLayout' | 'partsTheme' | 'truefalse' | 'mcqs'>('details');
   const [blanksText, setBlanksText] = useState('');
   const [isSelectingBlanks, setIsSelectingBlanks] = useState(false);
 
@@ -467,6 +467,225 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   const [tfQuizStage, setTfQuizStage] = useState<'welcome' | 'playing' | 'completed'>('welcome');
   const [tfScore, setTfScore] = useState<number>(0);
   const [showTfSuccessUpload, setShowTfSuccessUpload] = useState<boolean>(false);
+
+  // MCQs AI Generator & Quiz Builder States
+  const [mcqsWizardStep, setMcqsWizardStep] = useState<1 | 2 | 3 | 4>(1);
+  const [mcqsClass, setMcqsClass] = useState<string>('GRADE-II');
+  const [mcqsSection, setMcqsSection] = useState<string>('Section A');
+  const [mcqsCourse, setMcqsCourse] = useState<string>('English');
+  const [mcqsTitle, setMcqsTitle] = useState<string>('state of matter');
+  const [mcqsDocName, setMcqsDocName] = useState<string>('mateerr.PNG');
+  const [mcqsDocSize, setMcqsDocSize] = useState<string>('93.5 KB');
+  const [mcqsSlos, setMcqsSlos] = useState<string[]>([
+    'Differentiate between solute, solvent and solution',
+    'Explain solubility and factors affecting it'
+  ]);
+  const [mcqsNewSloText, setMcqsNewSloText] = useState<string>('');
+  const [isAnalyzingDoc, setIsAnalyzingDoc] = useState<boolean>(false);
+  const [isGeneratingMcqs, setIsGeneratingMcqs] = useState<boolean>(false);
+  const [generatedMcqs, setGeneratedMcqs] = useState<Array<{
+    id: string;
+    question: string;
+    options: [string, string, string, string];
+    correctAnswer: number;
+    bloom: 'EASY' | 'MEDIUM' | 'HARD';
+    slo: string;
+    explanation: string;
+  }>>([]);
+  const [mcqsPublishStatus, setMcqsPublishStatus] = useState<'Published' | 'Draft'>('Published');
+  const [mcqsFilterTab, setMcqsFilterTab] = useState<'All' | 'Published' | 'Draft'>('All');
+
+  // Initial list of MCQs Assessments for the Assessments Table Dashboard
+  const [mcqsAssessments, setMcqsAssessments] = useState<Array<any>>([
+    {
+      id: 'mcq-1',
+      title: "Nurse's Song",
+      docName: "Nurse's Song.pdf",
+      slosCount: 2,
+      status: 'Published',
+      class: 'GRADE-V',
+      section: 'A',
+      course: 'English',
+      qsCount: 10,
+      avgScore: 'No data',
+      completionRate: 0,
+      completionText: '0% (0/5)',
+      created: '27 Jun 07:12 PM',
+      mcqs: []
+    },
+    {
+      id: 'mcq-2',
+      title: 'Organism, Characteristics & Life Processes of Living Things',
+      docName: 'Chapter 1.pdf',
+      slosCount: 3,
+      status: 'Published',
+      class: 'GRADE-V',
+      section: 'A',
+      course: 'Science',
+      qsCount: 10,
+      avgScore: '50%',
+      completionRate: 80,
+      completionText: '80% (4/5)',
+      created: '08 Jun 03:58 PM',
+      mcqs: []
+    },
+    {
+      id: 'mcq-3',
+      title: 'Am I alive',
+      docName: 'Science book p1.pdf',
+      slosCount: 2,
+      status: 'Published',
+      class: 'GRADE-V',
+      section: 'A',
+      course: 'Science',
+      qsCount: 10,
+      avgScore: '0%',
+      completionRate: 0,
+      completionText: '0% (0/5)',
+      created: '25 May 04:19 PM',
+      mcqs: []
+    },
+    {
+      id: 'mcq-4',
+      title: 'Am I alive',
+      docName: 'Science book p1.pdf',
+      slosCount: 2,
+      status: 'Published',
+      class: 'GRADE-V',
+      section: 'A',
+      course: 'Science',
+      qsCount: 10,
+      avgScore: '10%',
+      completionRate: 80,
+      completionText: '80% (4/5)',
+      created: '20 May 10:09 PM',
+      mcqs: []
+    }
+  ]);
+
+  // Student Gameplay MCQs Player States
+  const [activeMcqPlayer, setActiveMcqPlayer] = useState<any>(null);
+  const [mcqPlayerIndex, setMcqPlayerIndex] = useState<number>(0);
+  const [mcqUserAnswers, setMcqUserAnswers] = useState<Record<number, number>>({});
+  const [mcqQuizStage, setMcqQuizStage] = useState<'welcome' | 'playing' | 'completed'>('welcome');
+  const [showMcqSuccessUpload, setShowMcqSuccessUpload] = useState<boolean>(false);
+
+  // Helper generator for 10 realistic MCQs
+  const generateSampleMcqs = (title: string, slos: string[]) => {
+    const defaultTopic = title.trim() || 'General Science';
+    return [
+      {
+        id: 'q-1',
+        question: `Which of the following best describes ${defaultTopic}?`,
+        options: [
+          'The study of ancient history and historical artifacts.',
+          'The art of storytelling, literature, and creative writing.',
+          'A systematic study of structure, behavior, and properties through observation.',
+          'The practice of cooking, baking, and culinary arts.'
+        ] as [string, string, string, string],
+        correctAnswer: 2,
+        bloom: 'EASY' as const,
+        slo: slos[0] || 'Understand core concept',
+        explanation: `${defaultTopic} is fundamentally about understanding the physical world through empirical observation.`
+      },
+      {
+        id: 'q-2',
+        question: `A key characteristic of scientific inquiry in ${defaultTopic} is:`,
+        options: [
+          'Reliance on personal beliefs and unverified opinions.',
+          'The use of repeatable experiments and testable evidence.',
+          'Accepting theories without testing or verification.',
+          'Avoiding mathematical formulas and quantitative data.'
+        ] as [string, string, string, string],
+        correctAnswer: 1,
+        bloom: 'MEDIUM' as const,
+        slo: slos[0] || 'Understand core concept',
+        explanation: 'Repeatable experiments and evidence are the foundation of scientific inquiry.'
+      },
+      {
+        id: 'q-3',
+        question: `Which of these fields is considered a core branch related to ${defaultTopic}?`,
+        options: ['Physics & Chemistry', 'Astronomy', 'Philosophy', 'Musicology'] as [string, string, string, string],
+        correctAnswer: 0,
+        bloom: 'EASY' as const,
+        slo: slos[1] || 'Identify branches & applications',
+        explanation: 'Physics and chemistry directly study matter, energy, and physical interactions.'
+      },
+      {
+        id: 'q-4',
+        question: `What is the primary goal of scientific investigation into ${defaultTopic}?`,
+        options: [
+          'To prove existing beliefs correct regardless of evidence.',
+          'To manufacture products without testing.',
+          'To understand and explain natural phenomena based on facts.',
+          'To create fictional narratives about the universe.'
+        ] as [string, string, string, string],
+        correctAnswer: 2,
+        bloom: 'EASY' as const,
+        slo: slos[1] || 'Identify branches & applications',
+        explanation: 'The primary goal is explaining natural phenomena accurately with empirical data.'
+      },
+      {
+        id: 'q-5',
+        question: `A scientist formulates a hypothesis about ${defaultTopic} and designs an experiment. This process is an example of:`,
+        options: ['Artistic expression', 'Scientific methodology', 'Random speculation', 'Philosophical debate'] as [string, string, string, string],
+        correctAnswer: 1,
+        bloom: 'MEDIUM' as const,
+        slo: slos[0] || 'Understand core concept',
+        explanation: 'Formulating hypotheses and testing them is the essence of the scientific method.'
+      },
+      {
+        id: 'q-6',
+        question: `Based on the study material for ${defaultTopic}, matter exists primarily in how many state forms?`,
+        options: ['2 states', '3 main states (Solid, Liquid, Gas)', '5 states', '10 states'] as [string, string, string, string],
+        correctAnswer: 1,
+        bloom: 'EASY' as const,
+        slo: slos[0] || 'Understand core concept',
+        explanation: 'Matter is commonly classified into solid, liquid, and gas phases.'
+      },
+      {
+        id: 'q-7',
+        question: `Identify the state of matter that maintains a fixed shape and fixed volume:`,
+        options: ['Gas', 'Liquid', 'Solid', 'Plasma'] as [string, string, string, string],
+        correctAnswer: 2,
+        bloom: 'EASY' as const,
+        slo: slos[1] || 'Identify branches & applications',
+        explanation: 'Solids have tightly packed molecules giving them rigid shape and volume.'
+      },
+      {
+        id: 'q-8',
+        question: `When heat energy is added to a solid material, what physical transition occurs first?`,
+        options: ['Evaporation directly to gas', 'Melting into a liquid', 'Condensation into droplets', 'Freezing into ice'] as [string, string, string, string],
+        correctAnswer: 1,
+        bloom: 'MEDIUM' as const,
+        slo: slos[1] || 'Identify branches & applications',
+        explanation: 'Adding thermal energy causes solids to melt into liquids at melting point.'
+      },
+      {
+        id: 'q-9',
+        question: `What distinguishes liquids from gases in terms of shape and volume?`,
+        options: [
+          'Liquids take the shape of their container but have fixed volume.',
+          'Gases have fixed shape while liquids expand infinitely.',
+          'Liquids have no mass whereas gases have high mass.',
+          'Both have rigid fixed shapes.'
+        ] as [string, string, string, string],
+        correctAnswer: 0,
+        bloom: 'HARD' as const,
+        slo: slos[0] || 'Understand core concept',
+        explanation: 'Liquids flow and adapt to container shape while maintaining constant volume.'
+      },
+      {
+        id: 'q-10',
+        question: `Which process describes liquid turning into gas upon boiling or heating?`,
+        options: ['Sublimation', 'Evaporation / Vaporization', 'Deposition', 'Solidification'] as [string, string, string, string],
+        correctAnswer: 1,
+        bloom: 'MEDIUM' as const,
+        slo: slos[1] || 'Identify branches & applications',
+        explanation: 'Vaporization occurs when liquid particles gain sufficient kinetic energy to enter gas phase.'
+      }
+    ];
+  };
   // Blanks state
   const skipBlankReset = useRef(false);
   const [selectedBlankIndices, setSelectedBlankIndices] = useState<number[]>([]);
@@ -645,6 +864,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
   // Step navigation helpers
   const handleStepPrev = () => {
+    if (createStep === 'mcqs') {
+      if (mcqsWizardStep === 1) {
+        setCreateStep('details');
+      } else if (mcqsWizardStep === 2) {
+        setMcqsWizardStep(1);
+      } else if (mcqsWizardStep === 3) {
+        setMcqsWizardStep(2);
+      } else if (mcqsWizardStep === 4) {
+        setMcqsWizardStep(3);
+      }
+      return;
+    }
     if (createStep === 'blanks' || createStep === 'match' || createStep === 'crossword' || createStep === 'partsCreator' || createStep === 'truefalse') {
       setCreateStep('details');
     } else if (createStep === 'partsTheme') {
@@ -669,6 +900,40 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   };
 
   const handleStepNext = () => {
+    if (createStep === 'mcqs') {
+      if (mcqsWizardStep === 1) {
+        if (!mcqsTitle.trim()) {
+          Alert.alert('Title Required', 'Please enter an assessment title.');
+          return;
+        }
+        setIsAnalyzingDoc(true);
+        setTimeout(() => {
+          setIsAnalyzingDoc(false);
+          setMcqsWizardStep(2);
+        }, 1800);
+      } else if (mcqsWizardStep === 2) {
+        if (mcqsSlos.length === 0) {
+          Alert.alert('SLO Required', 'Please add at least one learning outcome.');
+          return;
+        }
+        setIsGeneratingMcqs(true);
+        setTimeout(() => {
+          const generated = generateSampleMcqs(mcqsTitle, mcqsSlos);
+          setGeneratedMcqs(generated);
+          setIsGeneratingMcqs(false);
+          setMcqsWizardStep(3);
+        }, 1500);
+      } else if (mcqsWizardStep === 3) {
+        if (generatedMcqs.length === 0) {
+          Alert.alert('No MCQs', 'Please keep at least one MCQ question.');
+          return;
+        }
+        setMcqsWizardStep(4);
+      } else if (mcqsWizardStep === 4) {
+        handleCreateAssignment();
+      }
+      return;
+    }
     if (createStep === 'blanks') {
       if (!blanksText.trim()) {
         Alert.alert('Empty Content', 'Please enter some text first.');
@@ -819,7 +1084,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
-  // Filter types based on official 6 assignment formats
+  // Filter types based on official assignment formats
   const filterTypes = ['All', 'blanks', 'match', 'crosswords', 'parts', 'truefalse', 'cluegames'];
 
   const getTypeLabel = (type: string) => {
@@ -829,6 +1094,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     if (type === 'parts') return 'Label The Parts';
     if (type === 'truefalse') return 'True/False';
     if (type === 'cluegames') return 'Clue Games';
+    if (type === 'mcqs') return 'MCQs AI Generator';
     return type;
   };
 
@@ -839,6 +1105,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     if (type === 'parts') return ['#ffffff', '#FFF1F2', '#FFE4E6'];
     if (type === 'truefalse') return ['#ffffff', '#FFFBEB', '#FEF3C7'];
     if (type === 'cluegames') return ['#ffffff', '#ECFDF5', '#D1FAE5'];
+    if (type === 'mcqs') return ['#ffffff', '#E0F2FE', '#BAE6FD'];
     return ['#ffffff', '#F8FAFC', '#E2E8F0'];
   };
 
@@ -849,6 +1116,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     if (type === 'parts') return '#B0284F';
     if (type === 'truefalse') return '#B45309';
     if (type === 'cluegames') return '#059669';
+    if (type === 'mcqs') return '#0EA5E9';
     return '#003d9b';
   };
 
@@ -1089,13 +1357,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   };
 
   const handleCreateAssignment = () => {
-    if (!formTitle.trim()) {
-      Alert.alert('Required Info', 'Please enter an assignment title');
-      return;
-    }
-    
-    // Multi-step check: if details step and format is Fill in the Blanks or Match, go to next step
+    // Multi-step check: if details step and format is Fill in the Blanks, Match, MCQs, etc.
     if (createStep === 'details') {
+      if (formType === 'mcqs') {
+        setCreateStep('mcqs');
+        setMcqsWizardStep(1);
+        if (formTitle.trim()) setMcqsTitle(formTitle);
+        return;
+      }
+      if (!formTitle.trim()) {
+        Alert.alert('Required Info', 'Please enter an assignment title');
+        return;
+      }
       if (formType === 'blanks') {
         setCreateStep('blanks');
         return;
@@ -1116,6 +1389,48 @@ export const ActivityScreen = ({ navigation, route }: any) => {
         setCreateStep('truefalse');
         return;
       }
+    }
+
+    if (formType === 'mcqs') {
+      const newMcqAssessment = {
+        id: `mcq-${Date.now()}`,
+        title: mcqsTitle || formTitle || 'state of matter',
+        docName: mcqsDocName || 'mateerr.PNG',
+        slosCount: mcqsSlos.length,
+        status: mcqsPublishStatus,
+        class: mcqsClass || formClass || 'GRADE-II',
+        section: mcqsSection || formSection || 'A',
+        course: mcqsCourse || formCourse || 'English',
+        qsCount: generatedMcqs.length || 10,
+        avgScore: 'No data',
+        completionRate: 0,
+        completionText: '0% (0/5)',
+        created: 'Just now',
+        mcqs: generatedMcqs
+      };
+      setMcqsAssessments(prev => [newMcqAssessment, ...prev]);
+      
+      const newAssignment = {
+        sNo: Math.floor(1000 + Math.random() * 9000).toString(),
+        title: mcqsTitle || formTitle || 'state of matter',
+        class: `${mcqsClass || formClass || 'GRADE-II'} ${mcqsSection || formSection || 'A'}`,
+        section: mcqsSection || formSection || 'A',
+        course: mcqsCourse || formCourse || 'English',
+        chapter: '—',
+        topic: '—',
+        teacher: 'suman',
+        startDateTime: formStart,
+        deadline: formDeadline,
+        type: 'mcqs',
+        content: `${generatedMcqs.length || 10} Questions`,
+        mcqsData: newMcqAssessment
+      };
+      setAssignments(prev => [newAssignment, ...prev]);
+      setIsCreateVisible(false);
+      setCreateStep('details');
+      setMcqsWizardStep(1);
+      Alert.alert('Assessment Published!', `"${newMcqAssessment.title}" has been saved and posted to class.`);
+      return;
     }
 
     // Process blanks text if indices were selected
@@ -1492,6 +1807,132 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           ) : (
             filteredAssignments.map(item => {
               const accent = getAccentColor(item.type);
+
+              /* ── SPECIAL PREMIUM MCQ BUILDER CARD ── */
+              if (item.type === 'mcqs') {
+                return (
+                  <TouchableOpacity
+                    key={item.sNo}
+                    style={{
+                      marginBottom: 16,
+                      borderRadius: 22,
+                      overflow: 'hidden',
+                      shadowColor: '#0EA5E9',
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.18,
+                      shadowRadius: 16,
+                      elevation: 8,
+                    }}
+                    onPress={() => navigation.navigate('MCQBuilder')}
+                    activeOpacity={0.92}
+                  >
+                    <LinearGradient
+                      colors={['#ECFDF5', '#D1FAE5', '#BAE6FD']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ padding: 20, minHeight: 160 }}
+                    >
+                      {/* Top Row: Icon + GENERATOR tag */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                        {/* Icon Box */}
+                        <View style={{
+                          width: 52, height: 52,
+                          borderRadius: 16,
+                          backgroundColor: 'rgba(255,255,255,0.75)',
+                          alignItems: 'center', justifyContent: 'center',
+                          borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.25)',
+                          shadowColor: '#10B981',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.15,
+                          shadowRadius: 8,
+                          elevation: 4,
+                        }}>
+                          <MaterialIcons name="quiz" size={28} color="#0EA5E9" />
+                        </View>
+
+                        {/* GENERATOR Tag */}
+                        <View style={{
+                          flexDirection: 'row', alignItems: 'center', gap: 5,
+                          paddingVertical: 5, paddingHorizontal: 11,
+                          borderRadius: 20,
+                          backgroundColor: 'rgba(255,255,255,0.72)',
+                          borderWidth: 1.2, borderColor: 'rgba(16,185,129,0.3)',
+                        }}>
+                          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981' }} />
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: '#059669', letterSpacing: 0.5 }}>GENERATOR</Text>
+                        </View>
+                      </View>
+
+                      {/* Title & Subtitle */}
+                      <Text style={{ fontSize: 22, fontWeight: '900', color: '#064E3B', letterSpacing: -0.3, marginBottom: 4 }}>
+                        MCQ Builder
+                      </Text>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: '#065F46', opacity: 0.75, marginBottom: 16 }}>
+                        Smart quiz & paper generator tool
+                      </Text>
+
+                      {/* Bottom Row: Active pill + Arrow button */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {/* Active Pill */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981' }} />
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#047857' }}>
+                            {mcqsAssessments.length + 3} Active
+                          </Text>
+                        </View>
+
+                        {/* Decorative mini-document illustration */}
+                        <View style={{ position: 'absolute', bottom: -8, right: 54, opacity: 0.18 }}>
+                          <Svg width={64} height={64} viewBox="0 0 64 64">
+                            <Rect x="8" y="4" width="40" height="52" rx="6" fill="#10B981" />
+                            <Rect x="14" y="14" width="28" height="3" rx="1.5" fill="white" />
+                            <Rect x="14" y="22" width="20" height="3" rx="1.5" fill="white" />
+                            <Rect x="14" y="30" width="24" height="3" rx="1.5" fill="white" />
+                            <Rect x="14" y="38" width="16" height="3" rx="1.5" fill="white" />
+                          </Svg>
+                        </View>
+
+                        {/* Arrow Button */}
+                        <View
+                          style={{
+                            width: 42, height: 42,
+                            borderRadius: 21,
+                            backgroundColor: '#10B981',
+                            alignItems: 'center', justifyContent: 'center',
+                            shadowColor: '#059669',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 8,
+                            elevation: 6,
+                          }}
+                        >
+                          <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+                        </View>
+                      </View>
+
+                      {/* Extra info row: class • subject */}
+                      <View style={{
+                        marginTop: 14,
+                        paddingTop: 12,
+                        borderTopWidth: 1,
+                        borderTopColor: 'rgba(16,185,129,0.2)',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}>
+                        <MaterialIcons name="school" size={13} color="#059669" />
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#047857' }}>
+                          {item.class}  •  {item.course}  •  {item.topic}
+                        </Text>
+                        <View style={{ flex: 1 }} />
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#0EA5E9' }}>Tap to open →</Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              }
+
+
               return (
                 <View key={item.sNo} style={[styles.card, { shadowColor: accent }]}>
 
@@ -3749,6 +4190,782 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             <MaterialIcons name="flash-on" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
                           </TouchableOpacity>
                         </View>
+                      </View>
+                    )}
+
+                    {/* Step 4: MCQS AI GENERATOR & QUIZ BUILDER WIZARD */}
+                    {createStep === 'mcqs' && (
+                      <View style={{ gap: 20, width: '100%' }}>
+                        {/* 4-Step Top Progress Tracker Bar */}
+                        <View style={{
+                          width: '100%',
+                          backgroundColor: '#ffffff',
+                          borderRadius: 22,
+                          paddingVertical: 14,
+                          paddingHorizontal: 16,
+                          borderWidth: 1.6,
+                          borderColor: '#E2E8F0',
+                          shadowColor: '#0EA5E9',
+                          shadowOffset: { width: 0, height: 6 },
+                          shadowOpacity: 0.08,
+                          shadowRadius: 12,
+                          elevation: 3
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+                            <View style={{
+                              position: 'absolute',
+                              top: 15,
+                              left: 30,
+                              right: 30,
+                              height: 3,
+                              backgroundColor: '#E2E8F0',
+                              zIndex: 1
+                            }}>
+                              <View style={{
+                                height: '100%',
+                                width: mcqsWizardStep === 1 ? '0%' : mcqsWizardStep === 2 ? '33%' : mcqsWizardStep === 3 ? '66%' : '100%',
+                                backgroundColor: '#0EA5E9'
+                              }} />
+                            </View>
+
+                            {[
+                              { step: 1, label: 'Upload Document' },
+                              { step: 2, label: 'Define SLOs' },
+                              { step: 3, label: 'Review Questions' },
+                              { step: 4, label: 'Save & Publish' }
+                            ].map((item) => {
+                              const isDone = mcqsWizardStep > item.step;
+                              const isActive = mcqsWizardStep === item.step;
+                              return (
+                                <View key={item.step} style={{ alignItems: 'center', zIndex: 2, gap: 4 }}>
+                                  <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 16,
+                                    backgroundColor: isDone ? '#10B981' : isActive ? '#0EA5E9' : '#ffffff',
+                                    borderWidth: isDone || isActive ? 0 : 2,
+                                    borderColor: '#CBD5E1',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    {isDone ? (
+                                      <MaterialIcons name="check" size={18} color="#ffffff" />
+                                    ) : (
+                                      <Text style={{ fontSize: 13, fontWeight: '900', color: isActive ? '#ffffff' : '#64748B' }}>
+                                        {item.step}
+                                      </Text>
+                                    )}
+                                  </View>
+                                  <Text style={{ fontSize: 11, fontWeight: isActive ? '900' : '600', color: isActive ? '#0F172A' : '#64748B' }}>
+                                    {item.label}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                          </View>
+                        </View>
+
+                        {/* STEP 1: UPLOAD STUDY MATERIAL & ASSESSMENTS TABLE */}
+                        {mcqsWizardStep === 1 && (
+                          <View style={{ gap: 20 }}>
+                            {/* Upload Card */}
+                            <View style={{
+                              backgroundColor: '#ffffff',
+                              borderRadius: 24,
+                              padding: 22,
+                              borderWidth: 1.6,
+                              borderColor: '#BAE6FD',
+                              gap: 16,
+                              shadowColor: '#0EA5E9',
+                              shadowOffset: { width: 0, height: 6 },
+                              shadowOpacity: 0.08,
+                              shadowRadius: 12
+                            }}>
+                              <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>Upload Study Material</Text>
+
+                              {/* Class, Section, Course Selectors */}
+                              <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                                <View style={{ flex: 1, minWidth: 140, gap: 6 }}>
+                                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>Class *</Text>
+                                  <TextInput
+                                    style={{
+                                      backgroundColor: '#F8FAFC',
+                                      borderWidth: 1.5,
+                                      borderColor: '#CBD5E1',
+                                      borderRadius: 14,
+                                      paddingHorizontal: 14,
+                                      paddingVertical: 10,
+                                      fontSize: 14,
+                                      fontWeight: '700',
+                                      color: '#0F172A'
+                                    }}
+                                    value={mcqsClass}
+                                    onChangeText={setMcqsClass}
+                                    placeholder="e.g. GRADE-II"
+                                  />
+                                </View>
+
+                                <View style={{ flex: 1, minWidth: 140, gap: 6 }}>
+                                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>Section *</Text>
+                                  <TextInput
+                                    style={{
+                                      backgroundColor: '#F8FAFC',
+                                      borderWidth: 1.5,
+                                      borderColor: '#CBD5E1',
+                                      borderRadius: 14,
+                                      paddingHorizontal: 14,
+                                      paddingVertical: 10,
+                                      fontSize: 14,
+                                      fontWeight: '700',
+                                      color: '#0F172A'
+                                    }}
+                                    value={mcqsSection}
+                                    onChangeText={setMcqsSection}
+                                    placeholder="e.g. Section A"
+                                  />
+                                </View>
+
+                                <View style={{ flex: 1, minWidth: 140, gap: 6 }}>
+                                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>Course / Subject *</Text>
+                                  <TextInput
+                                    style={{
+                                      backgroundColor: '#F8FAFC',
+                                      borderWidth: 1.5,
+                                      borderColor: '#CBD5E1',
+                                      borderRadius: 14,
+                                      paddingHorizontal: 14,
+                                      paddingVertical: 10,
+                                      fontSize: 14,
+                                      fontWeight: '700',
+                                      color: '#0F172A'
+                                    }}
+                                    value={mcqsCourse}
+                                    onChangeText={setMcqsCourse}
+                                    placeholder="e.g. English"
+                                  />
+                                </View>
+                              </View>
+
+                              {/* Title Input */}
+                              <View style={{ gap: 6 }}>
+                                <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>Assessment Title *</Text>
+                                <TextInput
+                                  style={{
+                                    backgroundColor: '#F8FAFC',
+                                    borderWidth: 1.5,
+                                    borderColor: '#CBD5E1',
+                                    borderRadius: 14,
+                                    paddingHorizontal: 14,
+                                    paddingVertical: 12,
+                                    fontSize: 15,
+                                    fontWeight: '700',
+                                    color: '#0F172A'
+                                  }}
+                                  value={mcqsTitle}
+                                  onChangeText={setMcqsTitle}
+                                  placeholder="e.g., Chapter 5 — solutions and solubility quiz"
+                                />
+                              </View>
+
+                              {/* Upload Dropzone */}
+                              <View style={{ gap: 6 }}>
+                                <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>Document (PDF or Image) *</Text>
+                                <TouchableOpacity
+                                  style={{
+                                    borderWidth: 2,
+                                    borderColor: '#38BDF8',
+                                    borderStyle: 'dashed',
+                                    borderRadius: 18,
+                                    padding: 24,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#F0F9FF',
+                                    gap: 8
+                                  }}
+                                  onPress={() => {
+                                    setMcqsDocName('class 2 study material.pdf');
+                                    setMcqsDocSize('1.2 MB');
+                                    playSound('add');
+                                  }}
+                                  activeOpacity={0.8}
+                                >
+                                  <MaterialIcons name="cloud-upload" size={38} color="#0284C7" />
+                                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#0369A1' }}>
+                                    Click to upload or drag & drop
+                                  </Text>
+                                  <Text style={{ fontSize: 12, color: '#64748B' }}>
+                                    PDF, JPG, PNG — max 10 MB
+                                  </Text>
+                                </TouchableOpacity>
+
+                                {/* File Badge */}
+                                {mcqsDocName !== '' && (
+                                  <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    backgroundColor: '#F0FDFA',
+                                    borderWidth: 1.5,
+                                    borderColor: '#99F6E4',
+                                    borderRadius: 14,
+                                    padding: 12,
+                                    marginTop: 4
+                                  }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                      <View style={{
+                                        width: 34,
+                                        height: 34,
+                                        borderRadius: 10,
+                                        backgroundColor: '#0284C7',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}>
+                                        <MaterialIcons name="insert-drive-file" size={20} color="#ffffff" />
+                                      </View>
+                                      <View>
+                                        <Text style={{ fontSize: 14, fontWeight: '900', color: '#0F172A' }}>{mcqsDocName}</Text>
+                                        <Text style={{ fontSize: 11, color: '#64748B' }}>{mcqsDocSize}</Text>
+                                      </View>
+                                    </View>
+                                    <TouchableOpacity onPress={() => setMcqsDocName('')}>
+                                      <MaterialIcons name="close" size={20} color="#64748B" />
+                                    </TouchableOpacity>
+                                  </View>
+                                )}
+                              </View>
+
+                              {/* Continue Button */}
+                              <TouchableOpacity
+                                style={{
+                                  borderRadius: 14,
+                                  overflow: 'hidden',
+                                  marginTop: 6
+                                }}
+                                onPress={handleStepNext}
+                                activeOpacity={0.85}
+                              >
+                                <LinearGradient
+                                  colors={['#0EA5E9', '#0284C7', '#0369A1']}
+                                  start={{ x: 0, y: 0 }}
+                                  end={{ x: 1, y: 0 }}
+                                  style={{
+                                    paddingVertical: 14,
+                                    alignItems: 'center',
+                                    flexDirection: 'row',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    borderBottomWidth: 3,
+                                    borderBottomColor: '#075985'
+                                  }}
+                                >
+                                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16 }}>Continue</Text>
+                                  <MaterialIcons name="arrow-forward" size={18} color="#ffffff" />
+                                </LinearGradient>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* 2-Second Loader Overlay */}
+                            {isAnalyzingDoc && (
+                              <View style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                borderRadius: 24,
+                                padding: 32,
+                                borderWidth: 2,
+                                borderColor: '#38BDF8',
+                                alignItems: 'center',
+                                gap: 14
+                              }}>
+                                <MaterialIcons name="sync" size={40} color="#0EA5E9" />
+                                <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', textAlign: 'center' }}>
+                                  Analyzing Study Material & Extracting SLOs...
+                                </Text>
+                                <View style={{ width: '100%', height: 6, backgroundColor: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+                                  <LinearGradient colors={['#38BDF8', '#0284C7']} style={{ width: '80%', height: '100%' }} />
+                                </View>
+                              </View>
+                            )}
+
+                            {/* STATS METRIC CARDS GRID */}
+                            <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                              <View style={{ flex: 1, minWidth: 130, backgroundColor: '#ffffff', padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B' }}>TOTAL</Text>
+                                <Text style={{ fontSize: 24, fontWeight: '900', color: '#0EA5E9', marginTop: 2 }}>{mcqsAssessments.length}</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 130, backgroundColor: '#ffffff', padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B' }}>PUBLISHED</Text>
+                                <Text style={{ fontSize: 24, fontWeight: '900', color: '#D97706', marginTop: 2 }}>
+                                  {mcqsAssessments.filter(a => a.status === 'Published').length}
+                                </Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 130, backgroundColor: '#ffffff', padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B' }}>SUBMISSIONS</Text>
+                                <Text style={{ fontSize: 24, fontWeight: '900', color: '#0284C7', marginTop: 2 }}>3</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 130, backgroundColor: '#ffffff', padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B' }}>AVG SCORE</Text>
+                                <Text style={{ fontSize: 24, fontWeight: '900', color: '#10B981', marginTop: 2 }}>21%</Text>
+                              </View>
+                            </View>
+
+                            {/* ASSESSMENTS TABLE DASHBOARD */}
+                            <View style={{
+                              backgroundColor: '#ffffff',
+                              borderRadius: 24,
+                              padding: 20,
+                              borderWidth: 1.6,
+                              borderColor: '#E2E8F0',
+                              gap: 16
+                            }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A', letterSpacing: 0.5 }}>ASSESSMENTS</Text>
+                                <View style={{ flexDirection: 'row', gap: 6 }}>
+                                  {(['All', 'Published', 'Draft'] as const).map(tab => (
+                                    <TouchableOpacity
+                                      key={tab}
+                                      style={{
+                                        paddingVertical: 6,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 20,
+                                        backgroundColor: mcqsFilterTab === tab ? '#0EA5E9' : '#F1F5F9'
+                                      }}
+                                      onPress={() => setMcqsFilterTab(tab)}
+                                    >
+                                      <Text style={{ fontSize: 12, fontWeight: '800', color: mcqsFilterTab === tab ? '#ffffff' : '#64748B' }}>
+                                        {tab}
+                                      </Text>
+                                    </TouchableOpacity>
+                                  ))}
+                                </View>
+                              </View>
+
+                              {/* List of Assessments Cards / Rows */}
+                              <View style={{ gap: 12 }}>
+                                {mcqsAssessments
+                                  .filter(a => mcqsFilterTab === 'All' || a.status === mcqsFilterTab)
+                                  .map((item) => (
+                                    <View key={item.id} style={{
+                                      backgroundColor: '#F8FAFC',
+                                      borderRadius: 16,
+                                      padding: 16,
+                                      borderWidth: 1.5,
+                                      borderColor: '#E2E8F0',
+                                      gap: 10
+                                    }}>
+                                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <View style={{ flex: 1, marginRight: 10 }}>
+                                          <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A' }}>{item.title}</Text>
+                                          <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                                            📄 {item.docName} • {item.slosCount} SLOs
+                                          </Text>
+                                        </View>
+                                        <View style={{
+                                          paddingVertical: 3,
+                                          paddingHorizontal: 10,
+                                          borderRadius: 12,
+                                          backgroundColor: item.status === 'Published' ? '#ECFDF5' : '#FFFBEB',
+                                          borderWidth: 1,
+                                          borderColor: item.status === 'Published' ? '#A7F3D0' : '#FDE68A'
+                                        }}>
+                                          <Text style={{ fontSize: 11, fontWeight: '900', color: item.status === 'Published' ? '#047857' : '#B45309' }}>
+                                            • {item.status}
+                                          </Text>
+                                        </View>
+                                      </View>
+
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                        <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#E0F2FE' }}>
+                                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{item.class}</Text>
+                                        </View>
+                                        <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#E0F2FE' }}>
+                                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{item.section}</Text>
+                                        </View>
+                                        <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#E0F2FE' }}>
+                                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{item.course}</Text>
+                                        </View>
+                                        <Text style={{ fontSize: 12, color: '#64748B', marginLeft: 8 }}>
+                                          {item.qsCount} Qs • Completion: {item.completionText}
+                                        </Text>
+                                      </View>
+
+                                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+                                        <Text style={{ fontSize: 11, color: '#94A3B8' }}>Created: {item.created}</Text>
+                                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                                          <TouchableOpacity
+                                            onPress={() => {
+                                              setActiveMcqPlayer(item);
+                                              setMcqPlayerIndex(0);
+                                              setMcqUserAnswers({});
+                                              setMcqQuizStage('welcome');
+                                            }}
+                                          >
+                                            <MaterialIcons name="remove-red-eye" size={20} color="#0EA5E9" />
+                                          </TouchableOpacity>
+                                          <TouchableOpacity onPress={() => setMcqsAssessments(prev => prev.filter(a => a.id !== item.id))}>
+                                            <MaterialIcons name="delete-outline" size={20} color="#F43F5E" />
+                                          </TouchableOpacity>
+                                        </View>
+                                      </View>
+                                    </View>
+                                  ))}
+                              </View>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* STEP 2: DEFINE STUDENT LEARNING OUTCOMES (SLOs) */}
+                        {mcqsWizardStep === 2 && (
+                          <View style={{
+                            backgroundColor: '#ffffff',
+                            borderRadius: 24,
+                            padding: 24,
+                            borderWidth: 1.6,
+                            borderColor: '#BAE6FD',
+                            gap: 18
+                          }}>
+                            <View>
+                              <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A' }}>Student Learning Outcomes</Text>
+                              <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
+                                Define 2–6 Learning Objectives (AI will generate MCQs targeted to these outcomes)
+                              </Text>
+                            </View>
+
+                            {/* SLO List */}
+                            <View style={{ gap: 12 }}>
+                              {mcqsSlos.map((slo, index) => (
+                                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                  <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 16,
+                                    backgroundColor: '#E0F2FE',
+                                    borderWidth: 1.5,
+                                    borderColor: '#7DD3FC',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    <Text style={{ fontSize: 13, fontWeight: '900', color: '#0369A1' }}>{index + 1}</Text>
+                                  </View>
+                                  <TextInput
+                                    style={{
+                                      flex: 1,
+                                      backgroundColor: '#F8FAFC',
+                                      borderWidth: 1.5,
+                                      borderColor: '#CBD5E1',
+                                      borderRadius: 14,
+                                      paddingHorizontal: 14,
+                                      paddingVertical: 10,
+                                      fontSize: 14,
+                                      fontWeight: '600',
+                                      color: '#0F172A'
+                                    }}
+                                    value={slo}
+                                    onChangeText={(text) => {
+                                      const updated = [...mcqsSlos];
+                                      updated[index] = text;
+                                      setMcqsSlos(updated);
+                                    }}
+                                  />
+                                  <TouchableOpacity onPress={() => setMcqsSlos(prev => prev.filter((_, i) => i !== index))}>
+                                    <MaterialIcons name="close" size={20} color="#F43F5E" />
+                                  </TouchableOpacity>
+                                </View>
+                              ))}
+                            </View>
+
+                            {/* Add SLO Button */}
+                            <TouchableOpacity
+                              style={{
+                                alignSelf: 'flex-start',
+                                paddingVertical: 10,
+                                paddingHorizontal: 16,
+                                borderRadius: 14,
+                                borderWidth: 1.5,
+                                borderColor: '#0EA5E9',
+                                borderStyle: 'dashed',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                backgroundColor: '#F0F9FF'
+                              }}
+                              onPress={() => setMcqsSlos(prev => [...prev, 'New Learning Objective'])}
+                            >
+                              <MaterialIcons name="add" size={18} color="#0284C7" />
+                              <Text style={{ fontSize: 13, fontWeight: '800', color: '#0284C7' }}>+ Add another SLO</Text>
+                            </TouchableOpacity>
+
+                            {/* Generator Loader */}
+                            {isGeneratingMcqs && (
+                              <View style={{
+                                backgroundColor: '#F0F9FF',
+                                borderRadius: 16,
+                                padding: 20,
+                                alignItems: 'center',
+                                gap: 10,
+                                borderWidth: 1.5,
+                                borderColor: '#38BDF8'
+                              }}>
+                                <MaterialIcons name="auto-awesome" size={32} color="#0EA5E9" />
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0369A1' }}>
+                                  Generating 10 Targeted MCQs...
+                                </Text>
+                              </View>
+                            )}
+
+                            {/* Step Buttons */}
+                            <View style={styles.stepFooterButtons}>
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]} onPress={handleStepPrev}>
+                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                                <Text style={styles.stepFooterTextPrev}>Back</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#0EA5E9' }]} onPress={handleStepNext}>
+                                <Text style={styles.stepFooterTextNext}>Generate Questions →</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* STEP 3: REVIEW & EDIT GENERATED QUESTIONS (10 MCQs) */}
+                        {mcqsWizardStep === 3 && (
+                          <View style={{ gap: 16 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <View>
+                                <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A' }}>Review Generated Questions</Text>
+                                <Text style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
+                                  Edit options, mark correct answer, adjust difficulty bloom level, or add custom MCQs.
+                                </Text>
+                              </View>
+
+                              <TouchableOpacity
+                                style={{
+                                  paddingVertical: 8,
+                                  paddingHorizontal: 14,
+                                  borderRadius: 14,
+                                  backgroundColor: '#0EA5E9',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 6
+                                }}
+                                onPress={() => {
+                                  const newQ = {
+                                    id: `q-${Date.now()}`,
+                                    question: 'New Custom MCQ Question?',
+                                    options: ['Option A', 'Option B', 'Option C', 'Option D'] as [string, string, string, string],
+                                    correctAnswer: 0,
+                                    bloom: 'EASY' as const,
+                                    slo: mcqsSlos[0] || 'Core Concept',
+                                    explanation: 'Sample rationale explanation for this answer.'
+                                  };
+                                  setGeneratedMcqs(prev => [...prev, newQ]);
+                                }}
+                              >
+                                <MaterialIcons name="add" size={18} color="#ffffff" />
+                                <Text style={{ fontSize: 12, fontWeight: '900', color: '#ffffff' }}>+ Add MCQ</Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* 10 Generated Questions Cards */}
+                            <ScrollView style={{ maxHeight: 420 }} nestedScrollEnabled showsVerticalScrollIndicator>
+                              <View style={{ gap: 14 }}>
+                                {generatedMcqs.map((mcq, qIdx) => (
+                                  <View key={mcq.id} style={{
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: 20,
+                                    padding: 18,
+                                    borderWidth: 1.6,
+                                    borderColor: '#CBD5E1',
+                                    gap: 12,
+                                    shadowColor: '#64748B',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 8
+                                  }}>
+                                    {/* Header Row */}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                        <View style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#0EA5E9' }}>
+                                          <Text style={{ fontSize: 12, fontWeight: '900', color: '#ffffff' }}>Q{qIdx + 1}</Text>
+                                        </View>
+                                        <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A' }}>
+                                          <Text style={{ fontSize: 10, fontWeight: '900', color: '#92400E' }}>BLOOM: {mcq.bloom}</Text>
+                                        </View>
+                                      </View>
+
+                                      <TouchableOpacity onPress={() => setGeneratedMcqs(prev => prev.filter(q => q.id !== mcq.id))}>
+                                        <MaterialIcons name="delete-outline" size={20} color="#F43F5E" />
+                                      </TouchableOpacity>
+                                    </View>
+
+                                    {/* Question Text */}
+                                    <TextInput
+                                      style={{
+                                        backgroundColor: '#F8FAFC',
+                                        borderWidth: 1.5,
+                                        borderColor: '#CBD5E1',
+                                        borderRadius: 12,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 10,
+                                        fontSize: 14,
+                                        fontWeight: '700',
+                                        color: '#0F172A'
+                                      }}
+                                      value={mcq.question}
+                                      onChangeText={(text) => {
+                                        const updated = [...generatedMcqs];
+                                        updated[qIdx].question = text;
+                                        setGeneratedMcqs(updated);
+                                      }}
+                                      multiline
+                                    />
+
+                                    {/* Options (A, B, C, D) */}
+                                    <View style={{ gap: 8 }}>
+                                      {mcq.options.map((opt, optIdx) => {
+                                        const isCorrect = mcq.correctAnswer === optIdx;
+                                        const labels = ['A', 'B', 'C', 'D'];
+                                        return (
+                                          <TouchableOpacity
+                                            key={optIdx}
+                                            style={{
+                                              flexDirection: 'row',
+                                              alignItems: 'center',
+                                              gap: 8,
+                                              backgroundColor: isCorrect ? '#ECFDF5' : '#F8FAFC',
+                                              borderWidth: 1.5,
+                                              borderColor: isCorrect ? '#10B981' : '#CBD5E1',
+                                              borderRadius: 12,
+                                              paddingHorizontal: 12,
+                                              paddingVertical: 8
+                                            }}
+                                            onPress={() => {
+                                              const updated = [...generatedMcqs];
+                                              updated[qIdx].correctAnswer = optIdx;
+                                              setGeneratedMcqs(updated);
+                                            }}
+                                          >
+                                            <Text style={{ fontSize: 13, fontWeight: '900', color: isCorrect ? '#047857' : '#64748B' }}>
+                                              {labels[optIdx]}.
+                                            </Text>
+                                            <TextInput
+                                              style={{ flex: 1, fontSize: 13, fontWeight: '600', color: '#0F172A' }}
+                                              value={opt}
+                                              onChangeText={(text) => {
+                                                const updated = [...generatedMcqs];
+                                                const opts = [...updated[qIdx].options] as [string, string, string, string];
+                                                opts[optIdx] = text;
+                                                updated[qIdx].options = opts;
+                                                setGeneratedMcqs(updated);
+                                              }}
+                                            />
+                                            <MaterialIcons
+                                              name={isCorrect ? 'check-circle' : 'radio-button-unchecked'}
+                                              size={18}
+                                              color={isCorrect ? '#10B981' : '#CBD5E1'}
+                                            />
+                                          </TouchableOpacity>
+                                        );
+                                      })}
+                                    </View>
+                                  </View>
+                                ))}
+                              </View>
+                            </ScrollView>
+
+                            {/* Step Buttons */}
+                            <View style={styles.stepFooterButtons}>
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]} onPress={handleStepPrev}>
+                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                                <Text style={styles.stepFooterTextPrev}>Back</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#0EA5E9' }]} onPress={handleStepNext}>
+                                <Text style={styles.stepFooterTextNext}>Continue to Publish →</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* STEP 4: SAVE & PUBLISH ASSESSMENT */}
+                        {mcqsWizardStep === 4 && (
+                          <View style={{
+                            backgroundColor: '#ffffff',
+                            borderRadius: 24,
+                            padding: 24,
+                            borderWidth: 1.6,
+                            borderColor: '#BAE6FD',
+                            gap: 18
+                          }}>
+                            <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A' }}>Save & Publish Assessment</Text>
+
+                            {/* Summary Grid */}
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>TITLE</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{mcqsTitle || 'state of matter'}</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>CLASS</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{mcqsClass}</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>SECTION</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{mcqsSection}</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>SUBJECT</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{mcqsCourse}</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>QUESTIONS</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{generatedMcqs.length || 10} questions</Text>
+                              </View>
+
+                              <View style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 14, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>SLOS</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 4 }}>{mcqsSlos.length} outcomes</Text>
+                              </View>
+                            </View>
+
+                            {/* Publish Status Selector */}
+                            <View style={{ gap: 6 }}>
+                              <Text style={{ fontSize: 13, fontWeight: '800', color: '#334155' }}>Publish Status</Text>
+                              <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                backgroundColor: '#F8FAFC',
+                                borderWidth: 1.5,
+                                borderColor: '#CBD5E1',
+                                borderRadius: 14,
+                                padding: 14
+                              }}>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#0F172A' }}>
+                                  Published — Students can see and take it now
+                                </Text>
+                                <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748B" />
+                              </View>
+                            </View>
+
+                            {/* Action Buttons */}
+                            <View style={styles.stepFooterButtons}>
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]} onPress={handleStepPrev}>
+                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                                <Text style={styles.stepFooterTextPrev}>Back</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#10B981' }]} onPress={handleCreateAssignment}>
+                                <Text style={styles.stepFooterTextNext}>✓ Save Assessment</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
                       </View>
                     )}
 
@@ -6744,6 +7961,136 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               </View>
             </View>
           </Modal>
+        </Modal>
+      )}
+
+      {/* ── MCQS INTERACTIVE QUIZ STUDENT PLAYER MODAL ── */}
+      {activeMcqPlayer && (
+        <Modal
+          visible={activeMcqPlayer !== null}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setActiveMcqPlayer(null)}
+        >
+          <View style={{ flex: 1, backgroundColor: '#F0F9FF' }}>
+            <LinearGradient
+              colors={['#E0F2FE', '#F0F9FF', '#F0FDFA']}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+
+            <SafeAreaView style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
+              <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' }}
+                    onPress={() => setActiveMcqPlayer(null)}
+                  >
+                    <MaterialIcons name="close" size={20} color="#0F172A" />
+                  </TouchableOpacity>
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>{activeMcqPlayer.title}</Text>
+                    <Text style={{ fontSize: 12, color: '#64748B' }}>MCQ AI Interactive Quiz</Text>
+                  </View>
+                </View>
+                <View style={{ paddingVertical: 4, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#E0F2FE' }}>
+                  <Text style={{ fontSize: 13, fontWeight: '900', color: '#0369A1' }}>Score: {Object.keys(mcqUserAnswers).length} Answered</Text>
+                </View>
+              </View>
+            </SafeAreaView>
+
+            <ScrollView contentContainerStyle={{ padding: 24, alignItems: 'center' }}>
+              <View style={{ width: '100%', maxWidth: 620, backgroundColor: '#ffffff', borderRadius: 28, padding: 24, borderWidth: 1.6, borderColor: '#CBD5E1', gap: 18 }}>
+                {activeMcqPlayer.mcqs && activeMcqPlayer.mcqs.length > 0 ? (
+                  <>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#0EA5E9' }}>Question {mcqPlayerIndex + 1} of {activeMcqPlayer.mcqs.length}</Text>
+                    </View>
+
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', lineHeight: 26 }}>
+                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.question}
+                    </Text>
+
+                    <View style={{ gap: 10 }}>
+                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.options.map((opt: string, idx: number) => {
+                        const isSelected = mcqUserAnswers[mcqPlayerIndex] === idx;
+                        const isCorrect = activeMcqPlayer.mcqs[mcqPlayerIndex].correctAnswer === idx;
+                        let bg = '#F8FAFC';
+                        let border = '#CBD5E1';
+                        if (isSelected) {
+                          bg = isCorrect ? '#ECFDF5' : '#FFF1F2';
+                          border = isCorrect ? '#10B981' : '#F43F5E';
+                        }
+
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            style={{
+                              padding: 16,
+                              borderRadius: 16,
+                              backgroundColor: bg,
+                              borderWidth: 1.5,
+                              borderColor: border,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                            onPress={() => {
+                              setMcqUserAnswers(prev => ({ ...prev, [mcqPlayerIndex]: idx }));
+                              playSound('click');
+                            }}
+                          >
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', flex: 1 }}>{opt}</Text>
+                            {isSelected && (
+                              <MaterialIcons name={isCorrect ? "check-circle" : "cancel"} size={22} color={isCorrect ? "#10B981" : "#F43F5E"} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+                      <TouchableOpacity
+                        disabled={mcqPlayerIndex === 0}
+                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: mcqPlayerIndex === 0 ? '#F1F5F9' : '#0EA5E9' }}
+                        onPress={() => setMcqPlayerIndex(prev => Math.max(0, prev - 1))}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>← Prev</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: '#10B981' }}
+                        onPress={() => {
+                          if (mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1) {
+                            setMcqPlayerIndex(prev => prev + 1);
+                          } else {
+                            setShowMcqSuccessUpload(true);
+                          }
+                        }}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>
+                          {mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1 ? 'Next →' : 'Finish Quiz ✓'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={{ alignItems: 'center', padding: 24, gap: 12 }}>
+                    <MaterialIcons name="quiz" size={48} color="#0EA5E9" />
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>Quiz Ready!</Text>
+                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center' }}>
+                      10 Questions generated for {activeMcqPlayer.title}.
+                    </Text>
+                    <TouchableOpacity
+                      style={{ paddingVertical: 12, paddingHorizontal: 24, borderRadius: 16, backgroundColor: '#0EA5E9' }}
+                      onPress={() => setActiveMcqPlayer(null)}
+                    >
+                      <Text style={{ color: '#ffffff', fontWeight: '900' }}>Close Player</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </View>
         </Modal>
       )}
 

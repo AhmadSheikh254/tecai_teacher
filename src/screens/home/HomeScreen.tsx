@@ -54,7 +54,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     { label: 'Assign', icon: 'assignment', target: 'Assignment' },
     { label: 'Attend', icon: 'fact-check', target: 'More', params: { screen: 'Attendance' } },
     { label: 'Lesson', icon: 'import-contacts', target: 'More', params: { screen: 'LessonPlan' } },
-    { label: 'CBTS', icon: 'quiz', target: 'CBTS' },
     { label: 'Exam', icon: 'description', target: 'More', params: { screen: 'Exam' } },
   ];
 
@@ -120,7 +119,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const absentOffset  = circumference - (circumference * 6)  / 100;
 
     return (
-      <View style={styles.premiumCard}>
+      <TouchableOpacity 
+        style={styles.premiumCard}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('More', { screen: 'Attendance' })}
+      >
         {/* Header */}
         <View style={styles.premiumCardHeader}>
           <View style={styles.premiumCardTitleRow}>
@@ -191,7 +194,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -359,7 +362,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Attendance */}
-            <View style={[styles.heroStatCard, styles.heroStatCardCenter]}>
+            <TouchableOpacity 
+              style={[styles.heroStatCard, styles.heroStatCardCenter]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('More', { screen: 'Attendance' })}
+            >
               <View style={styles.glassCardShine} />
               <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
                 <MaterialIcons name="how-to-reg" size={20} color="#34d399" />
@@ -369,7 +376,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <View style={styles.heroStatBarTrack}>
                 <View style={[styles.heroStatBarFill, { width: '94%', backgroundColor: '#34d399' }]} />
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Teachers */}
             <View style={styles.heroStatCard}>
@@ -426,26 +433,37 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.tabContent}>
             {/* Quick Stats Grid — premium glow cards */}
             <View style={styles.statsGrid}>
-              {stats.map((item) => (
-                <View key={item.id} style={[styles.statCard, theme.shadows.level1]}>
-                  <View style={styles.statHeader}>
-                    <View style={styles.statIconWrapper}>
-                      <MaterialIcons name={item.icon as any} size={20} color="#0052cc" />
-                    </View>
-                    {item.change && (
-                      <View style={[styles.changeBadge, { backgroundColor: item.changeBg }]}>
-                        <MaterialIcons name="trending-up" size={10} color={item.changeColor} />
-                        <Text style={[styles.changeText, { color: item.changeColor }]}>{item.change}</Text>
+              {stats.map((item) => {
+                const isAttendance = item.id === 'attendance';
+                const CardComponent = isAttendance ? TouchableOpacity : View;
+                return (
+                  <CardComponent 
+                    key={item.id} 
+                    style={[styles.statCard, theme.shadows.level1]}
+                    {...(isAttendance ? {
+                      activeOpacity: 0.8,
+                      onPress: () => navigation.navigate('More', { screen: 'Attendance' })
+                    } : {})}
+                  >
+                    <View style={styles.statHeader}>
+                      <View style={styles.statIconWrapper}>
+                        <MaterialIcons name={item.icon as any} size={20} color="#0052cc" />
                       </View>
-                    )}
-                  </View>
-                  <View style={styles.statInfo}>
-                    <Text style={styles.statCount}>{item.count}</Text>
-                    <Text style={styles.statLabel} numberOfLines={1}>{item.label}</Text>
-                  </View>
-                  <View style={styles.statCardAccent} />
-                </View>
-              ))}
+                      {item.change && (
+                        <View style={[styles.changeBadge, { backgroundColor: item.changeBg }]}>
+                          <MaterialIcons name="trending-up" size={10} color={item.changeColor} />
+                          <Text style={[styles.changeText, { color: item.changeColor }]}>{item.change}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.statInfo}>
+                      <Text style={styles.statCount}>{item.count}</Text>
+                      <Text style={styles.statLabel} numberOfLines={1}>{item.label}</Text>
+                    </View>
+                    <View style={styles.statCardAccent} />
+                  </CardComponent>
+                );
+              })}
             </View>
 
             {/* Schedule Alert Banner */}

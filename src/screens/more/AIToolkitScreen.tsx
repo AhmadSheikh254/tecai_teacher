@@ -31,29 +31,51 @@ const HeroAiCoreOrb = () => {
         <Defs>
           <SvgLinearGradient id="coreGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor="#00FFCC" />
-            <Stop offset="50%" stopColor="#0066FF" />
-            <Stop offset="100%" stopColor="#7C3AED" />
+            <Stop offset="40%" stopColor="#3B82F6" />
+            <Stop offset="80%" stopColor="#8B5CF6" />
+            <Stop offset="100%" stopColor="#EC4899" />
           </SvgLinearGradient>
           <SvgLinearGradient id="ringLight" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.8} />
-            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0.05} />
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.9} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0.02} />
+          </SvgLinearGradient>
+          <SvgLinearGradient id="sheenOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.55} />
+            <Stop offset="40%" stopColor="#FFFFFF" stopOpacity={0.05} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
           </SvgLinearGradient>
         </Defs>
 
-        {/* Orbit Rings */}
-        <Circle cx="60" cy="60" r="50" stroke="url(#ringLight)" strokeWidth={1} fill="none" opacity={0.3} />
-        <Circle cx="60" cy="60" r="42" stroke="#00FFCC" strokeWidth={1.2} strokeDasharray="3,6" fill="none" opacity={0.6} />
-        <Circle cx="60" cy="60" r="34" stroke="#60A5FA" strokeWidth={0.8} strokeDasharray="4,8" fill="none" opacity={0.4} />
+        {/* Inner Radial Background Glow */}
+        <Circle cx="60" cy="60" r="32" fill="#3B82F6" opacity={0.16} />
 
-        {/* Outer orbital nodes */}
-        <Circle cx="60" cy="10" r="3" fill="#00FFCC" />
-        <Circle cx="60" cy="110" r="3" fill="#7C3AED" />
-        <Circle cx="18" cy="60" r="2.5" fill="#60A5FA" />
-        <Circle cx="102" cy="60" r="2.5" fill="#FFFFFF" />
+        {/* Outer Orbit Ring 1 - Solid soft line */}
+        <Circle cx="60" cy="60" r="54" stroke="url(#ringLight)" strokeWidth={1} fill="none" opacity={0.35} />
+        
+        {/* Orbit Ring 2 - Dash-array core glow ring */}
+        <Circle cx="60" cy="60" r="46" stroke="#00FFCC" strokeWidth={1.5} strokeDasharray="4,8" fill="none" opacity={0.7} />
+        
+        {/* Orbit Ring 3 - Fine high-speed indicator dashes */}
+        <Circle cx="60" cy="60" r="38" stroke="#60A5FA" strokeWidth={0.8} strokeDasharray="1,5" fill="none" opacity={0.5} />
+
+        {/* Outer orbital nodes & tech particles */}
+        <Circle cx="60" cy="6" r="3.5" fill="#00FFCC" />
+        <Circle cx="60" cy="114" r="3.5" fill="#EC4899" />
+        <Circle cx="14" cy="60" r="3" fill="#3B82F6" />
+        <Circle cx="106" cy="60" r="3" fill="#FFFFFF" opacity={0.9} />
+        
+        {/* Micro-nodes floating inside orbit */}
+        <Circle cx="28" cy="28" r="1.5" fill="#60A5FA" opacity={0.8} />
+        <Circle cx="92" cy="92" r="1.5" fill="#8B5CF6" opacity={0.8} />
+        <Circle cx="92" cy="28" r="1.5" fill="#00FFCC" opacity={0.8} />
+        <Circle cx="28" cy="92" r="1.5" fill="#FFFFFF" opacity={0.8} />
 
         {/* Center 3D Glowing Core Sphere */}
         <Circle cx="60" cy="60" r="24" fill="url(#coreGlowGrad)" />
-        <Circle cx="60" cy="60" r="24" fill="url(#ringLight)" opacity={0.15} />
+        {/* 3D Glass Sheen Top Layer */}
+        <Circle cx="60" cy="60" r="24" fill="url(#sheenOverlay)" />
+        {/* Center rim light reflection */}
+        <Path d="M40 50 C45 40, 75 40, 80 50 C70 45, 50 45, 40 50" fill="#FFFFFF" opacity={0.25} />
 
         {/* Inner auto-awesome icon symbol */}
         <G transform="translate(49, 49)">
@@ -211,6 +233,276 @@ const ToolIcon = ({ toolId, color }: { toolId: string; color: string }) => {
       );
     default:
       return <MaterialIcons name="auto-awesome" size={24} color={color} />;
+  }
+};
+
+// Custom functional component to render high-contrast subtle watermark SVGs for the background of the tool cards
+const ToolWatermark = ({ toolId, color }: { toolId: string; color: string }) => {
+  // Common tech dot matrix overlay
+  const TechDotMatrix = () => (
+    <G opacity={0.24}>
+      <Circle cx="85" cy="15" r="1.5" fill={color} />
+      <Circle cx="70" cy="15" r="1.5" fill={color} />
+      <Circle cx="55" cy="15" r="1.5" fill={color} />
+      <Circle cx="85" cy="30" r="1.5" fill={color} />
+      <Circle cx="70" cy="30" r="1.5" fill={color} />
+      <Circle cx="55" cy="30" r="1.5" fill={color} />
+      <Circle cx="85" cy="45" r="1.5" fill={color} />
+      <Circle cx="70" cy="45" r="1.5" fill={color} />
+      <Circle cx="55" cy="45" r="1.5" fill={color} />
+    </G>
+  );
+
+  switch (toolId) {
+    case 'lesson_plan':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="30" cy="50" r="28" stroke={color} strokeWidth={0.8} strokeDasharray="3,4" fill="none" opacity={0.15} />
+          {/* Shaded Binder Sheet - White body with color borders */}
+          <Rect x="25" y="15" width="50" height="70" rx="6" fill="#FFFFFF" stroke={color} strokeWidth={2.2} />
+          <Rect x="25" y="15" width="50" height="70" rx="6" fill={color} opacity={0.05} pointerEvents="none" />
+          {/* Top binder loops in metal slate */}
+          <Path d="M34 15 C34 9, 39 9, 39 15 M46 15 C46 9, 51 9, 51 15 M58 15 C58 9, 63 9, 63 15 M70 15 C70 9, 75 9, 75 15" fill="none" stroke="#64748B" strokeWidth={1.8} />
+          {/* Written lines */}
+          <Line x1="33" y1="32" x2="67" y2="32" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          <Line x1="33" y1="44" x2="58" y2="44" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          <Line x1="33" y1="56" x2="67" y2="56" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          <Line x1="33" y1="68" x2="50" y2="68" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          {/* Success checklist circular seal in Solid Green */}
+          <Circle cx="66" cy="68" r="8" fill="#10B981" />
+          <Path d="M62 68 L65 71 L71 65" stroke="#FFFFFF" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      );
+    case 'worksheet':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="50" cy="50" r="35" stroke={color} strokeWidth={0.7} strokeDasharray="4,6" fill="none" opacity={0.12} />
+          {/* Shaded Printable Worksheet - White layout sheet */}
+          <Rect x="20" y="18" width="52" height="66" rx="6" fill="#FFFFFF" stroke={color} strokeWidth={2} />
+          <Rect x="20" y="18" width="52" height="66" rx="6" fill={color} opacity={0.05} pointerEvents="none" />
+          <Line x1="30" y1="30" x2="62" y2="30" stroke="#94A3B8" strokeWidth={1.8} />
+          <Line x1="30" y1="42" x2="50" y2="42" stroke={color} strokeWidth={2} />
+          <Line x1="30" y1="54" x2="62" y2="54" stroke="#94A3B8" strokeWidth={1.8} />
+          {/* Floating Pencil Graphic - Multi-colored 3D layout */}
+          <G transform="translate(18, 12)">
+            {/* Pencil shaft in orange-yellow */}
+            <Path d="M45 45 L62 28 L72 38 L55 55 Z" fill="#F59E0B" />
+            <Path d="M45 45 L62 28 L72 38 L55 55 Z" fill="none" stroke="#334155" strokeWidth={1.2} />
+            {/* Pencil eraser in soft pink */}
+            <Path d="M62 28 L66 24 C68 22, 71 22, 73 24 L74 25 C76 27, 76 30, 74 32 L72 38 Z" fill="#F43F5E" />
+            {/* Pencil metal ring in silver */}
+            <Line x1="62" y1="28" x2="72" y2="38" stroke="#94A3B8" strokeWidth={2} />
+            {/* Pencil point wood tip */}
+            <Path d="M45 45 L41 51 L47 47 Z" fill="#FDE047" />
+            {/* Pencil black lead tip */}
+            <Path d="M41 51 L39 53 L41 51 L42 50 Z" fill="#334155" stroke="#334155" strokeWidth={1.5} />
+          </G>
+        </Svg>
+      );
+    case 'chatbot':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="50" cy="50" r="38" stroke={color} strokeWidth={0.6} fill="none" opacity={0.1} />
+          {/* Left User Bubble - Clean White with Color Border */}
+          <Path d="M 15 42 Q 15 24, 38 24 Q 61 24, 61 42 Q 61 60, 48 60 L 35 73 V 60 Q 15 60, 15 42 Z" fill="#FFFFFF" stroke={color} strokeWidth={2.2} />
+          {/* Right AI bubble overlap - Vibrant Color Fill with Soft Opacity */}
+          <Path d="M 45 56 Q 45 42, 63 42 Q 81 42, 81 56 Q 81 70, 71 70 L 62 80 V 70 Q 45 70, 45 56 Z" fill={color} opacity={0.24} stroke={color} strokeWidth={1.8} />
+          {/* Orange dialogue dots */}
+          <Circle cx="28" cy="42" r="3" fill="#F97316" />
+          <Circle cx="38" cy="42" r="3" fill="#F97316" />
+          <Circle cx="48" cy="42" r="3" fill="#F97316" />
+        </Svg>
+      );
+    case 'para_mcq':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="50" cy="50" r="32" stroke={color} strokeWidth={0.8} strokeDasharray="3,3" fill="none" opacity={0.16} />
+          {/* Shaded MCQ Document - Clean White Sheet */}
+          <Path d="M25 15 H65 L80 30 V85 C80 88, 77 88, 77 88 H25 C22 88, 22 85, 22 85 V18 C22 15, 25 15, 25 15" fill="#FFFFFF" stroke={color} strokeWidth={2.2} />
+          <Path d="M25 15 H65 L80 30 V85 C80 88, 77 88, 77 88 H25 C22 88, 22 85, 22 85 V18 C22 15, 25 15, 25 15" fill={color} opacity={0.04} pointerEvents="none" />
+          <Path d="M65 15 V30 H80" fill="#F1F5F9" stroke={color} strokeWidth={1.8} />
+          
+          {/* Choice Option 1 - Normal Radio */}
+          <Circle cx="35" cy="46" r="4.5" stroke="#94A3B8" strokeWidth={1.8} fill="#FFFFFF" />
+          <Line x1="45" y1="46" x2="68" y2="46" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          {/* Choice Option 2 - Correct Green Checked Radio */}
+          <Circle cx="35" cy="58" r="4.5" stroke="#10B981" strokeWidth={1.8} fill="#DCFCE7" />
+          <Circle cx="35" cy="58" r="2" fill="#10B981" />
+          <Line x1="45" y1="58" x2="68" y2="58" stroke="#10B981" strokeWidth={2.2} strokeLinecap="round" />
+          {/* Choice Option 3 - Normal Radio */}
+          <Circle cx="35" cy="70" r="4.5" stroke="#94A3B8" strokeWidth={1.8} fill="#FFFFFF" />
+          <Line x1="45" y1="70" x2="68" y2="70" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+        </Svg>
+      );
+    case 'fill_blanks':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          {/* Shaded exercise background board */}
+          <Rect x="10" y="12" width="80" height="76" rx="8" fill="#FFFFFF" stroke={color} strokeWidth={1.5} />
+          <Rect x="10" y="12" width="80" height="76" rx="8" fill={color} opacity={0.04} pointerEvents="none" />
+          <Line x1="18" y1="26" x2="82" y2="26" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          <Line x1="18" y1="42" x2="42" y2="42" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          {/* Advanced Cloze pill design - Gold filled badge */}
+          <Rect x="47" y="32" width="36" height="18" rx="9" fill="#FEF3C7" stroke="#F59E0B" strokeWidth={1.8} />
+          <Line x1="56" y1="41" x2="74" y2="41" stroke="#F59E0B" strokeWidth={2} strokeLinecap="round" />
+          
+          <Line x1="18" y1="58" x2="82" y2="58" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          <Line x1="18" y1="74" x2="52" y2="74" stroke="#94A3B8" strokeWidth={2} strokeLinecap="round" />
+          {/* Pill design 2 - Purple filled badge */}
+          <Rect x="58" y="65" width="24" height="18" rx="9" fill="#F3E8FF" stroke="#8B5CF6" strokeWidth={1.8} />
+        </Svg>
+      );
+    case 'tf_gen':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <G opacity={0.9}>
+            {/* Green glowing True ring with Solid fill */}
+            <Circle cx="34" cy="38" r="19" fill="#E8FDF0" stroke="#10B981" strokeWidth={2.2} />
+            <Path d="M26 38 L31 43 L42 32" stroke="#10B981" strokeWidth={3} fill="none" strokeLinecap="round" />
+            <Circle cx="34" cy="38" r="23" stroke="#10B981" strokeWidth={0.8} strokeDasharray="3,3" fill="none" opacity={0.4} />
+            
+            {/* Red glowing False ring overlapping with Solid fill */}
+            <Circle cx="64" cy="62" r="19" fill="#FDF2F2" stroke="#EF4444" strokeWidth={2.2} />
+            <Path d="M55 53 L73 71 M73 53 L55 71" stroke="#EF4444" strokeWidth={3} strokeLinecap="round" />
+            <Circle cx="64" cy="62" r="23" stroke="#EF4444" strokeWidth={0.8} strokeDasharray="3,3" fill="none" opacity={0.4} />
+          </G>
+        </Svg>
+      );
+    case 'qa_builder':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="50" cy="50" r="32" stroke={color} strokeWidth={0.8} strokeDasharray="4,6" fill="none" opacity={0.12} />
+          {/* Question node (Q) - Blue gradient header card */}
+          <Rect x="15" y="20" width="46" height="28" rx="8" fill="#DBEAFE" stroke="#3B82F6" strokeWidth={2} />
+          <SvgText x="21" y="39" fill="#1E40AF" fontSize="14" fontWeight="bold">Q</SvgText>
+          <Line x1="36" y1="34" x2="52" y2="34" stroke="#1E40AF" strokeWidth={2.2} strokeLinecap="round" />
+          
+          {/* Answer node (A) overlapping in 3D perspective - Purple header card */}
+          <Rect x="38" y="44" width="46" height="28" rx="8" fill="#F3E8FF" stroke="#8B5CF6" strokeWidth={1.8} />
+          <SvgText x="44" y="63" fill="#5B21B6" fontSize="14" fontWeight="bold">A</SvgText>
+          <Line x1="59" y1="58" x2="75" y2="58" stroke="#5B21B6" strokeWidth={2.2} strokeLinecap="round" />
+          
+          {/* Connecting linking thread line */}
+          <Path d="M45 48 C45 52, 30 40, 38 44" stroke="#8B5CF6" strokeWidth={1.5} strokeDasharray="2,3" />
+        </Svg>
+      );
+    case 'match_maker':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <G strokeWidth={2} fill="none">
+            {/* Color nodes on Left */}
+            <Circle cx="25" cy="24" r="7" fill="#EFF6FF" stroke="#3B82F6" />
+            <Circle cx="25" cy="50" r="7" fill="#FDF2F8" stroke="#EC4899" />
+            <Circle cx="25" cy="76" r="7" fill="#FAF5FF" stroke="#8B5CF6" />
+            
+            {/* Color nodes on Right */}
+            <Circle cx="75" cy="24" r="7" fill="#FAF5FF" stroke="#8B5CF6" />
+            <Circle cx="75" cy="50" r="7" fill="#EFF6FF" stroke="#3B82F6" />
+            <Circle cx="75" cy="76" r="7" fill="#FDF2F8" stroke="#EC4899" />
+            
+            {/* Matching paths */}
+            <Path d="M33 24 L67 50" stroke="#3B82F6" strokeDasharray="3,3" />
+            <Path d="M33 50 L67 76" stroke="#EC4899" strokeDasharray="3,3" />
+            <Path d="M33 76 L67 24" stroke="#8B5CF6" strokeWidth={2.4} />
+          </G>
+        </Svg>
+      );
+    case 'crossword':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <G stroke={color} strokeWidth={2} fill="none" opacity={0.95}>
+            {/* Grid square structure - filled with various contrast colors */}
+            <Rect x="20" y="20" width="20" height="20" rx="3" fill="#FFFFFF" />
+            <Rect x="40" y="20" width="20" height="20" rx="3" fill="#DBEAFE" />
+            <Rect x="40" y="40" width="20" height="20" rx="3" fill="#FFFFFF" />
+            <Rect x="40" y="60" width="20" height="20" rx="3" fill="#F3E8FF" />
+            <Rect x="60" y="40" width="20" height="20" rx="3" fill="#FFFFFF" />
+            <SvgText x="25.5" y="34.5" fill={color} stroke="none" fontSize="12" fontWeight="bold">A</SvgText>
+            <SvgText x="45.5" y="34.5" fill="#1E40AF" stroke="none" fontSize="12" fontWeight="bold">I</SvgText>
+          </G>
+        </Svg>
+      );
+    case 'excel_gen':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          {/* Spreadsheet clean layout sheet */}
+          <Rect x="15" y="15" width="70" height="70" rx="8" fill="#FFFFFF" stroke="#217346" strokeWidth={2.2} />
+          <Line x1="15" y1="36" x2="85" y2="36" stroke="#217346" strokeWidth={1.8} />
+          <Line x1="15" y1="58" x2="85" y2="58" stroke="#217346" strokeWidth={1.8} />
+          <Line x1="38" y1="15" x2="38" y2="85" stroke="#217346" strokeWidth={1.8} />
+          <Line x1="62" y1="15" x2="62" y2="85" stroke="#217346" strokeWidth={1.8} />
+          
+          {/* Excel colored visual data bars */}
+          <Rect x="20" y="42" width="12" height="10" fill="#217346" opacity={0.35} />
+          <Rect x="44" y="22" width="12" height="10" fill="#F59E0B" opacity={0.45} />
+          <Rect x="68" y="42" width="12" height="36" fill="#3B82F6" opacity={0.3} />
+        </Svg>
+      );
+    case 'presentation':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Line x1="50" y1="65" x2="50" y2="88" stroke="#D24726" strokeWidth={2.8} />
+          <Line x1="28" y1="88" x2="72" y2="88" stroke="#D24726" strokeWidth={2.8} strokeLinecap="round" />
+          {/* Projector slide screen with White fill */}
+          <Rect x="12" y="15" width="76" height="50" rx="8" fill="#FFFFFF" stroke="#D24726" strokeWidth={2.2} />
+          {/* Shaded slide graph background */}
+          <Path d="M12 40 Q50 30, 88 40 L88 65 L12 65 Z" fill="#FEE2E2" opacity={0.5} />
+          {/* Line Chart graph inside screen */}
+          <Path d="M22 48 L36 34 L52 42 L66 24 L78 30" fill="none" stroke="#D24726" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          <Circle cx="36" cy="34" r="3" fill="#D24726" />
+          <Circle cx="66" cy="24" r="3" fill="#D24726" />
+        </Svg>
+      );
+    case 'ai_assistant':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          <Circle cx="50" cy="50" r="35" stroke={color} strokeWidth={0.6} fill="none" opacity={0.08} />
+          {/* Shaded Droid body block */}
+          <Rect x="20" y="25" width="60" height="50" rx="14" fill="#F8FAFC" stroke="#E28743" strokeWidth={2} />
+          <Line x1="10" y1="50" x2="20" y2="50" stroke="#E28743" strokeWidth={3.5} strokeLinecap="round" />
+          <Line x1="80" y1="50" x2="90" y2="50" stroke="#E28743" strokeWidth={3.5} strokeLinecap="round" />
+          <Line x1="50" y1="25" x2="50" y2="12" stroke="#E28743" strokeWidth={2.2} />
+          <Circle cx="50" cy="9" r="4.5" fill="#EF4444" />
+          {/* Glowing blue eyes with concentric rings */}
+          <Circle cx="36" cy="45" r="5" fill="#06B6D4" />
+          <Circle cx="36" cy="45" r="9" stroke="#06B6D4" strokeWidth={0.8} fill="none" opacity={0.4} />
+          <Circle cx="64" cy="45" r="5" fill="#06B6D4" />
+          <Circle cx="64" cy="45" r="9" stroke="#06B6D4" strokeWidth={0.8} fill="none" opacity={0.4} />
+          <Path d="M38 60 Q50 67, 62 60" stroke="#E28743" strokeWidth={2.5} strokeLinecap="round" fill="none" />
+        </Svg>
+      );
+    case 'story_book':
+      return (
+        <Svg width="110" height="110" viewBox="0 0 100 100">
+          <TechDotMatrix />
+          {/* Magical orbiting gold stars */}
+          <Path d="M12 25 L14 28 L17 28 L15 30 L16 33 L13 31 L11 33 L12 30 L10 28 L13 28 Z" fill="#F59E0B" />
+          <Path d="M78 16 L79.5 19.5 L83 19.5 L80 21.5 L81.5 25 L78 23 L74.5 25 L76 21.5 L73 19.5 L76.5 19.5 Z" fill="#F59E0B" />
+          {/* Magic open book pages with White/Slate color blocks */}
+          <Path d="M50 80 C50 80, 38 66, 12 66 V18 C38 18, 50 32, 50 32 Z" fill="#FFFFFF" stroke="#8E44AD" strokeWidth={2} />
+          <Path d="M50 80 C50 80, 62 66, 88 66 V18 C62 18, 50 32, 50 32 Z" fill="#F5F3FF" stroke="#8E44AD" strokeWidth={2} />
+          <Line x1="50" y1="20" x2="50" y2="80" stroke="#8E44AD" strokeWidth={2.8} />
+          {/* Tiny written lines in the book pages */}
+          <Line x1="22" y1="34" x2="42" y2="34" stroke="#B28FCE" strokeWidth={1} />
+          <Line x1="22" y1="46" x2="38" y2="46" stroke="#B28FCE" strokeWidth={1} />
+          <Line x1="58" y1="34" x2="78" y2="34" stroke="#B28FCE" strokeWidth={1} />
+          <Line x1="58" y1="46" x2="74" y2="46" stroke="#B28FCE" strokeWidth={1} />
+        </Svg>
+      );
+    default:
+      return null;
   }
 };
 
@@ -517,29 +809,38 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
         
         {/* ── GLOWING AURORA GRADIENT HERO BANNER ── */}
         <LinearGradient 
-          colors={['#0F255C', '#0C3090', '#0284C7']} 
+          colors={['#0A1938', '#0E2E8C', '#1D4ED8']} // richer, deeper futuristic gradient transition
           start={{ x: 0, y: 0 }} 
           end={{ x: 1, y: 1 }} 
           style={styles.heroBanner}
         >
+          {/* Diagonal Glass Sheen overlay */}
+          <LinearGradient
+            colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.02)', 'rgba(255, 255, 255, 0)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+
           {/* Subtle shine bar */}
           <View style={styles.glassTopShine} />
 
           {/* Floating glowing circles */}
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#38BDF8', width: 220, height: 220, top: -75, right: -40, opacity: 0.28 }]} />
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#7C3AED', width: 140, height: 140, bottom: -45, left: -10, opacity: 0.15 }]} />
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#38BDF8', width: 220, height: 220, top: -75, right: -40, opacity: 0.32 }]} />
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#C084FC', width: 150, height: 150, bottom: -45, left: -10, opacity: 0.2 }]} />
 
           {/* Wavy vector line designs */}
           <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
             <Defs>
               <SvgLinearGradient id="heroWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <Stop offset="0%" stopColor="#00FFCC" stopOpacity={0} />
-                <Stop offset="50%" stopColor="#00E5FF" stopOpacity={0.12} />
-                <Stop offset="100%" stopColor="#60A5FA" stopOpacity={0} />
+                <Stop offset="50%" stopColor="#00FFCC" stopOpacity={0.25} />
+                <Stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
               </SvgLinearGradient>
             </Defs>
-            <Path d="M -10 90 C 40 60, 100 110, 150 90 S 240 60, 300 90" stroke="url(#heroWaveGrad)" strokeWidth={2} fill="none" opacity={0.6} />
-            <Path d="M 0 95 C 50 75, 110 85, 160 75 S 250 85, 310 75" stroke="url(#heroWaveGrad)" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.4} />
+            <Path d="M -10 90 C 40 60, 100 110, 150 90 S 240 60, 300 90" stroke="url(#heroWaveGrad)" strokeWidth={2} fill="none" opacity={0.7} />
+            <Path d="M 0 95 C 50 75, 110 85, 160 75 S 250 85, 310 75" stroke="url(#heroWaveGrad)" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.5} />
           </Svg>
 
           {/* 3D Glowing AI Core Orb (Right side) */}
@@ -585,7 +886,7 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
             {filteredTools.map((tool) => (
               <TouchableOpacity 
                 key={tool.id} 
-                style={[styles.toolCard, { borderLeftColor: tool.color, shadowColor: tool.color, backgroundColor: tool.cardBg || '#FFFFFF' }]}
+                style={[styles.toolCard, { shadowColor: tool.color, backgroundColor: tool.cardBg || '#FFFFFF' }]}
                 activeOpacity={0.85}
                 onPress={() => {
                   const noFrom = { fromScreen: undefined };
@@ -623,6 +924,19 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
+
+                {/* Floating Left Accent Bar with Gradient */}
+                <LinearGradient
+                  colors={[tool.color, tool.color + '33']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.leftAccentBar}
+                />
+
+                {/* Visual Watermark Design */}
+                <View style={styles.cardWatermarkContainer} pointerEvents="none">
+                  <ToolWatermark toolId={tool.id} color={tool.color} />
+                </View>
 
                 {/* Left Icon Orb with custom premium SVG vector graphic */}
                 <View style={[styles.iconBox, { borderColor: tool.color + '30', backgroundColor: tool.bg }]}>
@@ -1042,10 +1356,12 @@ const styles = StyleSheet.create({
     padding: 22,
     overflow: 'hidden',
     position: 'relative',
-    shadowColor: '#0A1F5C',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.14)', // soft glassmorphic border outline
+    shadowColor: '#091E42',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
     elevation: 8,
   },
   glassTopShine: {
@@ -1068,7 +1384,9 @@ const styles = StyleSheet.create({
   },
   heroBadge: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    backgroundColor: 'rgba(0, 255, 204, 0.08)', // glowing translucent background
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 204, 0.25)', // glowing neon border
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
     alignSelf: 'flex-start',
   },
@@ -1133,25 +1451,44 @@ const styles = StyleSheet.create({
   // Tool Card
   toolCard: {
     flexDirection: 'row',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 22, // Slightly larger vertical spacing
+    borderRadius: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 22,
+    minHeight: 114, // increased height for spacious premium look
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderLeftWidth: 5,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9', // softer, cleaner border
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.04, // very soft shadow
+    shadowRadius: 16,
+    elevation: 3,
     position: 'relative',
     overflow: 'hidden',
+  },
+  leftAccentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 20,
+    bottom: 20,
+    width: 6,
+    borderTopRightRadius: 5,
+    borderBottomRightRadius: 5,
   },
   cardWaveBackground: {
     position: 'absolute',
     right: 0,
     bottom: 0,
     opacity: 0.85,
+  },
+  cardWatermarkContainer: {
+    position: 'absolute',
+    right: 74, // shifted left to fully clear the chevron navigation button
+    top: 0,
+    bottom: 0,
+    width: 130,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    opacity: 0.22, // slightly higher opacity for richer visual depth
   },
   cardMetaBadge: {
     paddingHorizontal: 8,

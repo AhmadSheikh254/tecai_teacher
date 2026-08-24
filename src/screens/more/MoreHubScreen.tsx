@@ -21,40 +21,22 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 340;
 
+  const safeNavigate = (target: string) => {
+    navigation.navigate(target);
+  };
+
   // Fully detailed module configs with custom theme colors, subtitles, active badge tags, card backgrounds, and module coordinates
   const modules = [
     { 
       title: 'Lesson Planner', 
       icon: 'event-note', 
       target: 'LessonPlan', 
-      color: '#0d9488', // Teal
-      bg: 'rgba(13, 148, 136, 0.1)', 
-      cardBg: '#F0FDFA', // Light teal tint
+      color: '#d97706', // Gold/Amber
+      bg: 'rgba(217, 119, 6, 0.1)', 
+      cardBg: '#FFFBEB', // Light amber tint
       meta: 'Syllabus & Schedules', 
       badge: 'Term 1',
       code: 'SYS-LP04'
-    },
-    { 
-      title: 'Exam Management', 
-      icon: 'history-edu', 
-      target: 'Exam', 
-      color: '#0052cc', // Royal Blue
-      bg: 'rgba(0, 82, 204, 0.1)', 
-      cardBg: '#F0F9FF', // Light sky tint
-      meta: 'Tests & Grading', 
-      badge: '2 New',
-      code: 'SYS-EX02'
-    },
-    { 
-      title: 'Daily Attendance', 
-      icon: 'how-to-reg', 
-      target: 'Attendance', 
-      color: '#06b6d4', // Cyan
-      bg: 'rgba(6, 182, 212, 0.1)', 
-      cardBg: '#ECFEFF', // Light cyan tint
-      meta: 'Roll Call Records', 
-      badge: '94%',
-      code: 'SYS-AT06'
     },
     { 
       title: 'Students', 
@@ -79,38 +61,38 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
       code: 'SYS-TT07'
     },
     { 
-      title: 'Report Issues', 
-      icon: 'report-problem', 
-      target: 'Issue', 
-      color: '#ea580c', // Orange
-      bg: 'rgba(234, 88, 12, 0.1)', 
-      cardBg: '#FFF7ED', // Light orange tint
-      meta: 'Support Desk Logs', 
-      badge: '1 Urgent',
-      code: 'SYS-IS03'
+      title: 'Daily Attendance', 
+      icon: 'how-to-reg', 
+      target: 'Attendance', 
+      color: '#06b6d4', // Cyan
+      bg: 'rgba(6, 182, 212, 0.1)', 
+      cardBg: '#ECFEFF', // Light cyan tint
+      meta: 'Roll Call Records', 
+      badge: '94%',
+      code: 'SYS-AT06'
     },
     { 
-      title: 'Salary & Payroll', 
+      title: 'Exam Management', 
+      icon: 'history-edu', 
+      target: 'Exam', 
+      color: '#0052cc', // Royal Blue
+      bg: 'rgba(0, 82, 204, 0.1)', 
+      cardBg: '#F0F9FF', // Light sky tint
+      meta: 'Tests & Grading', 
+      badge: '2 New',
+      code: 'SYS-EX02'
+    },
+    { 
+      title: 'Salary Payment', 
       icon: 'payments', 
       target: 'Salary', 
-      color: '#d97706', // Gold/Amber
-      bg: 'rgba(217, 119, 6, 0.1)', 
-      cardBg: '#FFFBEB', // Light amber tint
-      meta: 'Salary Slip Logs', 
-      badge: 'Paid',
-      code: 'SYS-SA08'
-    },
-    { 
-      title: 'Parent Complains', 
-      icon: 'feedback', 
-      target: 'Complain', 
-      color: '#e11d48', // Rose
+      color: '#e11d48', // Crimson Rose
       bg: 'rgba(225, 29, 72, 0.1)', 
       cardBg: '#FFF1F2', // Light rose tint
-      meta: 'Inbox Feedbacks', 
-      badge: '1 Urgent',
-      code: 'SYS-CP09'
-    },
+      meta: 'Payroll & Slips', 
+      badge: 'Paid',
+      code: 'SYS-SL08'
+    }
   ];
 
   // Helper to chunk elements for standard rows
@@ -159,7 +141,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
         <TouchableOpacity 
           style={styles.aiCard}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('AIToolkit')}
+          onPress={() => safeNavigate('AIToolkit')}
         >
           {/* Layered luminous background gradients */}
           <LinearGradient
@@ -282,7 +264,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       key={index} 
                       style={[styles.card, styles.examGridCard]}
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Exam')}
+                      onPress={() => safeNavigate('Exam')}
                     >
                       {/* Luminous Light Blue Background Gradient */}
                       <LinearGradient
@@ -405,225 +387,117 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                   );
                 }
 
-                // SPECIAL DETAILED 2-COLUMN CARD 2: Report Issues
-                if (item.target === 'Issue') {
-                  return (
-                    <TouchableOpacity 
-                      key={index} 
-                      style={[styles.card, styles.issueGridCard]}
-                      activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Issue')}
-                    >
-                      {/* Luminous Light Orange Background Gradient */}
-                      <LinearGradient
-                        colors={['#FFFBF5', '#FFF7ED', '#FFEDD5']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      {/* Glass Sheen Glare */}
-                      <LinearGradient
-                        colors={['rgba(255, 255, 255, 0.65)', 'rgba(255, 255, 255, 0)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                        pointerEvents="none"
-                      />
 
-                      {/* Corner Glow Mesh */}
-                      <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(234, 88, 12, 0.15)' }]} pointerEvents="none" />
-
-                      {/* Left Accent Border Strip */}
-                      <View style={[styles.gridLeftBorder, { backgroundColor: '#ea580c' }]} />
-
-                      {/* Single Premium Glass Warning Triangle */}
-                      <View style={styles.issueTriangleBg} pointerEvents="none">
-                        {/* Light frosted backdrop */}
-                        <LinearGradient
-                          colors={['rgba(255, 247, 237, 0.88)', 'rgba(254, 232, 208, 0.65)']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.issueTriangleGlassCard}
-                          pointerEvents="none"
-                        />
-                        {/* Single Triangle */}
-                        <View style={styles.issueTriangleSingle}>
-                          <MaterialIcons name="warning" size={88} color="rgba(234, 88, 12, 0.45)" />
-                          {/* Glass sheen */}
-                          <LinearGradient
-                            colors={['rgba(255,255,255,0.30)', 'rgba(255,255,255,0)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 0, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                            pointerEvents="none"
-                          />
-                        </View>
-                        {/* Top glare */}
-                        <LinearGradient
-                          colors={['rgba(255,255,255,0.35)', 'rgba(255,255,255,0)']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={StyleSheet.absoluteFill}
-                          pointerEvents="none"
-                        />
-                      </View>
-
-                      {/* 3x3 Dot Matrix Pattern */}
-                      <View style={styles.gridDotMatrix} pointerEvents="none">
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                      </View>
-
-                      {/* Top Row: Icon Tile + Status Badge */}
-                      <View style={styles.gridCardTopRow}>
-                        <View style={styles.issueGridIconTile}>
-                          <LinearGradient
-                            colors={['#ea580c', '#f97316']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <View style={styles.iconGlassShine} />
-                          <MaterialIcons name="warning" size={20} color="#ffffff" />
-                        </View>
-
-                        {/* No Badge */}
-                        <View style={styles.gridCardTopRight} />
-                      </View>
-
-                      {/* Bottom Row: Title Block + Halo Action Orb */}
-                      <View style={styles.gridCardBottomRow}>
-                        <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Report Issues</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Support Desk Logs</Text>
-                        </View>
-
-                        <View style={[styles.gridActionHalo, { borderColor: 'rgba(234, 88, 12, 0.18)' }]}>
-                          <View style={styles.gridActionOrbGlass}>
-                            <LinearGradient
-                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(254, 243, 199, 0.7)']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                              style={StyleSheet.absoluteFill}
-                            />
-                            <MaterialIcons name="arrow-forward" size={13} color="#ea580c" />
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }
 
                 // SPECIAL DETAILED 2-COLUMN CARD 3: Lesson Planner
                 if (item.target === 'LessonPlan') {
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.card, styles.lessonGridCard]}
-                      activeOpacity={0.8}
-                      onPress={() => navigation.navigate('LessonPlan')}
-                    >
-                      {/* Teal Gradient Background */}
-                      <LinearGradient
-                        colors={['#F0FDFA', '#CCFBF1', '#99F6E4']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      {/* Glass Sheen Glare */}
-                      <LinearGradient
-                        colors={['rgba(255,255,255,0.65)', 'rgba(255,255,255,0)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                        pointerEvents="none"
-                      />
-                      {/* Corner Glow Mesh */}
-                      <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(13,148,136,0.12)' }]} pointerEvents="none" />
-                      {/* Left Accent Border */}
-                      <View style={[styles.gridLeftBorder, { backgroundColor: '#0d9488' }]} />
-
-                      {/* Premium Calendar Illustration */}
-                      <View style={styles.lessonCalendarSheet} pointerEvents="none">
-                        <LinearGradient
-                          colors={['rgba(255,255,255,0.94)', 'rgba(255,255,255,0)']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 0, y: 1 }}
-                          style={StyleSheet.absoluteFill}
-                          pointerEvents="none"
-                        />
-                        {/* Calendar Header */}
-                        <View style={styles.lessonCalHeader}>
-                          <View style={styles.lessonCalHeaderDot} />
-                          <View style={styles.lessonCalHeaderLine} />
-                        </View>
-                        {/* Divider */}
-                        <View style={styles.lessonCalDivider} />
-                        {/* Week grid: 5 day columns */}
-                        <View style={styles.lessonCalWeekRow}>
-                          {['M','T','W','T','F'].map((d, i) => (
-                            <View key={i} style={[styles.lessonCalDayCell, i === 2 && styles.lessonCalDayCellActive]}>
-                              <Text style={[styles.lessonCalDayText, i === 2 && styles.lessonCalDayTextActive]}>{d}</Text>
-                            </View>
-                          ))}
-                        </View>
-                        {/* Subject slots row */}
-                        <View style={styles.lessonCalSlotRow}>
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.18)', flex: 2 }]} />
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.10)', flex: 1 }]} />
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.22)', flex: 1.5 }]} />
-                        </View>
-                        {/* Second slots row */}
-                        <View style={styles.lessonCalSlotRow}>
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.10)', flex: 1 }]} />
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.20)', flex: 2 }]} />
-                          <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(13,148,136,0.08)', flex: 1 }]} />
-                        </View>
-                      </View>
-
-                      {/* Dot Matrix */}
-                      <View style={styles.gridDotMatrix} pointerEvents="none">
-                        <View style={styles.dotRow}><View style={styles.dotTeal} /><View style={styles.dotTeal} /><View style={styles.dotTeal} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotTeal} /><View style={styles.dotTeal} /><View style={styles.dotTeal} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotTeal} /><View style={styles.dotTeal} /><View style={styles.dotTeal} /></View>
-                      </View>
-
-                      {/* Top Row: Icon only */}
-                      <View style={styles.gridCardTopRow}>
-                        <View style={styles.lessonGridIconTile}>
-                          <LinearGradient
-                            colors={['#0d9488', '#14b8a6']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <View style={styles.iconGlassShine} />
-                          <MaterialIcons name="event-note" size={20} color="#ffffff" />
-                        </View>
-                      </View>
-
-                      {/* Bottom Row: Title + Arrow */}
-                      <View style={styles.gridCardBottomRow}>
-                        <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Lesson Planner</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Syllabus & Schedules</Text>
-                        </View>
-                        <View style={[styles.gridActionHalo, { borderColor: 'rgba(13,148,136,0.18)' }]}>
-                          <View style={styles.gridActionOrbGlass}>
-                            <LinearGradient
-                              colors={['rgba(255,255,255,0.95)', 'rgba(204,251,241,0.7)']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                              style={StyleSheet.absoluteFill}
-                            />
-                            <MaterialIcons name="arrow-forward" size={13} color="#0d9488" />
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }
+                   return (
+                     <TouchableOpacity
+                       key={index}
+                       style={[styles.card, styles.lessonGridCard]}
+                       activeOpacity={0.8}
+                       onPress={() => safeNavigate('LessonPlan')}
+                     >
+                       {/* Amber/Gold Gradient Background */}
+                       <LinearGradient
+                         colors={['#FFFBEB', '#FEF3C7', '#FDE68A']}
+                         start={{ x: 0, y: 0 }}
+                         end={{ x: 1, y: 1 }}
+                         style={StyleSheet.absoluteFill}
+                       />
+                       {/* Glass Sheen Glare */}
+                       <LinearGradient
+                         colors={['rgba(255,255,255,0.65)', 'rgba(255,255,255,0)']}
+                         start={{ x: 0, y: 0 }}
+                         end={{ x: 1, y: 1 }}
+                         style={StyleSheet.absoluteFill}
+                         pointerEvents="none"
+                       />
+                       {/* Corner Glow Mesh */}
+                       <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(217,119,6,0.12)' }]} pointerEvents="none" />
+                       {/* Left Accent Border */}
+                       <View style={[styles.gridLeftBorder, { backgroundColor: '#d97706' }]} />
+ 
+                       {/* Premium Calendar Illustration */}
+                       <View style={styles.lessonCalendarSheet} pointerEvents="none">
+                         <LinearGradient
+                           colors={['rgba(255,255,255,0.94)', 'rgba(254,243,199,0.5)']}
+                           start={{ x: 0, y: 0 }}
+                           end={{ x: 0, y: 1 }}
+                           style={StyleSheet.absoluteFill}
+                           pointerEvents="none"
+                         />
+                         {/* Calendar Header */}
+                         <View style={styles.lessonCalHeader}>
+                           <View style={[styles.lessonCalHeaderDot, { backgroundColor: '#d97706' }]} />
+                           <View style={[styles.lessonCalHeaderLine, { backgroundColor: 'rgba(217,119,6,0.25)' }]} />
+                         </View>
+                         {/* Divider */}
+                         <View style={styles.lessonCalDivider} />
+                         {/* Week grid: 5 day columns */}
+                         <View style={styles.lessonCalWeekRow}>
+                           {['M','T','W','T','F'].map((d, i) => (
+                             <View key={i} style={[styles.lessonCalDayCell, i === 2 && { backgroundColor: '#d97706', borderColor: '#fbbf24' }]}>
+                               <Text style={[styles.lessonCalDayText, i === 2 && { color: '#ffffff', fontWeight: '900' }]}>{d}</Text>
+                             </View>
+                           ))}
+                         </View>
+                         {/* Subject slots row */}
+                         <View style={styles.lessonCalSlotRow}>
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.18)', flex: 2 }]} />
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.10)', flex: 1 }]} />
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.22)', flex: 1.5 }]} />
+                         </View>
+                         {/* Second slots row */}
+                         <View style={styles.lessonCalSlotRow}>
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.10)', flex: 1 }]} />
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.20)', flex: 2 }]} />
+                           <View style={[styles.lessonCalSlot, { backgroundColor: 'rgba(217,119,6,0.08)', flex: 1 }]} />
+                         </View>
+                       </View>
+ 
+                       {/* Dot Matrix */}
+                       <View style={styles.gridDotMatrix} pointerEvents="none">
+                         <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                         <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                         <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                       </View>
+ 
+                       {/* Top Row: Icon only */}
+                       <View style={styles.gridCardTopRow}>
+                         <View style={styles.lessonGridIconTile}>
+                           <LinearGradient
+                             colors={['#d97706', '#fbbf24']}
+                             start={{ x: 0, y: 0 }}
+                             end={{ x: 1, y: 1 }}
+                             style={StyleSheet.absoluteFill}
+                           />
+                           <View style={styles.iconGlassShine} />
+                           <MaterialIcons name="event-note" size={20} color="#ffffff" />
+                         </View>
+                       </View>
+ 
+                       {/* Bottom Row: Title + Arrow */}
+                       <View style={styles.gridCardBottomRow}>
+                         <View style={styles.gridTitleBlock}>
+                           <Text style={styles.gridCardTitle} numberOfLines={1}>Lesson Planner</Text>
+                           <Text style={styles.gridCardSubtitle} numberOfLines={1}>Syllabus & Schedules</Text>
+                         </View>
+                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(217,119,6,0.18)' }]}>
+                           <View style={styles.gridActionOrbGlass}>
+                             <LinearGradient
+                               colors={['rgba(255,255,255,0.95)', 'rgba(254,243,199,0.7)']}
+                               start={{ x: 0, y: 0 }}
+                               end={{ x: 1, y: 1 }}
+                               style={StyleSheet.absoluteFill}
+                             />
+                             <MaterialIcons name="arrow-forward" size={13} color="#d97706" />
+                           </View>
+                         </View>
+                       </View>
+                     </TouchableOpacity>
+                   );
+                 }
 
                 // SPECIAL DETAILED 2-COLUMN CARD 4: Students Roster
                 if (item.target === 'Students') {
@@ -632,7 +506,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       key={index}
                       style={[styles.card, styles.studentGridCard]}
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Students')}
+                      onPress={() => safeNavigate('Students')}
                     >
                       {/* Emerald Gradient Background */}
                       <LinearGradient
@@ -752,7 +626,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       key={index}
                       style={[styles.card, styles.attendanceGridCard]}
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Attendance')}
+                      onPress={() => safeNavigate('Attendance')}
                     >
                       {/* Cyan Gradient Background */}
                       <LinearGradient
@@ -853,7 +727,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       key={index}
                       style={[styles.card, styles.timetableGridCard]}
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('TimeTable')}
+                      onPress={() => safeNavigate('TimeTable')}
                     >
                       {/* Violet Gradient Background */}
                       <LinearGradient
@@ -1040,143 +914,14 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                   );
                 }
 
-                // SPECIAL DETAILED 2-COLUMN CARD 7: Salary & Payroll
+                // SPECIAL DETAILED 2-COLUMN CARD 6: Salary Payment
                 if (item.target === 'Salary') {
                   return (
                     <TouchableOpacity
                       key={index}
                       style={[styles.card, styles.salaryGridCard]}
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Salary')}
-                    >
-                      {/* Amber/Gold Gradient Background */}
-                      <LinearGradient
-                        colors={['#FFFBEB', '#FEF3C7', '#FDE68A']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      {/* Glass Sheen Glare */}
-                      <LinearGradient
-                        colors={['rgba(255, 255, 255, 0.65)', 'rgba(255, 255, 255, 0)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                        pointerEvents="none"
-                      />
-                      {/* Corner Glow Mesh */}
-                      <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(217,119,6,0.12)' }]} pointerEvents="none" />
-                      {/* Left Accent Border */}
-                      <View style={[styles.gridLeftBorder, { backgroundColor: '#d97706' }]} />
-
-                      {/* Premium Salary Documents & Card Illustration */}
-                      <View style={styles.salaryVisualContainer} pointerEvents="none">
-                        {/* Receipt Sheet */}
-                        <View style={styles.salaryReceiptSheet}>
-                          <LinearGradient
-                            colors={['rgba(255, 255, 255, 0.94)', 'rgba(254, 243, 199, 0.5)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 0, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <View style={styles.salaryReceiptHeaderLine} />
-                          <View style={styles.salaryReceiptLineLong} />
-                          <View style={styles.salaryReceiptLineMedium} />
-                          <View style={styles.salaryReceiptLineShort} />
-                        </View>
-
-                        {/* Credit Card Overlay */}
-                        <View style={styles.salaryCreditCard}>
-                          <LinearGradient
-                            colors={['#fbbf24', '#d97706']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <View style={styles.creditCardGlassSheen} />
-                          {/* Micro Chip with inner lines */}
-                          <View style={styles.creditCardChip}>
-                            <View style={styles.chipInnerLineH} />
-                            <View style={styles.chipInnerLineV} />
-                          </View>
-                          {/* Wireless wave indicator */}
-                          <View style={styles.creditCardContactless}>
-                            <MaterialIcons name="wifi" size={6} color="rgba(255, 255, 255, 0.8)" style={{ transform: [{ rotate: '90deg' }] }} />
-                          </View>
-                          {/* Imprinted Card Numbers */}
-                          <Text style={styles.creditCardNumberText}>5412  8834  7920  0018</Text>
-                          {/* Cardholder name & Expiry row */}
-                          <View style={styles.creditCardMetaRow}>
-                            <Text style={styles.creditCardMetaText}>ACADEMIC OS</Text>
-                            <Text style={styles.creditCardMetaText}>12/29</Text>
-                          </View>
-                          {/* Card bottom branding row */}
-                          <View style={styles.creditCardDetailsRow}>
-                            {/* Hologram sticker */}
-                            <View style={styles.creditCardHologram}>
-                              <LinearGradient
-                                colors={['#e2e8f0', '#cbd5e1', '#94a3b8']}
-                                style={StyleSheet.absoluteFill}
-                              />
-                            </View>
-                            {/* Card logo orb */}
-                            <View style={styles.creditCardLogoOrb} />
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Dot Matrix */}
-                      <View style={styles.gridDotMatrix} pointerEvents="none">
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
-                      </View>
-
-                      {/* Top Row: Icon tile only, no badge */}
-                      <View style={styles.gridCardTopRow}>
-                        <View style={styles.salaryGridIconTile}>
-                          <LinearGradient
-                            colors={['#d97706', '#fbbf24']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <View style={styles.iconGlassShine} />
-                          <MaterialIcons name="payments" size={20} color="#ffffff" />
-                        </View>
-                        <View style={styles.gridCardTopRight} />
-                      </View>
-
-                      {/* Bottom Row: Title block + Action arrow */}
-                      <View style={styles.gridCardBottomRow}>
-                        <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Salary & Payroll</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Salary Slip Logs</Text>
-                        </View>
-                        <View style={[styles.gridActionHalo, { borderColor: 'rgba(217,119,6,0.18)' }]}>
-                          <View style={styles.gridActionOrbGlass}>
-                            <LinearGradient
-                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(254, 243, 199, 0.7)']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                              style={StyleSheet.absoluteFill}
-                            />
-                            <MaterialIcons name="arrow-forward" size={13} color="#d97706" />
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }
-
-                // SPECIAL DETAILED 2-COLUMN CARD 8: Parent Complaints
-                if (item.target === 'Complain') {
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.card, styles.complaintGridCard]}
-                      activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Complain')}
+                      onPress={() => safeNavigate('Salary')}
                     >
                       {/* Rose/Pink Gradient Background */}
                       <LinearGradient
@@ -1198,44 +943,51 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       {/* Left Accent Border */}
                       <View style={[styles.gridLeftBorder, { backgroundColor: '#e11d48' }]} />
 
-                      {/* Premium Conversations Speech Bubble Thread Illustration */}
-                      <View style={styles.complaintVisualContainer} pointerEvents="none">
-                        {/* Bubble Left/Top with Tail */}
-                        <View style={styles.complaintBubbleLeftWrapper}>
-                          <View style={styles.complaintBubbleLeft}>
-                            <LinearGradient
-                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(251, 113, 133, 0.38)']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 0, y: 1 }}
-                              style={StyleSheet.absoluteFill}
-                            />
-                            <View style={styles.complaintBubbleGlanceSheen} />
-                            {/* Inner chat lines */}
-                            <View style={styles.complaintBubbleLineLong} />
-                            <View style={styles.complaintBubbleLineShort} />
-                            {/* Diamond badge */}
-                            <View style={[styles.complaintBubbleDiamond, { left: 8 }]} />
-                          </View>
-                          <View style={styles.complaintBubbleTailLeft} />
+                      {/* Premium Salary Documents & Card Illustration */}
+                      <View style={styles.salaryVisualContainer} pointerEvents="none">
+                        {/* Receipt Sheet */}
+                        <View style={styles.salaryReceiptSheet}>
+                          <LinearGradient
+                            colors={['rgba(255, 255, 255, 0.94)', 'rgba(254, 226, 226, 0.5)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                            pointerEvents="none"
+                          />
+                          <View style={styles.salaryReceiptHeaderLine} />
+                          <View style={styles.salaryReceiptLineLong} />
+                          <View style={styles.salaryReceiptLineMedium} />
+                          <View style={styles.salaryReceiptLineShort} />
                         </View>
 
-                        {/* Bubble Right/Bottom with Tail */}
-                        <View style={styles.complaintBubbleRightWrapper}>
-                          <View style={styles.complaintBubbleRight}>
-                            <LinearGradient
-                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(244, 63, 94, 0.45)']}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 0, y: 1 }}
-                              style={StyleSheet.absoluteFill}
-                            />
-                            <View style={styles.complaintBubbleGlanceSheen} />
-                            {/* Inner chat lines */}
-                            <View style={styles.complaintBubbleLineMedium} />
-                            <View style={styles.complaintBubbleLineShort} />
-                            {/* Diamond badge */}
-                            <View style={[styles.complaintBubbleDiamond, { right: 8 }]} />
+                        {/* Credit Card overlapping in front */}
+                        <View style={styles.salaryCreditCard}>
+                          <LinearGradient
+                            colors={['#e11d48', '#fb7185']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                          />
+                          <View style={styles.creditCardGlassSheen} />
+                          {/* Credit card chip */}
+                          <View style={styles.creditCardChip}>
+                            <View style={styles.chipInnerLineH} />
+                            <View style={styles.chipInnerLineV} />
                           </View>
-                          <View style={styles.complaintBubbleTailRight} />
+                          {/* Credit card signal icon */}
+                          <View style={styles.creditCardContactless}>
+                            <MaterialIcons name="wifi" size={5} color="rgba(255, 255, 255, 0.95)" style={{ transform: [{ rotate: '90deg' }] }} />
+                          </View>
+                          {/* Mock card number text */}
+                          <Text style={styles.creditCardNumberText}>••••  ••••  ••••  8829</Text>
+                          <View style={styles.creditCardMetaRow}>
+                            <Text style={styles.creditCardMetaText}>PAYSLIP</Text>
+                            {/* Brand circles */}
+                            <View style={{ flexDirection: 'row', gap: 1.5, alignItems: 'center' }}>
+                              <View style={[styles.creditCardLogoOrb, { backgroundColor: '#ffffff', opacity: 0.85 }]} />
+                              <View style={[styles.creditCardLogoOrb, { backgroundColor: '#fef08a', opacity: 0.85, marginLeft: -3 }]} />
+                            </View>
+                          </View>
                         </View>
                       </View>
 
@@ -1246,9 +998,9 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                         <View style={styles.dotRow}><View style={styles.dotRose} /><View style={styles.dotRose} /><View style={styles.dotRose} /></View>
                       </View>
 
-                      {/* Top Row: Icon tile only, no badge */}
+                      {/* Top Row: Icon tile only, with badge */}
                       <View style={styles.gridCardTopRow}>
-                        <View style={styles.complaintGridIconTile}>
+                        <View style={styles.salaryGridIconTile}>
                           <LinearGradient
                             colors={['#e11d48', '#fb7185']}
                             start={{ x: 0, y: 0 }}
@@ -1256,16 +1008,18 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                             style={StyleSheet.absoluteFill}
                           />
                           <View style={styles.iconGlassShine} />
-                          <MaterialIcons name="feedback" size={20} color="#ffffff" />
+                          <MaterialIcons name="payments" size={20} color="#ffffff" />
                         </View>
-                        <View style={styles.gridCardTopRight} />
+                        <View style={[styles.gridBadgePill, { backgroundColor: 'rgba(225,29,72,0.12)', borderColor: 'rgba(225,29,72,0.2)' }]}>
+                          <Text style={[styles.gridBadgeText, { color: '#e11d48' }]}>Paid</Text>
+                        </View>
                       </View>
 
                       {/* Bottom Row: Title block + Action arrow */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Parent Complaints</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Inbox Feedbacks</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={1}>Salary Payment</Text>
+                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Payroll & Slips</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(225,29,72,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -1299,7 +1053,7 @@ export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
                       }
                     ]}
                     activeOpacity={0.78}
-                    onPress={() => navigation.navigate(item.target)}
+                    onPress={() => safeNavigate(item.target)}
                   >
                     {/* Glass Sheen Glare Diagonal Overlay */}
                     <LinearGradient
@@ -2335,12 +2089,12 @@ const styles = StyleSheet.create({
     padding: 14,
     minHeight: 148,
     justifyContent: 'space-between',
-    shadowColor: '#0d9488',
+    shadowColor: '#d97706',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.14,
     shadowRadius: 14,
     elevation: 6,
-    borderColor: 'rgba(13, 148, 136, 0.16)',
+    borderColor: 'rgba(217, 119, 6, 0.16)',
   },
   studentGridCard: {
     padding: 14,
@@ -2379,12 +2133,12 @@ const styles = StyleSheet.create({
     padding: 14,
     minHeight: 148,
     justifyContent: 'space-between',
-    shadowColor: '#d97706',
+    shadowColor: '#e11d48',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.14,
     shadowRadius: 14,
     elevation: 6,
-    borderColor: 'rgba(217, 119, 6, 0.16)',
+    borderColor: 'rgba(225, 29, 72, 0.16)',
   },
   complaintGridCard: {
     padding: 14,
@@ -2423,11 +2177,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(13, 148, 136, 0.1)',
+    borderColor: 'rgba(217, 119, 6, 0.1)',
     transform: [{ rotate: '5deg' }],
     opacity: 0.82,
     overflow: 'hidden',
-    shadowColor: '#0d9488',
+    shadowColor: '#d97706',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 7,
@@ -2443,19 +2197,19 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#0d9488',
+    backgroundColor: '#d97706',
   },
   lessonCalHeaderLine: {
     flex: 1,
     height: 3.5,
     borderRadius: 2,
-    backgroundColor: 'rgba(13, 148, 136, 0.18)',
+    backgroundColor: 'rgba(217, 119, 6, 0.18)',
   },
   lessonCalHeaderBadge: {
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: 6,
-    backgroundColor: '#0d9488',
+    backgroundColor: '#d97706',
   },
   lessonCalHeaderBadgeText: {
     fontSize: 6.5,
@@ -2465,7 +2219,7 @@ const styles = StyleSheet.create({
   },
   lessonCalDivider: {
     height: 1,
-    backgroundColor: 'rgba(13, 148, 136, 0.1)',
+    backgroundColor: 'rgba(217, 119, 6, 0.1)',
     borderRadius: 1,
   },
   lessonCalWeekRow: {
@@ -2482,7 +2236,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lessonCalDayCellActive: {
-    backgroundColor: '#0d9488',
+    backgroundColor: '#d97706',
   },
   lessonCalDayText: {
     fontSize: 5,
@@ -2821,10 +2575,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(217, 119, 6, 0.1)',
+    borderColor: 'rgba(225, 29, 72, 0.1)',
     transform: [{ rotate: '-8deg' }],
     opacity: 0.85,
-    shadowColor: '#d97706',
+    shadowColor: '#e11d48',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -2835,26 +2589,26 @@ const styles = StyleSheet.create({
     height: 4,
     width: 22,
     borderRadius: 2,
-    backgroundColor: 'rgba(217, 119, 6, 0.22)',
+    backgroundColor: 'rgba(225, 29, 72, 0.22)',
     marginBottom: 2,
   },
   salaryReceiptLineLong: {
     height: 3,
     width: 50,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    backgroundColor: 'rgba(225, 29, 72, 0.12)',
   },
   salaryReceiptLineMedium: {
     height: 3,
     width: 40,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    backgroundColor: 'rgba(225, 29, 72, 0.12)',
   },
   salaryReceiptLineShort: {
     height: 3,
     width: 25,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    backgroundColor: 'rgba(225, 29, 72, 0.12)',
   },
   salaryCreditCard: {
     position: 'absolute',
@@ -2867,7 +2621,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.4)',
     transform: [{ rotate: '8deg' }],
     overflow: 'hidden',
-    shadowColor: '#d97706',
+    shadowColor: '#e11d48',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 5,
@@ -2898,7 +2652,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 0.8,
-    backgroundColor: 'rgba(217, 119, 6, 0.45)',
+    backgroundColor: 'rgba(225, 29, 72, 0.45)',
   },
   chipInnerLineV: {
     position: 'absolute',
@@ -2906,7 +2660,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 0.8,
-    backgroundColor: 'rgba(217, 119, 6, 0.45)',
+    backgroundColor: 'rgba(225, 29, 72, 0.45)',
   },
   creditCardContactless: {
     position: 'absolute',
@@ -2971,7 +2725,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#d97706',
+    shadowColor: '#e11d48',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.32,
     shadowRadius: 8,
@@ -3424,7 +3178,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#0d9488',
+    shadowColor: '#d97706',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.32,
     shadowRadius: 8,

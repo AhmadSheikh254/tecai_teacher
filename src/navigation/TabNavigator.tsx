@@ -21,13 +21,17 @@ import { ActivityScreen }        from '../screens/assignment/ActivityScreen';
 import { ReadingCoachScreen }    from '../screens/assignment/ReadingCoachScreen';
 import { MCQBuilderScreen }      from '../screens/assignment/MCQBuilderScreen';
 import { AISpeakingBuddyScreen } from '../screens/assignment/AISpeakingBuddyScreen';
-import { CBTSHubScreen }         from '../screens/cbts/CBTSHubScreen';
-import { QuestionBankScreen }    from '../screens/cbts/QuestionBankScreen';
-import { CBTSExamScreen }        from '../screens/cbts/CBTSExamScreen';
+
 import { MoreHubScreen }         from '../screens/more/MoreHubScreen';
 import { AIToolkitScreen }       from '../screens/more/AIToolkitScreen';
 import { ExamScreen }            from '../screens/more/ExamScreen';
-import { IssueScreen }           from '../screens/more/IssueScreen';
+import { ExamScheduleScreen }    from '../screens/more/ExamScheduleScreen';
+import { ExamAttendanceScreen }  from '../screens/more/ExamAttendanceScreen';
+import { ExamMarksScreen }       from '../screens/more/ExamMarksScreen';
+import { ExamTermMarkScreen }    from '../screens/more/ExamTermMarkScreen';
+import { ExamFinalMarkScreen }   from '../screens/more/ExamFinalMarkScreen';
+import { ExamReportScreen }      from '../screens/more/ExamReportScreen';
+
 import { LessonPlanScreen }      from '../screens/more/LessonPlanScreen';
 import { WorksheetScreen }       from '../screens/more/WorksheetScreen';
 import { ChatbotScreen }         from '../screens/more/ChatbotScreen';
@@ -43,11 +47,10 @@ import { StudentRosterScreen }   from '../screens/more/StudentRosterScreen';
 import { AttendanceScreen }      from '../screens/more/AttendanceScreen';
 import { TimeTableScreen }       from '../screens/more/TimeTableScreen';
 import { SalaryScreen }          from '../screens/more/SalaryScreen';
-import { ComplainScreen }        from '../screens/more/ComplainScreen';
+
 
 // ─── Stacks ───────────────────────────────────────────────────────────────────
 const AssignmentStack = createNativeStackNavigator();
-const CBTSStack       = createNativeStackNavigator();
 const MoreStack       = createNativeStackNavigator();
 const Tab             = createBottomTabNavigator();
 
@@ -61,36 +64,32 @@ const AssignmentStackNavigator = () => (
   </AssignmentStack.Navigator>
 );
 
-const CBTSStackNavigator = () => (
-  <CBTSStack.Navigator screenOptions={{ headerShown: false }}>
-    <CBTSStack.Screen name="CBTSHub"      component={CBTSHubScreen} />
-    <CBTSStack.Screen name="QuestionBank" component={QuestionBankScreen} />
-    <CBTSStack.Screen name="CBTSExam"     component={CBTSExamScreen} />
-  </CBTSStack.Navigator>
-);
-
 const MoreStackNavigator = () => (
   <MoreStack.Navigator screenOptions={{ headerShown: false }}>
-    <MoreStack.Screen name="MoreHub"    component={MoreHubScreen} />
-    <MoreStack.Screen name="AIToolkit"  component={AIToolkitScreen} />
-    <MoreStack.Screen name="Exam"       component={ExamScreen} />
-    <MoreStack.Screen name="Issue"      component={IssueScreen} />
-    <MoreStack.Screen name="LessonPlan" component={LessonPlanScreen} />
-    <MoreStack.Screen name="Worksheet"  component={WorksheetScreen} />
-    <MoreStack.Screen name="Chatbot"    component={ChatbotScreen} />
-    <MoreStack.Screen name="MCQs"       component={MCQsScreen} />
-    <MoreStack.Screen name="FillBlanks" component={FillBlanksScreen} />
-    <MoreStack.Screen name="TrueFalse"  component={TrueFalseScreen} />
-    <MoreStack.Screen name="MatchColumn" component={MatchColumnScreen} />
-    <MoreStack.Screen name="Crossword"   component={CrosswordScreen} />
-    <MoreStack.Screen name="QABuilder"   component={QABuilderScreen} />
-    <MoreStack.Screen name="ExcelGen"    component={ExcelGenScreen} />
+    <MoreStack.Screen name="MoreHub"        component={MoreHubScreen} />
+    <MoreStack.Screen name="AIToolkit"      component={AIToolkitScreen} />
+    <MoreStack.Screen name="Exam"           component={ExamScreen} />
+    <MoreStack.Screen name="ExamSchedule"   component={ExamScheduleScreen} />
+    <MoreStack.Screen name="ExamAttendance" component={ExamAttendanceScreen} />
+    <MoreStack.Screen name="ExamMarks"      component={ExamMarksScreen} />
+    <MoreStack.Screen name="ExamTermMark"   component={ExamTermMarkScreen} />
+    <MoreStack.Screen name="ExamFinalMark"  component={ExamFinalMarkScreen} />
+    <MoreStack.Screen name="ExamReport"     component={ExamReportScreen} />
+    <MoreStack.Screen name="LessonPlan"     component={LessonPlanScreen} />
+    <MoreStack.Screen name="Worksheet"    component={WorksheetScreen} />
+    <MoreStack.Screen name="Chatbot"      component={ChatbotScreen} />
+    <MoreStack.Screen name="MCQs"         component={MCQsScreen} />
+    <MoreStack.Screen name="FillBlanks"   component={FillBlanksScreen} />
+    <MoreStack.Screen name="TrueFalse"    component={TrueFalseScreen} />
+    <MoreStack.Screen name="MatchColumn"  component={MatchColumnScreen} />
+    <MoreStack.Screen name="Crossword"    component={CrosswordScreen} />
+    <MoreStack.Screen name="QABuilder"    component={QABuilderScreen} />
+    <MoreStack.Screen name="ExcelGen"     component={ExcelGenScreen} />
     <MoreStack.Screen name="Presentation" component={PresentationScreen} />
-    <MoreStack.Screen name="Students"   component={StudentRosterScreen} />
-    <MoreStack.Screen name="Attendance" component={AttendanceScreen} />
-    <MoreStack.Screen name="TimeTable"  component={TimeTableScreen} />
-    <MoreStack.Screen name="Salary"     component={SalaryScreen} />
-    <MoreStack.Screen name="Complain"   component={ComplainScreen} />
+    <MoreStack.Screen name="Students"     component={StudentRosterScreen} />
+    <MoreStack.Screen name="Attendance"   component={AttendanceScreen} />
+    <MoreStack.Screen name="TimeTable"    component={TimeTableScreen} />
+    <MoreStack.Screen name="Salary"       component={SalaryScreen} />
   </MoreStack.Navigator>
 );
 
@@ -106,7 +105,6 @@ const TABS = [
   { name: 'HomeTab',    label: 'Home',       icon: 'home',                  iconActive: 'home'               },
   { name: 'Assignment', label: 'Assignment',  icon: 'clipboard-text',        iconActive: 'clipboard-check'    },
   { name: 'Homework',   label: 'Homework',   icon: 'book-open-variant',      iconActive: 'book-open-variant'  },
-  { name: 'CBTS',       label: 'CBTS',       icon: 'layers',                 iconActive: 'layers'             },
   { name: 'More',       label: 'More',       icon: 'dots-horizontal-circle', iconActive: 'dots-horizontal-circle' },
 ] as const;
 
@@ -247,8 +245,6 @@ const PremiumTabBar = ({ state, navigation }: BottomTabBarProps) => (
               navigation.navigate('More', { screen: 'MoreHub' });
             } else if (tab.name === 'Assignment') {
               navigation.navigate('Assignment', { screen: 'AssignmentHub' });
-            } else if (tab.name === 'CBTS') {
-              navigation.navigate('CBTS', { screen: 'CBTSHub' });
             } else {
               if (!focused && !event.defaultPrevented) {
                 navigation.navigate(tab.name);
@@ -270,7 +266,6 @@ export const TabNavigator = () => (
     <Tab.Screen name="HomeTab"    component={HomeScreen} />
     <Tab.Screen name="Assignment" component={AssignmentStackNavigator} />
     <Tab.Screen name="Homework"   component={HomeworkScreen} />
-    <Tab.Screen name="CBTS"       component={CBTSStackNavigator} />
     <Tab.Screen name="More"       component={MoreStackNavigator} />
   </Tab.Navigator>
 );

@@ -11,8 +11,28 @@ import {
   useWindowDimensions
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Ellipse } from 'react-native-svg';
 import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+type Student = {
+  id: string;
+  regNo: string;
+  name: string;
+  father: string;
+  grade: string;
+  section: string;
+  school: string;
+};
+
+// Uniform premium theme for all cards to look identical and clean
+const CARD_THEME = {
+  accent: '#2563EB',
+  glow: 'rgba(37,99,235,0.05)',
+  avatarBg: 'rgba(37,99,235,0.09)',
+  badge: ['#2563EB', '#1D4ED8'] as [string, string]
+};
 
 export const StudentRosterScreen = ({ navigation }: any) => {
   const { width } = useWindowDimensions();
@@ -22,10 +42,10 @@ export const StudentRosterScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('GRADE-II');
   const [classPickerVisible, setClassPickerVisible] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Roster Student Data matching desktop screenshot
-  const [studentsList] = useState([
+  const [studentsList] = useState<Student[]>([
     { id: '1', regNo: 'HMSA_2230', name: 'MUHAMMAD MUSTAFA', father: 'MUHAMMAD Zahid', grade: 'GRADE-II', section: 'A', school: 'XYZ School - Karachi Campus' },
     { id: '2', regNo: 'HMSA_2231', name: 'HIRA TAHIR', father: 'samiullah', grade: 'GRADE-II', section: 'A', school: 'XYZ School - Karachi Campus' },
     { id: '3', regNo: 'HMSA_2232', name: 'ANUSHA SAQIB', father: 'SAQIB JAVED', grade: 'GRADE-II', section: 'A', school: 'XYZ School - Karachi Campus' },
@@ -91,7 +111,7 @@ export const StudentRosterScreen = ({ navigation }: any) => {
   });
 
   const renderSkeletonCard = (index: number) => (
-    <Animated.View key={`skeleton-${index}`} style={[styles.skeletonCard, { opacity: pulseAnim }, theme.shadows.level1]}>
+    <Animated.View key={`skeleton-${index}`} style={[styles.skeletonCard, { opacity: pulseAnim }]}>
       <View style={styles.skeletonAvatar} />
       <View style={{ flex: 1, gap: 8 }}>
         <View style={styles.skeletonLineShort} />
@@ -102,375 +122,550 @@ export const StudentRosterScreen = ({ navigation }: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* App Bar */}
-      <View style={styles.appBar}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Students View</Text>
-        </View>
-        <TouchableOpacity style={styles.appBarIconButton}>
-          <MaterialIcons name="groups" size={22} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.root}>
+      {/* ── PREMIUM LIGHT BG GRADIENT ── */}
+      <LinearGradient
+        colors={['#C7DCFF', '#D8E9FF', '#E8F2FF', '#F5F9FF']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* Class Filter Card */}
-        <View style={[styles.filterCard, theme.shadows.level1]}>
-          <View style={styles.filterCardHeader}>
-            <MaterialIcons name="filter-alt" size={20} color={theme.colors.primary} />
-            <Text style={styles.filterCardTitle}>Filter Roster</Text>
-          </View>
+      {/* Radial glows */}
+      <View style={styles.orb1} pointerEvents="none" />
+      <View style={styles.orb2} pointerEvents="none" />
+      <View style={styles.orb3} pointerEvents="none" />
 
-          <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Class *</Text>
-            <TouchableOpacity style={styles.formDropdown} onPress={() => setClassPickerVisible(true)}>
-              <Text style={styles.dropdownValueText}>{selectedClass || 'Select Class'}</Text>
-              <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
-            </TouchableOpacity>
-          </View>
+      {/* Decorative curves */}
+      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Ellipse cx="115%" cy="5%" rx="65%" ry="28%" fill="rgba(255,255,255,0.35)" />
+        <Ellipse cx="-15%" cy="95%" rx="60%" ry="25%" fill="rgba(255,255,255,0.3)" />
+        <Path d="M-40,260 Q160,140 380,280 T820,240" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+        <Path d="M-40,320 Q160,200 380,340 T820,300" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+      </Svg>
 
-          <TouchableOpacity 
-            style={[styles.filterBtn, theme.shadows.level1]} 
-            onPress={handleApplyFilter}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.filterBtnText}>Filter</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Student Records List Title */}
-        <View style={styles.recordsHeaderRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialIcons name="assignment-ind" size={18} color={theme.colors.onSurface} />
-            <Text style={styles.recordsSectionTitle}>Students Directory</Text>
-          </View>
-          <View style={styles.recordsCountBadge}>
-            <Text style={styles.recordsCountText}>{filteredStudents.length} Students</Text>
-          </View>
-        </View>
-
-        {/* Search input field */}
-        <View style={styles.searchWrapper}>
-          <MaterialIcons name="search" size={20} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search name, father name or reg no..."
-            placeholderTextColor={theme.colors.onSurfaceVariant}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* App Bar (glass) */}
+        <View style={styles.appBar}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.75)', 'rgba(255,255,255,0.60)']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
           />
-          {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <MaterialIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color="#1E293B" />
             </TouchableOpacity>
-          )}
+            <Text style={styles.headerTitle}>Students View</Text>
+          </View>
+          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
+            <MaterialIcons name="groups" size={22} color="#2563EB" />
+          </TouchableOpacity>
         </View>
 
-        {/* Cards List rendering */}
-        {loading ? (
-          <View style={styles.rosterList}>
-            {renderSkeletonCard(1)}
-            {renderSkeletonCard(2)}
-            {renderSkeletonCard(3)}
-          </View>
-        ) : filteredStudents.length === 0 ? (
-          <View style={[styles.emptyContainer, theme.shadows.level1]}>
-            <View style={styles.emptyIconCircle}>
-              <MaterialIcons name="person-search" size={48} color={theme.colors.outline} />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Glassmorphic Filter Card */}
+          <View style={styles.filterCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.85)', 'rgba(255,255,255,0.70)']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.filterCardHeader}>
+              <MaterialIcons name="filter-alt" size={18} color="#2563EB" />
+              <Text style={styles.filterCardTitle}>Filter Roster</Text>
             </View>
-            <Text style={styles.emptyTitle}>No Students Found</Text>
-            <Text style={styles.emptyDesc}>We couldn't find any students matching your search criteria. Try modifying your search.</Text>
-          </View>
-        ) : (
-          <View style={styles.rosterList}>
-            {filteredStudents.map((student) => (
-              <TouchableOpacity
-                key={student.id}
-                style={[styles.studentCard, theme.shadows.level1]}
-                activeOpacity={0.7}
-                onPress={() => setSelectedStudent(student)}
-              >
-                {/* Left side: Avatar Circle initials */}
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarText}>{getInitials(student.name)}</Text>
-                </View>
 
-                {/* Center details */}
-                <View style={styles.studentInfoCol}>
-                  <Text style={styles.studentName} numberOfLines={1}>{student.name}</Text>
-                  <Text style={styles.studentFather} numberOfLines={1}>Father: {student.father}</Text>
-                  
-                  <View style={styles.metaBadgeRow}>
-                    <View style={styles.regNoBadge}>
-                      <Text style={styles.regNoText}>{student.regNo}</Text>
-                    </View>
-                    <View style={styles.classBadge}>
-                      <Text style={styles.classBadgeText}>{student.grade}-{student.section}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.schoolRow}>
-                    <MaterialIcons name="school" size={12} color={theme.colors.outline} style={{ marginRight: 4 }} />
-                    <Text style={styles.schoolText} numberOfLines={1}>{student.school}</Text>
-                  </View>
-                </View>
-
-                {/* Right side: View button */}
-                <TouchableOpacity 
-                  style={styles.viewProfileBtn}
-                  onPress={() => setSelectedStudent(student)}
-                >
-                  <Text style={styles.viewProfileBtnText}>View</Text>
-                </TouchableOpacity>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Class *</Text>
+              <TouchableOpacity style={styles.formDropdown} onPress={() => setClassPickerVisible(true)} activeOpacity={0.75}>
+                <Text style={styles.dropdownValueText}>{selectedClass || 'Select Class'}</Text>
+                <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748B" />
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+            </View>
 
-      {/* CLASS FILTER DROPDOWN MODAL */}
-      <Modal
-        visible={classPickerVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setClassPickerVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.pickerBackdrop} 
-          activeOpacity={1} 
-          onPress={() => setClassPickerVisible(false)}
+            <TouchableOpacity 
+              style={styles.filterBtn} 
+              onPress={handleApplyFilter}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#2563EB', '#1D4ED8']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.25)', 'rgba(255, 255, 255, 0)']}
+                start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
+              />
+              <Text style={styles.filterBtnText}>Filter</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Student Directory Header Title */}
+          <View style={styles.recordsHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialIcons name="assignment-ind" size={18} color="#1E293B" />
+              <Text style={styles.recordsSectionTitle}>Students Directory</Text>
+            </View>
+            <View style={styles.recordsCountBadge}>
+              <Text style={styles.recordsCountText}>{filteredStudents.length} Students</Text>
+            </View>
+          </View>
+
+          {/* Search bar input (glass design) */}
+          <View style={styles.searchWrapper}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.80)', 'rgba(255,255,255,0.60)']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <MaterialIcons name="search" size={20} color="#64748B" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search name, father name or reg no..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery !== '' && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
+                <MaterialIcons name="close" size={18} color="#64748B" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Cards List rendering */}
+          {loading ? (
+            <View style={styles.rosterList}>
+              {renderSkeletonCard(1)}
+              {renderSkeletonCard(2)}
+              {renderSkeletonCard(3)}
+            </View>
+          ) : filteredStudents.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.80)', 'rgba(255,255,255,0.60)']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.emptyIconCircle}>
+                <MaterialIcons name="person-search" size={44} color="#94A3B8" />
+              </View>
+              <Text style={styles.emptyTitle}>No Students Found</Text>
+              <Text style={styles.emptyDesc}>We couldn't find any students matching your search criteria. Try modifying your filter or query.</Text>
+            </View>
+          ) : (
+            <View style={styles.rosterList}>
+              {filteredStudents.map((student, index) => {
+                return (
+                  <TouchableOpacity
+                    key={student.id}
+                    style={styles.studentCard}
+                    activeOpacity={0.8}
+                    onPress={() => setSelectedStudent(student)}
+                  >
+                    {/* Glass background */}
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.88)', 'rgba(255,255,255,0.72)']}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+
+                    {/* Accent bar - Uniform Royal Blue theme */}
+                    <View style={[styles.cardAccentBar, { backgroundColor: CARD_THEME.accent }]} />
+
+                    {/* Initials Avatar - Uniform Royal Blue theme */}
+                    <View style={[styles.avatarCircle, { backgroundColor: CARD_THEME.avatarBg }]}>
+                      <Text style={[styles.avatarText, { color: CARD_THEME.accent }]}>{getInitials(student.name)}</Text>
+                    </View>
+
+                    {/* Center Details Block */}
+                    <View style={styles.studentInfoCol}>
+                      <Text style={styles.studentName} numberOfLines={1}>{student.name}</Text>
+                      <Text style={styles.studentFather} numberOfLines={1}>Father: {student.father}</Text>
+                      
+                      <View style={styles.metaBadgeRow}>
+                        <View style={styles.regNoBadge}>
+                          <Text style={styles.regNoText}>{student.regNo}</Text>
+                        </View>
+                        <View style={[styles.classBadge, { backgroundColor: CARD_THEME.avatarBg }]}>
+                          <Text style={[styles.classBadgeText, { color: CARD_THEME.accent }]}>{student.grade}-{student.section}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.schoolRow}>
+                        <MaterialIcons name="school" size={12} color="#64748B" style={{ marginRight: 4 }} />
+                        <Text style={styles.schoolText} numberOfLines={1}>{student.school}</Text>
+                      </View>
+                    </View>
+
+                    {/* View Profile Action - Uniform Royal Blue theme */}
+                    <TouchableOpacity 
+                      style={styles.viewProfileBtn}
+                      activeOpacity={0.7}
+                      onPress={() => setSelectedStudent(student)}
+                    >
+                      <LinearGradient
+                        colors={[CARD_THEME.accent + '22', CARD_THEME.accent + '0B']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <Text style={[styles.viewProfileBtnText, { color: CARD_THEME.accent }]}>View</Text>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </ScrollView>
+
+        {/* CLASS SELECTOR MODAL (frosted glass option list) */}
+        <Modal
+          visible={classPickerVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setClassPickerVisible(false)}
         >
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerTitle}>Select Class</Text>
-            <View style={styles.pickerOptionsList}>
-              {['GRADE-II', 'Grade-I', 'Grade-III'].map((c) => (
-                <TouchableOpacity 
-                  key={c} 
-                  style={styles.pickerOptionItem}
-                  onPress={() => {
-                    setSelectedClass(c);
-                    setClassPickerVisible(false);
-                  }}
-                >
-                  <Text style={styles.pickerOptionText}>{c}</Text>
-                  {selectedClass === c && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
+          <TouchableOpacity 
+            style={styles.pickerBackdrop} 
+            activeOpacity={1} 
+            onPress={() => setClassPickerVisible(false)}
+          >
+            <View style={styles.pickerContainer}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.98)', 'rgba(245,249,255,0.95)']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={styles.pickerTitle}>Select Class</Text>
+              <View style={styles.pickerOptionsList}>
+                {['GRADE-II', 'Grade-I', 'Grade-III'].map((c) => (
+                  <TouchableOpacity 
+                    key={c} 
+                    style={styles.pickerOptionItem}
+                    onPress={() => {
+                      setSelectedClass(c);
+                      setClassPickerVisible(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.pickerOptionText}>{c}</Text>
+                    {selectedClass === c && <MaterialIcons name="check-circle" size={19} color="#2563EB" />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* PROFILE SHEET MODAL (bottom-sheet glass) */}
+        <Modal
+          visible={selectedStudent !== null}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setSelectedStudent(null)}
+        >
+          <View style={styles.sheetBackdrop}>
+            <TouchableOpacity style={{ flex: 1 }} onPress={() => setSelectedStudent(null)} />
+            <View style={styles.sheetContainer}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.96)', 'rgba(240,248,255,0.92)']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Sheet drag bar */}
+              <View style={styles.sheetHandle} />
+
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetHeaderTitle}>Student Profile</Text>
+                <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setSelectedStudent(null)}>
+                  <MaterialIcons name="close" size={20} color="#475569" />
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+              </View>
 
-      {/* STUDENT PROFILE SHEET MODAL */}
-      <Modal
-        visible={selectedStudent !== null}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setSelectedStudent(null)}
-      >
-        <View style={styles.sheetBackdrop}>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setSelectedStudent(null)} />
-          <View style={[styles.sheetContainer, theme.shadows.level2]}>
-            
-            {/* Sheet Handle indicator */}
-            <View style={styles.sheetHandle} />
-
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetHeaderTitle}>Student Profile</Text>
-              <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setSelectedStudent(null)}>
-                <MaterialIcons name="close" size={22} color={theme.colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            </View>
-
-            {selectedStudent && (
-              <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-                
-                {/* Profile Banner */}
-                <View style={styles.profileBanner}>
-                  <View style={styles.bannerAvatarCircle}>
-                    <Text style={styles.bannerAvatarText}>{getInitials(selectedStudent.name)}</Text>
-                  </View>
-                  <Text style={styles.bannerName}>{selectedStudent.name}</Text>
-                  <Text style={styles.bannerRegNo}>{selectedStudent.regNo}</Text>
-                </View>
-
-                {/* Profile Details List */}
-                <View style={styles.detailsGroup}>
+              {selectedStudent && (
+                <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
                   
-                  {/* Student Details Card */}
-                  <View style={styles.detailsSectionCard}>
+                  {/* Banner Profile */}
+                  <View style={styles.profileBanner}>
+                    <View style={styles.bannerAvatarCircle}>
+                      <LinearGradient
+                        colors={['#2563EB', '#1D4ED8']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <Text style={styles.bannerAvatarText}>{getInitials(selectedStudent.name)}</Text>
+                    </View>
+                    <Text style={styles.bannerName}>{selectedStudent.name}</Text>
+                    <Text style={styles.bannerRegNo}>{selectedStudent.regNo}</Text>
+                    
+                    {/* Status Badge */}
+                    <View style={styles.activeStatusBadge}>
+                      <View style={styles.statusDot} />
+                      <Text style={styles.activeStatusText}>Active Student</Text>
+                    </View>
+                  </View>
+
+                  {/* Details block */}
+                  <View style={styles.detailsGroup}>
                     <Text style={styles.detailsSectionTitle}>Student Information</Text>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="badge" size={18} color={theme.colors.primary} />
+                    {/* Reg No Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="badge" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>Reg No</Text>
+                        <Text style={styles.detailLabel}>REGISTRATION NO</Text>
                         <Text style={styles.detailValue}>{selectedStudent.regNo}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="person" size={18} color={theme.colors.primary} />
+                    {/* Student Name Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="person" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>Student Name</Text>
+                        <Text style={styles.detailLabel}>STUDENT NAME</Text>
                         <Text style={styles.detailValue}>{selectedStudent.name}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="people" size={18} color={theme.colors.primary} />
+                    {/* Father Name Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="people" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>Father Name</Text>
+                        <Text style={styles.detailLabel}>FATHER NAME</Text>
                         <Text style={styles.detailValue}>{selectedStudent.father}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="class" size={18} color={theme.colors.primary} />
+                    {/* Class Grade Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="class" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>Class</Text>
+                        <Text style={styles.detailLabel}>CLASS GRADE</Text>
                         <Text style={styles.detailValue}>{selectedStudent.grade}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="view-module" size={18} color={theme.colors.primary} />
+                    {/* Class Section Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="view-module" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>Section</Text>
+                        <Text style={styles.detailLabel}>CLASS SECTION</Text>
                         <Text style={styles.detailValue}>{selectedStudent.section}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                      <MaterialIcons name="school" size={18} color={theme.colors.primary} />
+                    {/* School Campus Card */}
+                    <View style={styles.detailRowCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0.72)']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.detailIconBox}>
+                        <MaterialIcons name="school" size={18} color="#2563EB" />
+                      </View>
                       <View style={styles.detailMeta}>
-                        <Text style={styles.detailLabel}>School Name</Text>
+                        <Text style={styles.detailLabel}>SCHOOL CAMPUS</Text>
                         <Text style={styles.detailValue}>{selectedStudent.school}</Text>
                       </View>
                     </View>
                   </View>
-                </View>
-              </ScrollView>
-            )}
+                </ScrollView>
+              )}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
+  root: { flex: 1 },
+  safeArea: { flex: 1 },
+
+  // Orbs
+  orb1: {
+    position: 'absolute', top: -160, right: -140,
+    width: 440, height: 440, borderRadius: 220,
+    backgroundColor: 'rgba(99,140,255,0.22)',
   },
+  orb2: {
+    position: 'absolute', bottom: -100, left: -130,
+    width: 380, height: 380, borderRadius: 190,
+    backgroundColor: 'rgba(52,211,153,0.16)',
+  },
+  orb3: {
+    position: 'absolute', top: '38%', right: -80,
+    width: 280, height: 280, borderRadius: 140,
+    backgroundColor: 'rgba(167,139,250,0.16)',
+  },
+
+  // App Bar
   appBar: {
-    height: 64,
+    height: 68,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.containerMargin,
-    backgroundColor: theme.colors.surfaceContainerLowest,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: 'rgba(255,255,255,0.55)',
+    position: 'relative',
+    overflow: 'hidden',
+    zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.70)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: theme.typography.headlineLgMobile.fontSize,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
   appBarIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.70)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   // Scroll Container
   scrollContent: {
-    padding: theme.spacing.containerMargin,
+    padding: 16,
     paddingBottom: 110,
     gap: 16,
   },
 
-  // Filters Card panel
+  // Filters Card
   filterCard: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.xl,
+    borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 18,
     borderWidth: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-    borderColor: 'rgba(0, 82, 204, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.70)',
+    overflow: 'hidden',
+    position: 'relative',
     gap: 14,
+    elevation: 4,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
   },
   filterCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
-    paddingBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(226, 232, 240, 0.8)',
+    paddingBottom: 10,
   },
   filterCardTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
+    fontWeight: '800',
+    color: '#1E293B',
   },
   formGroup: {
     gap: 6,
   },
   formLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#475569',
+    letterSpacing: 0.2,
   },
   formDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.default,
-    height: 42,
+    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderRadius: 12,
+    height: 44,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.90)',
   },
   dropdownValueText: {
-    fontSize: 13,
-    color: theme.colors.onSurface,
-    fontWeight: '500',
+    fontSize: 13.5,
+    color: '#1E293B',
+    fontWeight: '700',
   },
   filterBtn: {
-    backgroundColor: theme.colors.primary,
-    height: 42,
-    borderRadius: 6,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+    overflow: 'hidden',
+    position: 'relative',
+    elevation: 3,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
   filterBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 
   // Section Header
@@ -478,46 +673,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
-    paddingHorizontal: 4,
+    marginTop: 4,
+    paddingHorizontal: 2,
   },
   recordsSectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: theme.colors.onSurface,
+    fontSize: 14.5,
+    fontWeight: '900',
+    color: '#0F172A',
   },
   recordsCountBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 82, 204, 0.06)',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   recordsCountText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#2563EB',
   },
 
   // Search input
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.full,
-    height: 44,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outlineVariant,
+    borderRadius: 16,
+    height: 46,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.65)',
+    overflow: 'hidden',
+    position: 'relative',
+    elevation: 2,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 6,
   },
   searchInput: {
     flex: 1,
     height: '100%',
-    color: theme.colors.onSurface,
-    fontSize: 13,
-    fontWeight: '500',
+    color: '#0F172A',
+    fontSize: 13.5,
+    fontWeight: '700',
   },
 
   // Roster Cards List
@@ -525,44 +728,60 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   studentCard: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.lg,
+    borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-    borderColor: 'rgba(0, 82, 204, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.70)',
+    overflow: 'hidden',
+    position: 'relative',
+    elevation: 4,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+  },
+  cardAccentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 82, 204, 0.06)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   avatarText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
-    color: theme.colors.primary,
   },
   studentInfoCol: {
     flex: 1,
-    gap: 3,
+    gap: 4,
+    paddingLeft: 2,
   },
   studentName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
   studentFather: {
-    fontSize: 11,
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '700',
   },
   metaBadgeRow: {
     flexDirection: 'row',
@@ -571,52 +790,55 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   regNoBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: theme.colors.surfaceContainerLow,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   regNoText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
-    color: theme.colors.onSurfaceVariant,
+    color: '#475569',
   },
   classBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0, 82, 204, 0.06)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   classBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: theme.colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
   },
   schoolRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 1,
   },
   schoolText: {
-    fontSize: 9.5,
-    color: theme.colors.outline,
-    fontWeight: '500',
+    fontSize: 10.5,
+    color: '#64748B',
+    fontWeight: '600',
   },
   viewProfileBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0, 82, 204, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.1)',
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.60)',
+    overflow: 'hidden',
+    position: 'relative',
+    alignSelf: 'center',
   },
   viewProfileBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
   },
 
-  // Option Picker Modal Styles
+  // Picker modal
   pickerBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.4)',
@@ -624,56 +846,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerContainer: {
-    width: '80%',
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: 16,
+    width: '82%',
+    borderRadius: 20,
     padding: 20,
+    overflow: 'hidden',
+    position: 'relative',
     elevation: 10,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.7)',
   },
   pickerTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.onSurface,
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: '#0F172A',
     marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
-    paddingBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(226,232,240,0.8)',
+    paddingBottom: 10,
+    letterSpacing: -0.1,
   },
   pickerOptionsList: {
-    gap: 4,
+    gap: 6,
   },
   pickerOptionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
   },
   pickerOptionText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#334155',
   },
 
-  // Profile Bottom Sheet styles
+  // Profile bottom sheet
   sheetBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '82%',
+    maxHeight: '84%',
     paddingBottom: 30,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.8)',
   },
   sheetHandle: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.outlineVariant,
+    backgroundColor: '#CBD5E1',
     alignSelf: 'center',
     marginTop: 10,
   },
@@ -683,13 +916,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(226,232,240,0.8)',
   },
   sheetHeaderTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.colors.onSurface,
+    fontSize: 19,
+    fontWeight: '900',
+    color: '#0F172A',
   },
   sheetCloseBtn: {
     padding: 4,
@@ -699,152 +932,178 @@ const styles = StyleSheet.create({
   },
   profileBanner: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
     gap: 6,
   },
   bannerAvatarCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(0, 82, 204, 0.08)',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    elevation: 6,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
   },
   bannerAvatarText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: theme.colors.primary,
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
   bannerName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.colors.onSurface,
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#0F172A',
   },
   bannerRegNo: {
-    fontSize: 12,
-    color: theme.colors.outline,
-    fontWeight: '600',
+    fontSize: 14.5,
+    color: '#64748B',
+    fontWeight: '700',
   },
   activeStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(76, 175, 80, 0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.15)',
+    borderColor: '#A7F3D0',
     marginTop: 4,
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#10B981',
   },
   activeStatusText: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '800',
-    color: '#4CAF50',
+    color: '#059669',
   },
   detailsGroup: {
-    gap: 16,
+    gap: 10,
+    paddingBottom: 20,
   },
-  detailsSectionCard: {
-    backgroundColor: theme.colors.surfaceContainerLow,
-    borderRadius: 12,
-    padding: 16,
-    gap: 14,
-  },
-  detailsSectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: theme.colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.04)',
-    paddingBottom: 6,
-  },
-  detailRow: {
+  detailRowCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.7)',
+    overflow: 'hidden',
+    position: 'relative',
+    elevation: 3,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  detailsSectionTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#2563EB',
+    textTransform: 'uppercase',
+    letterSpacing: 1.0,
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
+  detailIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
   },
   detailMeta: {
-    gap: 2,
+    gap: 3,
     flex: 1,
   },
   detailLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.colors.outline,
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.4,
   },
   detailValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
+    fontSize: 16.5,
+    fontWeight: '900',
+    color: '#1E293B',
   },
 
   // Skeleton structure
   skeletonCard: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.lg,
+    backgroundColor: 'rgba(255,255,255,0.80)',
+    borderRadius: 18,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.70)',
   },
   skeletonAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.surfaceContainer,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E2E8F0',
     marginRight: 12,
   },
   skeletonLineShort: {
     width: '30%',
     height: 10,
-    backgroundColor: theme.colors.surfaceContainer,
+    backgroundColor: '#E2E8F0',
     borderRadius: 4,
   },
   skeletonLineMedium: {
     width: '60%',
     height: 14,
-    backgroundColor: theme.colors.surfaceContainer,
+    backgroundColor: '#E2E8F0',
     borderRadius: 4,
   },
   emptyContainer: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    borderRadius: theme.rounded.xl,
+    borderRadius: 18,
     padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.06)',
-    marginTop: 20,
+    borderColor: 'rgba(255,255,255,0.7)',
+    overflow: 'hidden',
+    position: 'relative',
+    marginTop: 10,
   },
   emptyIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,82,204,0.06)',
+    backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#DBEAFE',
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.colors.onSurface,
+    fontSize: 15.5,
+    fontWeight: '900',
+    color: '#1E293B',
     textAlign: 'center',
   },
   emptyDesc: {
-    fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
+    fontSize: 12.5,
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
     maxWidth: 260,

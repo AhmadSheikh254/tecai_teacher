@@ -453,7 +453,7 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
       bgColor: 'rgba(0,61,155,0.04)',
       badge: 'AI Vocal',
       stats: '24 Logs',
-      target: 'AISpeakingBuddyDirect'
+      target: 'AISpeakingBuddy'
     }
   ];
 
