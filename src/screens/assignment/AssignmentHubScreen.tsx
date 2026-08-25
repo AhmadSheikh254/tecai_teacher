@@ -105,7 +105,8 @@ interface ModuleCardProps {
   };
   onPress: () => void;
 }
-const ModuleCard: React.FC<ModuleCardProps> = ({ item, onPress }) => {
+const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => {
+  const { width } = useWindowDimensions();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
 
@@ -334,11 +335,13 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ item, onPress }) => {
                            : item.color === '#0D9488' ? ['#ffffff', '#F0FDFA', '#CCFBF1']
                            : ['#ffffff', '#F0F9FF', '#E0F2FE'];
 
+  const dynamicCardWidth = width >= 1024 ? '31.5%' : width >= 600 ? '48.5%' : '100%';
+
   return (
     <Animated.View style={[
       styles.moduleCard, 
       animatedShadowStyle, 
-      { shadowColor: item.color, borderColor: cardBorderColor }
+      { shadowColor: item.color, borderColor: cardBorderColor, width: dynamicCardWidth }
     ]}>
       <Pressable
         style={styles.cardTouchable}
@@ -407,7 +410,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ item, onPress }) => {
       </Pressable>
     </Animated.View>
   );
-};
+});
 
 
 export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ navigation }) => {
@@ -551,40 +554,6 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
             />
           ))}
         </View>
-
-        {/* DIRECT Speaking Buddy Link Button */}
-        <TouchableOpacity
-          style={{
-            marginHorizontal: 16,
-            marginBottom: 20,
-            backgroundColor: '#003d9b',
-            borderRadius: 14,
-            paddingVertical: 16,
-            alignItems: 'center',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            gap: 10,
-          }}
-          onPress={() => {
-            // Try nested stack first, then root navigator as fallback
-            try {
-              navigation.navigate('AISpeakingBuddy');
-            } catch (e) {
-              try {
-                navigation.getParent()?.navigate('AISpeakingBuddyDirect');
-              } catch (e2) {
-                console.error('All navigation attempts failed');
-              }
-            }
-          }}
-          activeOpacity={0.85}
-        >
-          <MaterialIcons name="record-voice-over" size={22} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 }}>
-            Open AI Speaking Buddy
-          </Text>
-          <MaterialIcons name="arrow-forward" size={18} color="#fff" />
-        </TouchableOpacity>
 
       </ScrollView>
     </SafeAreaView>
@@ -737,9 +706,12 @@ const styles = StyleSheet.create({
   },
   // ===== CONTENT LAYOUT =====
   scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
+    padding: 14,
+    paddingBottom: 90,
     zIndex: 5,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   // ===== DEEP NAVY HEADER BANNER =====
   welcomeBanner: {
@@ -878,25 +850,22 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between', // Span full screen width
     gap: 12,
+    width: '100%',
   },
   moduleCard: {
-    width: '48.2%', // Relative layout width ensuring columns stretch from edge to edge
-    height: 186, // Increased height to prevent vertical clipping and allow custom watermark illustrations
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(0, 82, 204, 0.05)',
     overflow: 'hidden',
-    // Luxury layered shadow
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
+    minHeight: 140,
   },
   cardTouchable: {
     flex: 1,
-    padding: 14,
+    padding: 12,
     justifyContent: 'space-between',
     position: 'relative',
   },

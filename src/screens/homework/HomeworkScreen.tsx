@@ -1233,10 +1233,13 @@ const styles = StyleSheet.create({
 
   // Main Scroll View
   scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
-    gap: 16,
+    padding: 14,
+    paddingBottom: 90,
+    gap: 12,
     zIndex: 5,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   searchWrapper: {
     flexDirection: 'row',
