@@ -96,9 +96,9 @@ const MoreStackNavigator = () => (
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const BRAND     = '#0047CC';   // richer darker premium blue
 const INACTIVE  = '#607390';   // stronger muted slate — clearly visible
-const BAR_H     = 72;
-const PILL_H    = 46;
-const SAFE_B    = Platform.OS === 'ios' ? 26 : 0;
+const BAR_H     = 56;
+const PILL_H    = 38;
+const SAFE_B    = Platform.OS === 'ios' ? 20 : 0;
 
 // ─── Tab Definitions ─────────────────────────────────────────────────────────
 const TABS = [
@@ -109,7 +109,7 @@ const TABS = [
 ] as const;
 
 // ─── Single Tab Item with self-contained pill animation ───────────────────────
-const TabItem = ({
+const TabItem = React.memo(({
   tab,
   focused,
   onPress,
@@ -122,111 +122,50 @@ const TabItem = ({
   const anim = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(anim, {
-      toValue:   focused ? 1 : 0,
-      damping:   22,
-      stiffness: 240,
-      mass:      0.8,
-      useNativeDriver: false,
+    Animated.timing(anim, {
+      toValue: focused ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
     }).start();
   }, [focused]);
 
-  // Pill bg opacity (0 inactive → 1 active)
-  const pillOpacity = anim;
-
-  // Pill horizontal padding grows
-  const pillPaddingH = anim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [11, 16],
-  });
-
-  // Label max-width opens up
-  const labelMaxW = anim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [0, 100],
-  });
-
-  // Label left margin
-  const labelMarginL = anim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [0, 7],
-  });
-
-  // Label opacity — appears after pill is half expanded
-  const labelOpacity = anim.interpolate({
-    inputRange:  [0, 0.5, 1],
-    outputRange: [0, 0,   1],
-  });
-
-  // Icon scale
-  const iconScale = anim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [0.85, 1.05],
-  });
-
+  // Scale and Opacity natively handled
   const iconColor = focused ? '#fff' : INACTIVE;
 
   return (
     <Pressable
       onPress={onPress}
       style={styles.touchable}
-      android_ripple={{ color: 'rgba(10,110,255,0.07)', borderless: true, radius: 38 }}
+      android_ripple={{ color: 'rgba(10,110,255,0.07)', borderless: true, radius: 30 }}
     >
       <Animated.View
         style={[
           styles.pill,
-          { paddingHorizontal: pillPaddingH },
+          { 
+            backgroundColor: focused ? '#0035CC' : 'transparent',
+            paddingHorizontal: focused ? 14 : 10,
+            transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] 
+          },
         ]}
       >
-        {/* Gradient background — fades in/out via opacity using react-native-svg */}
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { opacity: pillOpacity, borderRadius: PILL_H / 2, overflow: 'hidden' }]}
-        >
-          <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
-            <Defs>
-              <SvgLinearGradient id="pillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <Stop offset="0%" stopColor="#2979FF" stopOpacity="1" />
-                <Stop offset="100%" stopColor="#0035CC" stopOpacity="1" />
-              </SvgLinearGradient>
-            </Defs>
-            <Rect width="100%" height="100%" fill="url(#pillGrad)" />
-          </Svg>
-          {/* Subtle inner highlight line at top */}
-          <View style={styles.pillHighlight} />
-        </Animated.View>
+        <MaterialCommunityIcons
+          name={(focused ? tab.iconActive : tab.icon) as any}
+          size={22}
+          color={iconColor}
+        />
 
-        {/* Icon */}
-        <Animated.View style={{ transform: [{ scale: iconScale }], zIndex: 1 }}>
-          <MaterialCommunityIcons
-            name={(focused ? tab.iconActive : tab.icon) as any}
-            size={26}
-            color={iconColor}
-          />
-        </Animated.View>
-
-        {/* Label */}
-        <Animated.Text
-          numberOfLines={1}
-          style={[
-            styles.label,
-            {
-              opacity:    labelOpacity,
-              maxWidth:   labelMaxW,
-              marginLeft: labelMarginL,
-              zIndex:     1,
-            },
-          ]}
-        >
-          {tab.label}
-        </Animated.Text>
+        {focused && (
+          <Text numberOfLines={1} style={styles.label}>
+            {tab.label}
+          </Text>
+        )}
       </Animated.View>
     </Pressable>
   );
-};
+});
 
 // ─── Premium Tab Bar Container ────────────────────────────────────────────────
-const PremiumTabBar = ({ state, navigation }: BottomTabBarProps) => (
+const PremiumTabBar = React.memo(({ state, navigation }: BottomTabBarProps) => (
   <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
     {TABS.map((tab, i) => {
       const focused = state.index === i;
@@ -255,7 +194,7 @@ const PremiumTabBar = ({ state, navigation }: BottomTabBarProps) => (
       );
     })}
   </View>
-);
+));
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 export const TabNavigator = () => (

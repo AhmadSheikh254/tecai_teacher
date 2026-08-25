@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -10,63 +10,63 @@ type AppHeaderProps = {
   onRightPress?: () => void;
 };
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ title, onBack, rightIcon, onRightPress }) => {
+export const AppHeader: React.FC<AppHeaderProps> = memo(({ title, onBack, rightIcon, onRightPress }) => {
   return (
     <View style={styles.appBar}>
       <View style={styles.headerLeft}>
         {onBack && (
           <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
-            <MaterialIcons name="arrow-back" size={26} color={Colors.textPrimary} />
+            <MaterialIcons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         )}
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
       {rightIcon && (
         <TouchableOpacity style={styles.appBarIconButton} onPress={onRightPress} activeOpacity={0.7}>
-          <MaterialIcons name={rightIcon} size={26} color={Colors.primary} />
+          <MaterialIcons name={rightIcon} size={20} color={Colors.primary} />
         </TouchableOpacity>
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   appBar: {
-    height: 76,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
   },
   backButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
     borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: '900',
     color: '#0F172A',
   },
   appBarIconButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
     borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',

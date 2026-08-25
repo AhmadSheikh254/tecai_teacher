@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export const Button = ({ title, onPress, variant = 'primary' }: any) => {
+export const Button = memo(({ title, onPress, variant = 'primary' }: any) => {
   const isPrimary = variant === 'primary';
   return (
     <TouchableOpacity style={styles.btnWrapper} onPress={onPress} activeOpacity={0.8}>
@@ -15,19 +15,19 @@ export const Button = ({ title, onPress, variant = 'primary' }: any) => {
       </Text>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   btnWrapper: {
-    height: 48,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 10,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
   btnText: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: '900',
   },
 });

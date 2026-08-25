@@ -18,7 +18,7 @@ interface HomeScreenProps {
   navigation: any;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 340;
   
@@ -1011,8 +1011,11 @@ const styles = StyleSheet.create({
   // ===== SCROLL CONTENT =====
   scrollContent: {
     padding: 14,
-    paddingBottom: 110,
-    gap: 14,
+    paddingBottom: 90,
+    gap: 12,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
 
   // ===== ULTRA-PREMIUM HERO DASHBOARD CARD =====
@@ -2504,3 +2507,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
 });
+
+export const HomeScreen = React.memo(HomeScreenComponent);

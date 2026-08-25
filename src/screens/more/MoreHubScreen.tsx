@@ -17,7 +17,7 @@ interface MoreHubScreenProps {
   navigation: any;
 }
 
-export const MoreHubScreen: React.FC<MoreHubScreenProps> = ({ navigation }) => {
+const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 340;
 
@@ -1252,9 +1252,12 @@ const styles = StyleSheet.create({
   },
   // Scroll & Grid Content
   scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
+    padding: 14,
+    paddingBottom: 90,
     zIndex: 5,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   gridContainer: {
     width: '100%',
@@ -1262,7 +1265,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
     width: '100%',
   },
   // Analytics Summary Card
@@ -3320,3 +3323,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export const MoreHubScreen = React.memo(MoreHubScreenComponent);

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export const BottomBar = ({ activeTab, onTabPress }: any) => {
+export const BottomBar = memo(({ activeTab, onTabPress }: any) => {
   const tabs = [
     { id: 'home', label: 'Home', icon: 'dashboard' },
     { id: 'assignments', label: 'Assignments', icon: 'assignment' },
@@ -23,7 +23,7 @@ export const BottomBar = ({ activeTab, onTabPress }: any) => {
           >
             <MaterialIcons 
               name={tab.icon as any} 
-              size={24} 
+              size={20} 
               color={isActive ? '#0284C7' : '#64748B'} 
             />
             <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
@@ -34,24 +34,24 @@ export const BottomBar = ({ activeTab, onTabPress }: any) => {
       })}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   bottomBarContainer: {
-    height: 64,
+    height: 54,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1.5,
+    borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
   },
   tabBtn: {
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   tabLabel: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '800',
     color: '#64748B',
   },
