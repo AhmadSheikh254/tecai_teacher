@@ -313,9 +313,9 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* ── High-Fidelity Ambient Background Glow Particles ── */}
-      <View style={styles.bgGlow1} />
-      <View style={styles.bgGlow2} />
-      <View style={styles.bgGlow3} />
+      <View style={styles.bgGlow1} pointerEvents="none" />
+      <View style={styles.bgGlow2} pointerEvents="none" />
+      <View style={styles.bgGlow3} pointerEvents="none" />
 
       {/* Premium AppBar */}
       <View style={styles.appBar}>
@@ -361,7 +361,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Unified Premium Control Center Deck */}
         <View style={styles.controlDeck}>
           {/* Segmented Date Filter Bar */}
@@ -1199,36 +1203,35 @@ const styles = StyleSheet.create({
   // Segmented Date Filter Control Bar
   filterBar: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0', // Darker, defined grey channel background
-    borderRadius: 14,
-    padding: 3.5,
-    height: 42,
-    marginBottom: 14,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 10,
+    padding: 3,
+    height: 36,
+    marginBottom: 10,
   },
   filterBarOption: {
     flex: 1,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 11,
+    borderRadius: 8,
   },
   filterBarOptionActive: {
     backgroundColor: '#fff',
-    // Heavy, prominent shadow for the selected sliding tab
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   filterBarOptionText: {
-    fontSize: 12.5,
-    fontWeight: '900', // Bolder inactive text
+    fontSize: 11,
+    fontWeight: '900',
     color: '#475569',
   },
   filterBarOptionTextActive: {
     color: '#0d1b3e',
-    fontWeight: '900', // Heavy bold active text
+    fontWeight: '900',
   },
 
   // Main Scroll View
@@ -1238,41 +1241,41 @@ const styles = StyleSheet.create({
     gap: 12,
     zIndex: 5,
     maxWidth: 1200,
-    alignSelf: 'center',
     width: '100%',
+    marginHorizontal: 'auto',
   },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
-    borderRadius: 14,
-    height: 46,
-    paddingHorizontal: 12,
-    borderWidth: 1.8, // Bolder input outline
-    borderColor: '#cbd5e1', // High contrast slate grey border
-    marginBottom: 14,
+    borderRadius: 10,
+    height: 36,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 10,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
     height: '100%',
     color: '#0d1b3e',
-    fontSize: 13.5,
-    fontWeight: '900', // Bold/heavy search query
+    fontSize: 12,
+    fontWeight: '900',
   },
   searchShortcutBadge: {
     backgroundColor: '#f1f5f9',
-    paddingHorizontal: 7,
-    paddingVertical: 3.5,
-    borderRadius: 6,
-    borderWidth: 1.2,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
+    borderWidth: 1,
     borderColor: '#cbd5e1',
   },
   searchShortcutText: {
-    fontSize: 9.5,
-    fontWeight: '900', // Heavy shortcut text
+    fontSize: 8.5,
+    fontWeight: '900',
     color: '#64748b',
     letterSpacing: 0.2,
   },
@@ -1280,22 +1283,22 @@ const styles = StyleSheet.create({
   // Actions row (Export & Create)
   topActionsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginBottom: 4,
   },
   topActionBtn: {
     flex: 1,
-    height: 48, // Taller buttons for elevated clickability
-    borderRadius: 14,
+    height: 36,
+    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 5,
   },
   exportBtn: {
     backgroundColor: '#fff',
-    borderWidth: 1.8, // Bolder border stroke
-    borderColor: '#0052cc', // Sapphire border matching text color
+    borderWidth: 1.2,
+    borderColor: '#0052cc',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -1304,24 +1307,23 @@ const styles = StyleSheet.create({
   },
   exportBtnText: {
     color: '#0052cc',
-    fontSize: 14,
-    fontWeight: '900', // Solid heavy font weight
-    letterSpacing: 0.3,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
   createBtn: {
     backgroundColor: '#0C3090',
-    // High-density glow shadow projection
     shadowColor: '#0C3090',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45, // Heavy shadow opacity
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   createBtnText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '900',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 
   // Cards List Container
@@ -1497,10 +1499,10 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   cardTitle: {
-    fontSize: 14.5,
+    fontSize: 13,
     fontWeight: '900',
     color: '#0d1b3e',
-    lineHeight: 18,
+    lineHeight: 16,
     marginTop: 2,
   },
   creatorRow: {

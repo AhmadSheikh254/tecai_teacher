@@ -946,12 +946,12 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 {/* Metadata Content */}
                 <View style={styles.toolMeta}>
                   <View style={styles.titleRow}>
-                    <Text style={styles.toolName}>{tool.title}</Text>
+                    <Text style={styles.toolName} numberOfLines={1}>{tool.title}</Text>
                     <View style={[styles.cardMetaBadge, { backgroundColor: tool.color + '10', borderColor: tool.color + '20' }]}>
                       <Text style={[styles.cardMetaBadgeText, { color: tool.color }]}>{tool.tag}</Text>
                     </View>
                   </View>
-                  <Text style={styles.toolDesc} numberOfLines={2}>{tool.desc}</Text>
+                  <Text style={styles.toolDesc} numberOfLines={1}>{tool.desc}</Text>
                 </View>
 
                 {/* Navigation arrow badge */}
@@ -961,7 +961,7 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                   end={{ x: 1, y: 1 }}
                   style={[styles.chevronWrapper, { borderColor: tool.color + '45', shadowColor: tool.color }]}
                 >
-                  <Svg width="42" height="42" viewBox="0 0 42 42">
+                  <Svg width="30" height="30" viewBox="0 0 42 42">
                     <Circle cx="21" cy="21" r="18" stroke={tool.color} strokeWidth={0.9} strokeDasharray="2.5,3.5" opacity={0.38} fill="none" />
                     <Path d="M15 21 H27 M22 16 L27 21 L22 26" stroke={tool.color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
                   </Svg>
@@ -1351,18 +1351,18 @@ const styles = StyleSheet.create({
 
   // Hero Banner Gradient
   heroBanner: {
-    margin: 14,
-    borderRadius: 24,
-    padding: 22,
+    margin: 12,
+    borderRadius: 16,
+    padding: 12,
     overflow: 'hidden',
     position: 'relative',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.14)', // soft glassmorphic border outline
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
     shadowColor: '#091E42',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
   },
   glassTopShine: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
@@ -1373,9 +1373,9 @@ const styles = StyleSheet.create({
   },
   heroOrbContainer: {
     position: 'absolute',
-    right: 8,
+    right: 4,
     top: '50%',
-    marginTop: -55,
+    marginTop: -40,
     zIndex: 3,
   },
   heroTextContainer: {
@@ -1384,95 +1384,95 @@ const styles = StyleSheet.create({
   },
   heroBadge: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(0, 255, 204, 0.08)', // glowing translucent background
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 255, 204, 0.25)', // glowing neon border
-    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: 'rgba(0, 255, 204, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 204, 0.25)',
+    borderRadius: 16, paddingHorizontal: 8, paddingVertical: 3,
     alignSelf: 'flex-start',
   },
   heroBadgeText: {
-    fontSize: 9, fontWeight: '900', color: '#00FFCC', letterSpacing: 1,
+    fontSize: 8.5, fontWeight: '900', color: '#00FFCC', letterSpacing: 0.8,
   },
   heroTitle: {
-    fontSize: 26,
+    fontSize: 18,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
-    marginTop: 10,
+    letterSpacing: 0.3,
+    marginTop: 4,
   },
   heroSubtitle: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#E2E8F0',
-    lineHeight: 17,
-    marginTop: 4,
+    lineHeight: 14,
+    marginTop: 2,
     opacity: 0.95,
   },
 
   // Search input
-  searchSection: { paddingHorizontal: 14, marginTop: 14, marginBottom: 8 },
+  searchSection: { paddingHorizontal: 12, marginTop: 8, marginBottom: 6 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#E2E8F0',
+    borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0',
     shadowColor: '#003d9b', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 2,
+    height: 36,
   },
-  searchIconBox: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  searchInput:   { flex: 1, height: 44, fontSize: 13, fontWeight: '600', color: '#0F172A' },
+  searchIconBox: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  searchInput:   { flex: 1, height: 36, fontSize: 12.5, fontWeight: '600', color: '#0F172A' },
 
   // Category sections
   categorySection: {
-    marginTop: 14,
-    paddingHorizontal: 14,
-    gap: 10,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    gap: 8,
   },
   categoryHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingLeft: 4,
+    gap: 6,
+    paddingLeft: 2,
   },
   categoryHeaderBullet: {
-    width: 6,
-    height: 14,
-    borderRadius: 3,
+    width: 5,
+    height: 12,
+    borderRadius: 2.5,
   },
   categoryTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
     color: '#334155',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   gridRow: {
-    gap: 12,
+    gap: 10,
   },
 
   // Tool Card
   toolCard: {
     flexDirection: 'row',
-    borderRadius: 24,
-    paddingHorizontal: 22,
-    paddingVertical: 22,
-    minHeight: 114, // increased height for spacious premium look
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    height: 56,
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#F1F5F9', // softer, cleaner border
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04, // very soft shadow
-    shadowRadius: 16,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
     position: 'relative',
     overflow: 'hidden',
   },
   leftAccentBar: {
     position: 'absolute',
     left: 0,
-    top: 20,
-    bottom: 20,
-    width: 6,
-    borderTopRightRadius: 5,
-    borderBottomRightRadius: 5,
+    top: 8,
+    bottom: 8,
+    width: 3.5,
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
   },
   cardWaveBackground: {
     position: 'absolute',
@@ -1482,74 +1482,76 @@ const styles = StyleSheet.create({
   },
   cardWatermarkContainer: {
     position: 'absolute',
-    right: 74, // shifted left to fully clear the chevron navigation button
+    right: 36,
     top: 0,
     bottom: 0,
-    width: 130,
+    width: 60,
     justifyContent: 'center',
     alignItems: 'flex-end',
-    opacity: 0.22, // slightly higher opacity for richer visual depth
+    opacity: 0.12,
   },
   cardMetaBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 7,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
     borderWidth: 0.8,
   },
   cardMetaBadgeText: {
-    fontSize: 9.8, // Slightly larger, clear tag font
+    fontSize: 7.5,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   iconBox: {
-    width: 56, // Enlarged for ultra-prominence
-    height: 56,
-    borderRadius: 28, // Perfect circular orb
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   toolMeta: {
     flex: 1,
-    marginLeft: 16,
-    marginRight: 48, // Gutter preventing text from overlapping the enlarged chevron button
+    marginLeft: 8,
+    marginRight: 6,
+    justifyContent: 'center',
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 6,
+    justifyContent: 'space-between',
+    gap: 4,
+    marginBottom: 1,
   },
   toolName: {
-    fontSize: 18.5, // Even larger premium title
+    flex: 1,
+    fontSize: 12,
     fontWeight: '900',
     color: '#0A1F5C',
   },
   toolDesc: {
-    fontSize: 14.2, // Even larger, clear description text
+    fontSize: 10,
     color: '#475569',
     fontWeight: '600',
-    lineHeight: 20, // Spacious line height
+    lineHeight: 12,
   },
   chevronWrapper: {
-    width: 44, // Scaled-up prominent button size
-    height: 44,
-    borderRadius: 22, // Perfect circular badge
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    marginLeft: 10,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 6,
-    elevation: 3,
+    borderWidth: 1,
+    marginLeft: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   // Empty state search

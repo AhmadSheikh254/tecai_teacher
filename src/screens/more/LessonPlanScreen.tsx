@@ -351,6 +351,138 @@ export const LessonPlanScreen = ({ navigation }: any) => {
       });
     }, 120);
   };
+  if (activePlan) {
+    return (
+      <View style={styles.viewerBackdrop}>
+        <SafeAreaView style={styles.viewerContainer} edges={['top', 'bottom']}>
+          {/* Viewer Top Action Bar */}
+          <View style={styles.viewerTopBar}>
+            <TouchableOpacity 
+              style={styles.viewerCloseBtn} 
+              onPress={() => setActivePlan(null)}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={20} color="#0A1F5C" />
+              <Text style={styles.viewerCloseText}>Back</Text>
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              <TouchableOpacity 
+                style={styles.downloadBtn} 
+                onPress={() => alert('Lesson Plan PDF downloaded to your device!')}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="file-download" size={15} color="#fff" style={{ marginRight: 3 }} />
+                <Text style={styles.downloadBtnText}>Download</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.printBtn} 
+                onPress={() => alert('Print command initialized! Loading printer preview...')}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="print" size={15} color="#003d9b" style={{ marginRight: 3 }} />
+                <Text style={styles.printBtnText}>Print</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.viewerScrollContent} showsVerticalScrollIndicator={false}>
+            {/* Clean Sheet Paper Layout */}
+            <View style={styles.paperSheet}>
+              {/* Sheet Title */}
+              <Text style={styles.sheetHeaderTitle}>Lesson Plan: {activePlan.topic}</Text>
+              <View style={styles.sheetMetaRow}>
+                <Text style={styles.sheetMetaText}>Target: {activePlan.level} • Language: {activePlan.language}</Text>
+                {activePlan.fileName && (
+                  <Text style={styles.sheetMetaFile}>Reference File: {activePlan.fileName}</Text>
+                )}
+              </View>
+              <View style={styles.sheetDivider} />
+
+              {/* 1. SLOs */}
+              <Text style={styles.sheetSectionTitle}>1. Student Learning Outcomes (SLOs)</Text>
+              {activePlan.slos.map((item, idx) => (
+                <View key={idx} style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>{item}</Text>
+                </View>
+              ))}
+
+              {/* 2. Objectives */}
+              <Text style={styles.sheetSectionTitle}>2. Learning Objectives</Text>
+              {activePlan.objectives.map((item, idx) => (
+                <View key={idx} style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>*</Text>
+                  <Text style={styles.bulletText}>{item}</Text>
+                </View>
+              ))}
+
+              {/* 3. Materials Needed */}
+              <Text style={styles.sheetSectionTitle}>3. Materials Needed</Text>
+              
+              <View style={styles.tableHeaderRow}>
+                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Material</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Quantity</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Description</Text>
+              </View>
+              {activePlan.materials.map((m, idx) => (
+                <View key={idx} style={[styles.tableDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
+                  <Text style={[styles.tableDataCell, { flex: 1.5, fontWeight: '700' }]}>{m.name}</Text>
+                  <Text style={[styles.tableDataCell, { flex: 1 }]}>{m.quantity}</Text>
+                  <Text style={[styles.tableDataCell, { flex: 2, color: '#475569' }]}>{m.desc}</Text>
+                </View>
+              ))}
+
+              {/* 4. Introduction */}
+              <Text style={styles.sheetSectionTitle}>4. Introduction (10 minutes)</Text>
+              <Text style={styles.sheetParagraphText}>{activePlan.introduction}</Text>
+
+              {/* 5. Main Activities */}
+              <Text style={styles.sheetSectionTitle}>5. Main Activities (25 minutes)</Text>
+              {activePlan.mainActivities.map((act, idx) => (
+                <View key={idx} style={styles.activityBox}>
+                  <View style={styles.activityTitleRow}>
+                    <Text style={styles.activityTitleText}>{act.title}</Text>
+                    <Text style={styles.activityDurationText}>{act.duration}</Text>
+                  </View>
+                  <Text style={styles.sheetParagraphText}>{act.details}</Text>
+                </View>
+              ))}
+
+              {/* 6. Worksheet Activities */}
+              <Text style={styles.sheetSectionTitle}>6. Worksheet Activities</Text>
+              {activePlan.worksheet.map((item, idx) => (
+                <View key={idx} style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>-</Text>
+                  <Text style={styles.bulletText}>{item}</Text>
+                </View>
+              ))}
+
+              {/* 7. Assessment */}
+              <Text style={styles.sheetSectionTitle}>7. Assessment Rubric</Text>
+              
+              <View style={styles.rubricHeaderRow}>
+                <Text style={[styles.rubricHeaderCell, { flex: 1.2 }]}>Criteria</Text>
+                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Excellent (3)</Text>
+                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Good (2)</Text>
+                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Needs Improvement (1)</Text>
+              </View>
+              {activePlan.assessment.map((r, idx) => (
+                <View key={idx} style={[styles.rubricDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
+                  <Text style={[styles.rubricDataCell, { flex: 1.2, fontWeight: '700', color: '#0A1F5C' }]}>{r.criteria}</Text>
+                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#059669' }]}>{r.excellent}</Text>
+                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#D97706' }]}>{r.good}</Text>
+                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#DC2626' }]}>{r.needsImp}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
 
@@ -533,8 +665,8 @@ export const LessonPlanScreen = ({ navigation }: any) => {
 
                 {/* Label */}
                 <View style={styles.generateBtnLabelBlock}>
-                  <Text style={styles.generateBtnText}>Generate Lesson Plan</Text>
-                  <Text style={styles.generateBtnSubText}>AI · Multilingual · Grade-ready</Text>
+                  <Text style={styles.generateBtnText} numberOfLines={1}>Generate Lesson Plan</Text>
+                  <Text style={styles.generateBtnSubText} numberOfLines={1}>AI · Multilingual · Grade-ready</Text>
                 </View>
 
                 {/* Premium arrow pill */}
@@ -574,74 +706,7 @@ export const LessonPlanScreen = ({ navigation }: any) => {
             <Text style={styles.loaderPercentage}>{progress}% Complete</Text>
           </View>
         )}
-
-        {/* ── PLANS LIST HEADER ── */}
-        <View style={styles.viewPlanHeaderRow}>
-          <LinearGradient colors={['#0047CC','#0EA5E9']} style={styles.bulletIndicator}/>
-          <Text style={styles.viewPlanTitle}>Generated Lesson Plans</Text>
-          <View style={styles.planCountBadge}>
-            <Text style={styles.planCountText}>{plans.length}</Text>
-          </View>
-        </View>
-
-        {/* ── PLANS CARDS ── */}
-        <View style={styles.plansListContainer}>
-          {plans.map((p, index) => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.planItemCard}
-              onPress={() => setActivePlan(p)}
-              activeOpacity={0.86}
-            >
-
-              {/* subtle top highlight */}
-              <View style={styles.planItemTopHighlight}/>
-
-              {/* premium icon orb */}
-              <LinearGradient
-                colors={['#EBF2FF','#DBEAFE','#C8D9F7']}
-                start={{x:0,y:0}} end={{x:1,y:1}}
-                style={styles.planItemIconWrapper}
-              >
-                <View style={styles.planItemIconInner}>
-                  <MaterialIcons name="description" size={22} color="#1E40AF"/>
-                </View>
-              </LinearGradient>
-
-              {/* text */}
-              <View style={styles.planItemTextContent}>
-                <Text style={styles.planItemTopic} numberOfLines={1}>{p.topic}</Text>
-                <View style={styles.planMetaRow}>
-                  <View style={styles.planMetaPill}>
-                    <MaterialIcons name="language" size={9} color="#4B6CB7" style={{marginRight:3}}/>
-                    <Text style={styles.planMetaPillText}>{p.language}</Text>
-                  </View>
-                  <View style={[styles.planMetaPill, styles.planMetaPillBlue]}>
-                    <MaterialIcons name="school" size={9} color="#1B3270" style={{marginRight:3}}/>
-                    <Text style={[styles.planMetaPillText,{color:'#1B3270'}]}>{p.level}</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* ── Premium Eye Button ── */}
-              <View style={styles.eyeBtnOuter}>
-                <LinearGradient
-                  colors={['#1B3270','#2563EB']}
-                  start={{x:0,y:0}} end={{x:1,y:1}}
-                  style={styles.eyeBtnCore}
-                >
-                  {/* inner gloss highlight */}
-                  <View style={styles.eyeBtnGloss}/>
-                  <MaterialIcons name="remove-red-eye" size={18} color="#fff"/>
-                </LinearGradient>
-              </View>
-
-            </TouchableOpacity>
-          ))}
-        </View>
-
       </ScrollView>
-
 
       {/* LANGUAGE SELECTOR PICKER MODAL */}
       <Modal visible={langModalVisible} transparent={true} animationType="slide">
@@ -687,135 +752,6 @@ export const LessonPlanScreen = ({ navigation }: any) => {
             ))}
           </View>
         </PressableModalBackdrop>
-      </Modal>
-
-      {/* ── HIGH FIDELITY DETAILED LESSON PLAN VIEWER (SCREENSHOT 3 STYLE) ── */}
-      <Modal visible={activePlan !== null} transparent={true} animationType="slide">
-        <View style={styles.viewerBackdrop}>
-          <SafeAreaView style={styles.viewerContainer} edges={['top', 'bottom']}>
-            
-            {/* Viewer Top Action Bar */}
-            <View style={styles.viewerTopBar}>
-              <TouchableOpacity 
-                style={styles.viewerCloseBtn} 
-                onPress={() => setActivePlan(null)}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons name="arrow-back" size={20} color="#0A1F5C" />
-                <Text style={styles.viewerCloseText}>Back</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.printBtn} 
-                onPress={() => alert('Print command initialized! Loading printer preview...')}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons name="print" size={15} color="#003d9b" style={{ marginRight: 5 }} />
-                <Text style={styles.printBtnText}>Print</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.viewerScrollContent} showsVerticalScrollIndicator={false}>
-              
-              {/* Clean Sheet Paper Layout */}
-              <View style={styles.paperSheet}>
-                
-                {/* Sheet Title */}
-                <Text style={styles.sheetHeaderTitle}>Lesson Plan: {activePlan?.topic}</Text>
-                <View style={styles.sheetMetaRow}>
-                  <Text style={styles.sheetMetaText}>Target: {activePlan?.level} • Language: {activePlan?.language}</Text>
-                  {activePlan?.fileName && (
-                    <Text style={styles.sheetMetaFile}>Reference File: {activePlan.fileName}</Text>
-                  )}
-                </View>
-                <View style={styles.sheetDivider} />
-
-                {/* 1. SLOs */}
-                <Text style={styles.sheetSectionTitle}>1. Student Learning Outcomes (SLOs)</Text>
-                {activePlan?.slos.map((item, idx) => (
-                  <View key={idx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{item}</Text>
-                  </View>
-                ))}
-
-                {/* 2. Objectives */}
-                <Text style={styles.sheetSectionTitle}>2. Learning Objectives</Text>
-                {activePlan?.objectives.map((item, idx) => (
-                  <View key={idx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>*</Text>
-                    <Text style={styles.bulletText}>{item}</Text>
-                  </View>
-                ))}
-
-                {/* 3. Materials Needed */}
-                <Text style={styles.sheetSectionTitle}>3. Materials Needed</Text>
-                
-                {/* Table Header */}
-                <View style={styles.tableHeaderRow}>
-                  <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Material</Text>
-                  <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Quantity</Text>
-                  <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Description</Text>
-                </View>
-                {/* Table Rows */}
-                {activePlan?.materials.map((m, idx) => (
-                  <View key={idx} style={[styles.tableDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
-                    <Text style={[styles.tableDataCell, { flex: 1.5, fontWeight: '700' }]}>{m.name}</Text>
-                    <Text style={[styles.tableDataCell, { flex: 1 }]}>{m.quantity}</Text>
-                    <Text style={[styles.tableDataCell, { flex: 2, color: '#475569' }]}>{m.desc}</Text>
-                  </View>
-                ))}
-
-                {/* 4. Introduction */}
-                <Text style={styles.sheetSectionTitle}>4. Introduction (10 minutes)</Text>
-                <Text style={styles.sheetParagraphText}>{activePlan?.introduction}</Text>
-
-                {/* 5. Main Activities */}
-                <Text style={styles.sheetSectionTitle}>5. Main Activities (25 minutes)</Text>
-                {activePlan?.mainActivities.map((act, idx) => (
-                  <View key={idx} style={styles.activityBox}>
-                    <View style={styles.activityTitleRow}>
-                      <Text style={styles.activityTitleText}>{act.title}</Text>
-                      <Text style={styles.activityDurationText}>{act.duration}</Text>
-                    </View>
-                    <Text style={styles.sheetParagraphText}>{act.details}</Text>
-                  </View>
-                ))}
-
-                {/* 6. Worksheet Activities */}
-                <Text style={styles.sheetSectionTitle}>6. Worksheet Activities</Text>
-                {activePlan?.worksheet.map((item, idx) => (
-                  <View key={idx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>-</Text>
-                    <Text style={styles.bulletText}>{item}</Text>
-                  </View>
-                ))}
-
-                {/* 7. Assessment */}
-                <Text style={styles.sheetSectionTitle}>7. Assessment Rubric</Text>
-                
-                {/* Rubric Headers */}
-                <View style={styles.rubricHeaderRow}>
-                  <Text style={[styles.rubricHeaderCell, { flex: 1.2 }]}>Criteria</Text>
-                  <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Excellent (3)</Text>
-                  <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Good (2)</Text>
-                  <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Needs Improvement (1)</Text>
-                </View>
-                {/* Rubric Rows */}
-                {activePlan?.assessment.map((r, idx) => (
-                  <View key={idx} style={[styles.rubricDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
-                    <Text style={[styles.rubricDataCell, { flex: 1.2, fontWeight: '700', color: '#0A1F5C' }]}>{r.criteria}</Text>
-                    <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#059669' }]}>{r.excellent}</Text>
-                    <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#D97706' }]}>{r.good}</Text>
-                    <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#DC2626' }]}>{r.needsImp}</Text>
-                  </View>
-                ))}
-
-              </View>
-
-            </ScrollView>
-          </SafeAreaView>
-        </View>
       </Modal>
 
     </SafeAreaView>
@@ -924,54 +860,54 @@ const styles = StyleSheet.create({
   // FORM CARD
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 24,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: 'rgba(27, 50, 112, 0.08)',
     shadowColor: '#1B3270',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.1,
-    shadowRadius: 28,
-    elevation: 6,
-    marginBottom: 20,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 14,
   },
   // FIELD HEADER
   fieldHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 7,
+    marginBottom: 5,
   },
   fieldDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#0047CC',
-    marginRight: 7,
+    marginRight: 6,
   },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#334155',
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
+    letterSpacing: 0.6,
   },
   requestTextArea: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(0, 71, 204, 0.12)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
     color: '#0F172A',
     fontWeight: '600',
-    height: 88,
-    marginBottom: 16,
+    height: 60,
+    marginBottom: 10,
   },
   gridRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 10,
   },
   gridCol: {
     flex: 1,
@@ -981,11 +917,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FAFBFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: 'rgba(0,71,204,0.14)',
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    height: 52,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    height: 38,
   },
   pickerLeft: {
     flexDirection: 'row',
@@ -993,15 +929,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pickerIconOrb: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 6,
   },
   pickerButtonText: {
-    fontSize: 13.5,
+    fontSize: 12,
     fontWeight: '800',
     color: '#1E293B',
   },
@@ -1011,13 +947,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: 'rgba(0, 71, 204, 0.18)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 54,
-    marginBottom: 22,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    marginBottom: 12,
   },
   fileAttachmentBoxActive: {
     backgroundColor: '#EFF6FF',
@@ -1025,15 +961,15 @@ const styles = StyleSheet.create({
     borderColor: '#0047CC',
   },
   fileIconOrb: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   fileAttachmentText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#94A3B8',
     flex: 1,
@@ -1045,20 +981,20 @@ const styles = StyleSheet.create({
 
   // ── GENERATE BUTTON ──
   generateBtnContainer: {
-    marginTop: 6,
-    borderRadius: 18,
+    marginTop: 2,
+    borderRadius: 12,
     shadowColor: '#0D1F55',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.55,
-    shadowRadius: 22,
-    elevation: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
     overflow: 'visible',
   },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
@@ -1067,49 +1003,51 @@ const styles = StyleSheet.create({
   generateBtnHighlight: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 1.5,
+    height: 1,
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
   generateBtnIconZone: {
-    width: 64,
-    height: 64,
+    width: 44,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.09)',
   },
   generateBtnDivider: {
     width: 1,
-    height: 40,
+    height: 28,
     backgroundColor: 'rgba(255,255,255,0.18)',
-    marginRight: 14,
+    marginRight: 8,
   },
   generateBtnLabelBlock: {
     flex: 1,
+    justifyContent: 'center',
   },
   generateBtnText: {
     color: '#FFFFFF',
-    fontSize: 15.5,
+    fontSize: 12.5,
     fontWeight: '900',
-    letterSpacing: 0.6,
-    lineHeight: 20,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
   generateBtnSubText: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 10,
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 8.5,
     fontWeight: '700',
-    letterSpacing: 0.8,
-    marginTop: 2,
+    letterSpacing: 0.4,
+    marginTop: 1,
+    lineHeight: 11,
     textTransform: 'uppercase',
   },
   generateBtnArrow: {
-    height: 40,
-    paddingHorizontal: 13,
-    borderRadius: 11,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
 
   // Generating State
@@ -1413,9 +1351,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1.5,
+    paddingHorizontal: 12,
+    height: 40,
+    borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
   viewerCloseBtn: {
@@ -1424,34 +1362,48 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   viewerCloseText: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '900',
     color: '#0A1F5C',
     marginLeft: 4,
+  },
+  downloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0047CC',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  downloadBtnText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
   printBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#003d9b',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   printBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
     color: '#003d9b',
   },
 
   viewerScrollContent: {
-    padding: 16,
+    padding: 10,
+    paddingBottom: 30,
   },
   paperSheet: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 20,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
@@ -1459,85 +1411,85 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sheetHeaderTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '900',
     color: '#0A1F5C',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 20,
   },
   sheetMetaRow: {
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
     gap: 4,
   },
   sheetMetaText: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '800',
     color: '#64748B',
   },
   sheetMetaFile: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: '#003d9b',
     backgroundColor: 'rgba(0, 61, 155, 0.05)',
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
-    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   sheetDivider: {
-    height: 1.5,
+    height: 1,
     backgroundColor: '#E2E8F0',
-    marginVertical: 16,
+    marginVertical: 10,
   },
   sheetSectionTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '900',
     color: '#0F172A',
-    marginTop: 18,
-    marginBottom: 8,
+    marginTop: 10,
+    marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   sheetParagraphText: {
-    fontSize: 13,
+    fontSize: 10.5,
     color: '#334155',
     fontWeight: '600',
-    lineHeight: 18.5,
+    lineHeight: 14.5,
   },
   bulletRow: {
     flexDirection: 'row',
-    marginBottom: 6,
-    paddingRight: 10,
+    marginBottom: 4,
+    paddingRight: 6,
   },
   bulletDot: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '900',
     color: '#003d9b',
-    marginRight: 8,
-    width: 8,
+    marginRight: 6,
+    width: 6,
     textAlign: 'center',
   },
   bulletText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 10.5,
     color: '#334155',
     fontWeight: '600',
-    lineHeight: 18,
+    lineHeight: 14.5,
   },
 
   // Table styling (Materials Section)
   tableHeaderRow: {
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',
-    borderTopWidth: 1.5,
-    borderBottomWidth: 1.5,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     borderColor: '#CBD5E1',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     marginTop: 4,
   },
   tableHeaderCell: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '900',
     color: '#1E293B',
     textTransform: 'uppercase',
@@ -1546,78 +1498,74 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderColor: '#E2E8F0',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     alignItems: 'center',
   },
   tableDataCell: {
-    fontSize: 12,
+    fontSize: 9.5,
     color: '#1E293B',
     fontWeight: '600',
-    paddingRight: 6,
+    paddingRight: 4,
   },
 
   activityBox: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 6,
+    padding: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#003d9b',
-    marginBottom: 8,
-    marginTop: 4,
+    marginBottom: 6,
   },
   activityTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 2,
   },
   activityTitleText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '900',
     color: '#0A1F5C',
-    flex: 1,
-    marginRight: 8,
   },
   activityDurationText: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '800',
-    color: '#FFFFFF',
-    backgroundColor: '#003d9b',
-    paddingHorizontal: 7,
+    color: '#003d9b',
+    backgroundColor: 'rgba(0, 61, 155, 0.08)',
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 5,
+    borderRadius: 4,
   },
 
-  // Rubric / Assessment styles
+  // Assessment Rubric
   rubricHeaderRow: {
     flexDirection: 'row',
-    backgroundColor: '#E2E8F0',
-    borderTopWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderColor: '#94A3B8',
-    paddingVertical: 8,
+    backgroundColor: '#F1F5F9',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingVertical: 5,
     paddingHorizontal: 6,
     marginTop: 4,
   },
   rubricHeaderCell: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '900',
-    color: '#0F172A',
+    color: '#1E293B',
     textTransform: 'uppercase',
-    paddingRight: 4,
   },
   rubricDataRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderColor: '#CBD5E1',
-    paddingVertical: 10,
+    borderColor: '#E2E8F0',
+    paddingVertical: 5,
     paddingHorizontal: 6,
+    alignItems: 'center',
   },
   rubricDataCell: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600',
-    lineHeight: 14,
-    paddingRight: 6,
-  }
+    paddingRight: 4,
+  },
 });

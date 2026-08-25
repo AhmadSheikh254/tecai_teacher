@@ -107,9 +107,9 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* Ambient background glows for 3D depth */}
-      <View style={styles.bgGlow1} />
-      <View style={styles.bgGlow2} />
-      <View style={styles.bgGlow3} />
+      <View style={styles.bgGlow1} pointerEvents="none" />
+      <View style={styles.bgGlow2} pointerEvents="none" />
+      <View style={styles.bgGlow3} pointerEvents="none" />
 
       {/* Upgraded Premium Header Bar */}
       <View style={styles.appBar}>
@@ -135,7 +135,11 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* FLAGSHIP FEATURE: Standalone Premium AI Card */}
         <TouchableOpacity 
@@ -1256,8 +1260,8 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
     zIndex: 5,
     maxWidth: 1200,
-    alignSelf: 'center',
     width: '100%',
+    marginHorizontal: 'auto',
   },
   gridContainer: {
     width: '100%',

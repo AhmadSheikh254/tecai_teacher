@@ -463,9 +463,9 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* ── High-Fidelity Ambient Background Glow Particles ── */}
-      <View style={styles.bgGlow1} />
-      <View style={styles.bgGlow2} />
-      <View style={styles.bgGlow3} />
+      <View style={styles.bgGlow1} pointerEvents="none" />
+      <View style={styles.bgGlow2} pointerEvents="none" />
+      <View style={styles.bgGlow3} pointerEvents="none" />
 
       {/* Premium AppBar */}
       <View style={styles.appBar}>
@@ -503,7 +503,11 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Deep Luxury Header Banner */}
         <View style={styles.welcomeBanner}>
           <View style={styles.cardTopShine} />
@@ -710,8 +714,8 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
     zIndex: 5,
     maxWidth: 1200,
-    alignSelf: 'center',
     width: '100%',
+    marginHorizontal: 'auto',
   },
   // ===== DEEP NAVY HEADER BANNER =====
   welcomeBanner: {
@@ -762,11 +766,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   dashboardTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '900',
     color: '#fff',
-    letterSpacing: -0.6,
-    marginBottom: 4,
+    letterSpacing: -0.4,
+    marginBottom: 2,
   },
   dashboardSubtitle: {
     fontSize: 12,

@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-// Web Vector Icons Font Injection for Vercel & Web Exports
+// Web Performance & GPU Acceleration Injection for Vercel & Web Exports
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   try {
     const cdnLinks = [
@@ -23,7 +23,22 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       }
     });
 
-    const iconFontStyles = `
+    const webPerfAndIconStyles = `
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        box-sizing: border-box;
+      }
+      html, body, #root {
+        overflow-x: hidden;
+        touch-action: manipulation;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* Hardware Acceleration for smooth 60fps scrolling */
+      div, [role="grid"], [data-focusable="true"] {
+        transform: translateZ(0);
+        will-change: transform;
+      }
       @font-face {
         font-family: 'MaterialIcons';
         src: url('https://fonts.gstatic.com/s/materialicons/v142/fluGr4svyA-A6H72462Uce5P7A.woff2') format('woff2');
@@ -46,7 +61,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       const styleEl = document.createElement('style');
       styleEl.id = 'expo-vector-icons-web';
       styleEl.type = 'text/css';
-      styleEl.appendChild(document.createTextNode(iconFontStyles));
+      styleEl.appendChild(document.createTextNode(webPerfAndIconStyles));
       document.head.appendChild(styleEl);
     }
   } catch (e) {

@@ -160,7 +160,11 @@ export const ExamScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={{ flex: 1, width: '100%' }}
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+        >
           
           {/* EXAM OVERVIEW HERO BANNER */}
           <View style={styles.heroCard}>
@@ -495,78 +499,81 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
-    gap: 18,
+    padding: 14,
+    paddingBottom: 90,
+    gap: 12,
+    maxWidth: 1200,
+    width: '100%',
+    marginHorizontal: 'auto',
   },
 
   // Hero Card
   heroCard: {
-    borderRadius: 26,
-    padding: 22,
+    borderRadius: 16,
+    padding: 12,
     position: 'relative',
     overflow: 'hidden',
-    gap: 12,
-    elevation: 7,
+    gap: 6,
+    elevation: 4,
     shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   heroHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     alignSelf: 'flex-start',
   },
   heroBadgeBox: {
-    width: 24, height: 24,
-    borderRadius: 12,
+    width: 18, height: 18,
+    borderRadius: 9,
     alignItems: 'center', justifyContent: 'center',
   },
   heroBadgeText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: '900',
   },
   heroTitle: {
-    fontSize: 23,
+    fontSize: 17,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   heroSubtitle: {
-    fontSize: 13.5,
+    fontSize: 10.5,
     fontWeight: '700',
     color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 19,
+    lineHeight: 14,
   },
   heroMetricsGrid: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(0, 0, 0, 0.12)',
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 6,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginTop: 2,
   },
   heroMetricItem: {
     alignItems: 'center',
-    gap: 2,
+    gap: 1,
   },
   heroMetricValue: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '900',
   },
   heroMetricLabel: {
     color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   heroMetricDivider: {

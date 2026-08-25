@@ -110,7 +110,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
   const [topic, setTopic] = useState('');
   const [format, setFormat] = useState('Presentation');
   const [textMode, setTextMode] = useState('Generate');
-  const [slidesCount, setSlidesCount] = useState('8');
+  const [slidesCount, setSlidesCount] = useState('');
   const [exportAs, setExportAs] = useState('PowerPoint (PPTX)');
   const [additionalNotes, setAdditionalNotes] = useState('');
   
@@ -495,46 +495,46 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF5F2' },
 
-  header: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 20 },
+  header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
-  backBtn: { marginRight: 12 },
+  backBtn: { marginRight: 10 },
   backBtnInner: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 32, height: 32, borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)',
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   headerIconBox: {
-    width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
-    marginRight: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)',
+    width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+    marginRight: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)',
   },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', letterSpacing: 0.2 },
-  headerSub: { fontSize: 11, color: 'rgba(255,255,255,0.92)', fontWeight: '600', marginTop: 2 },
-  headerGlow: { height: 3 },
+  headerTitle: { fontSize: 15, fontWeight: '900', color: '#fff', letterSpacing: 0.2 },
+  headerSub: { fontSize: 9.5, color: 'rgba(255,255,255,0.88)', fontWeight: '600', marginTop: 1 },
+  headerGlow: { height: 2 },
 
-  scroll: { padding: 16, paddingBottom: 52 },
+  scroll: { padding: 12, paddingBottom: 60 },
 
-  pillRow: { flexDirection: 'row', gap: 7, marginBottom: 14, flexWrap: 'wrap' },
+  pillRow: { flexDirection: 'row', gap: 5, marginBottom: 10, flexWrap: 'wrap' },
   pill: {
-    backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1.5, borderColor: '#FFCCBC',
+    backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: '#FFCCBC',
   },
-  pillText: { fontSize: 11.5, fontWeight: '800', color: '#A83014' },
+  pillText: { fontSize: 9.5, fontWeight: '800', color: '#A83014' },
 
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 28, padding: 22,
-    borderWidth: 1.5, borderColor: '#FFCCBC',
-    shadowColor: '#D24726', shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08, shadowRadius: 24, elevation: 5, marginBottom: 20,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12,
+    borderWidth: 1, borderColor: '#FFCCBC',
+    shadowColor: '#D24726', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05, shadowRadius: 10, elevation: 3, marginBottom: 12,
   },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 },
-  fieldDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D24726', marginRight: 8 },
-  fieldLabel: { fontSize: 12, fontWeight: '900', color: '#5C1605', textTransform: 'uppercase', letterSpacing: 0.9 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5, marginTop: 2 },
+  fieldDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#D24726', marginRight: 6 },
+  fieldLabel: { fontSize: 9.5, fontWeight: '900', color: '#5C1605', textTransform: 'uppercase', letterSpacing: 0.8 },
 
   textArea: {
-    backgroundColor: '#FAF9F8', borderWidth: 1.5, borderColor: '#FFD7CC',
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 14.5, color: '#2A0800', fontWeight: '600', height: 110, marginBottom: 16,
+    backgroundColor: '#FAF9F8', borderWidth: 1, borderColor: '#FFD7CC',
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8,
+    fontSize: 12, color: '#2A0800', fontWeight: '600', height: 60, marginBottom: 10,
   },
 
   dropdownSelector: {
@@ -542,61 +542,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FAF9F8',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#FFD7CC',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 52,
-    marginBottom: 16,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 36,
+    marginBottom: 10,
   },
   dropdownText: {
-    fontSize: 14.5,
+    fontSize: 12,
     fontWeight: '700',
     color: '#2A0800',
   },
 
   singleLineInput: {
     backgroundColor: '#FAF9F8',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#FFD7CC',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 52,
-    fontSize: 14.5,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 36,
+    fontSize: 12,
     fontWeight: '700',
     color: '#2A0800',
-    marginBottom: 16,
+    marginBottom: 10,
   },
 
   fileBox: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#FAF9F8',
-    borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#FFCCBC',
-    borderRadius: 14, paddingHorizontal: 14, height: 56, marginBottom: 20,
+    borderWidth: 1, borderStyle: 'dashed', borderColor: '#FFCCBC',
+    borderRadius: 10, paddingHorizontal: 10, height: 36, marginBottom: 12,
   },
   fileBoxActive: { backgroundColor: '#FDF2EE', borderStyle: 'solid', borderColor: '#D24726' },
-  fileOrb: { width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  fileText: { fontSize: 14, fontWeight: '600', color: '#A83014', flex: 1 },
+  fileOrb: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  fileText: { fontSize: 11.5, fontWeight: '600', color: '#A83014', flex: 1 },
   fileTextActive: { color: '#D24726', fontWeight: '700' },
 
   generateBtn: {
     alignSelf: 'flex-start',
-    borderRadius: 14,
+    borderRadius: 10,
     overflow: 'hidden',
-    marginTop: 8,
+    marginTop: 4,
     shadowColor: '#A83014',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   generateBtnGrad: {
-    paddingHorizontal: 30,
-    paddingVertical: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   generateBtnText: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: '900',
     color: '#fff',
     letterSpacing: 0.5,

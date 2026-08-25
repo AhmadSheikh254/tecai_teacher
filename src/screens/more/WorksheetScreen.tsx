@@ -269,6 +269,142 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
     }, 110);
   };
 
+  if (activeWorksheet) {
+    return (
+      <View style={styles.fullScreenModalWrapper}>
+        <SafeAreaView style={styles.sheetSafeArea} edges={['top', 'bottom']}>
+          {/* Viewer Navigation Bar */}
+          <View style={styles.sheetNavBar}>
+            <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setActiveWorksheet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="arrow-back" size={20} color="#0E7490" />
+            </TouchableOpacity>
+
+            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeWorksheet.topic}</Text>
+
+            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              <TouchableOpacity
+                style={styles.sheetDownloadBtn}
+                onPress={() => Alert.alert('Download PDF', 'Worksheet PDF downloaded to your device.')}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="file-download" size={15} color="#fff" style={{ marginRight: 3 }} />
+                <Text style={styles.sheetDownloadText}>Download</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sheetPrintBtn}
+                onPress={() => Alert.alert('Print Worksheet', 'Worksheet sent to print queue as PDF.')}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="print" size={15} color="#fff" style={{ marginRight: 3 }} />
+                <Text style={styles.sheetPrintText}>Print</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Paper Sheet Container */}
+          <ScrollView style={{ flex: 1, width: '100%' }} contentContainerStyle={styles.sheetScrollContainer} showsVerticalScrollIndicator={false}>
+            <View style={styles.paperSheetCard}>
+              
+              {/* Paper Top Title Header */}
+              <View style={styles.paperHeader}>
+                <Text style={styles.paperMainTitle}>{activeWorksheet.topic}</Text>
+                <View style={styles.paperBadgeRow}>
+                  <View style={styles.paperMetaBadge}>
+                    <Text style={styles.paperMetaBadgeText}>{activeWorksheet.language}</Text>
+                  </View>
+                  <View style={[styles.paperMetaBadge, { backgroundColor: '#ECFEFF' }]}>
+                    <Text style={[styles.paperMetaBadgeText, { color: '#0E7490' }]}>{activeWorksheet.level}</Text>
+                  </View>
+                </View>
+
+                {/* Fillable Student Info Line */}
+                <View style={styles.studentInfoBox}>
+                  <Text style={styles.studentInfoText}>Name: <Text style={styles.studentInfoLine}>___________________________</Text></Text>
+                  <Text style={styles.studentInfoText}>Date: <Text style={styles.studentInfoLine}>____________</Text></Text>
+                  <Text style={styles.studentInfoText}>Score: <Text style={styles.studentInfoLine}>______</Text></Text>
+                </View>
+              </View>
+
+              {/* Instructions Box */}
+              <View style={styles.instructionsContainer}>
+                <Text style={styles.instructionsHeading}>Instructions:</Text>
+                <Text style={styles.instructionsBody}>{activeWorksheet.instructions}</Text>
+              </View>
+
+              {/* PART 1: FILL IN THE BLANKS */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionHeading}>Part 1: Fill in the Blanks</Text>
+                
+                {/* Word Bank Box */}
+                <View style={styles.wordBankCard}>
+                  <Text style={styles.wordBankTitle}>Word Bank:</Text>
+                  <Text style={styles.wordBankWords}>{activeWorksheet.wordBank.join(', ')}</Text>
+                </View>
+
+                {/* Questions */}
+                {activeWorksheet.fillBlanks.map((q) => (
+                  <View key={q.id} style={styles.questionItem}>
+                    <Text style={styles.questionText}>
+                      <Text style={{ fontWeight: '800' }}>{q.id}. </Text>
+                      {q.question}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* PART 2: MULTIPLE CHOICE QUESTIONS */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionHeading}>Part 2: Multiple Choice Questions</Text>
+                
+                {activeWorksheet.mcqs.map((mcq) => (
+                  <View key={mcq.id} style={styles.mcqBlock}>
+                    <Text style={styles.questionText}>
+                      <Text style={{ fontWeight: '800' }}>{mcq.id}. </Text>
+                      {mcq.question}
+                    </Text>
+
+                    <View style={styles.mcqOptionsList}>
+                      {mcq.options.map((opt, idx) => {
+                        const letter = String.fromCharCode(65 + idx);
+                        return (
+                          <View key={idx} style={styles.mcqOptionRow}>
+                            <Text style={styles.mcqOptionLetter}>•  {letter}) </Text>
+                            <Text style={styles.mcqOptionText}>{opt}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              {/* PART 3: SHORT ANSWER QUESTIONS */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionHeading}>Part 3: Short Answer Questions</Text>
+
+                {activeWorksheet.shortAnswers.map((sa) => (
+                  <View key={sa.id} style={styles.shortAnsBlock}>
+                    <Text style={styles.questionText}>
+                      <Text style={{ fontWeight: '800' }}>{sa.id}. </Text>
+                      {sa.question}
+                    </Text>
+
+                    <View style={styles.answerLinesContainer}>
+                      <View style={styles.writeLine} />
+                      <View style={styles.writeLine} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
 
@@ -434,8 +570,8 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
                 <View style={styles.generateBtnDivider} />
 
                 <View style={styles.generateBtnLabelBlock}>
-                  <Text style={styles.generateBtnText}>Generate Worksheet</Text>
-                  <Text style={styles.generateBtnSubText}>Word Bank · MCQs · Q&A · PDF Ready</Text>
+                  <Text style={styles.generateBtnText} numberOfLines={1}>Generate Worksheet</Text>
+                  <Text style={styles.generateBtnSubText} numberOfLines={1}>Word Bank · MCQs · Q&A · PDF Ready</Text>
                 </View>
 
                 <LinearGradient
@@ -473,65 +609,6 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
             <Text style={styles.loaderPercentage}>{progress}% Complete</Text>
           </View>
         )}
-
-        {/* ── WORKSHEETS LIST HEADER ── */}
-        <View style={styles.viewPlanHeaderRow}>
-          <LinearGradient colors={['#0891B2', '#22D3EE']} style={styles.bulletIndicator} />
-          <Text style={styles.viewPlanTitle}>Generated Worksheets</Text>
-          <View style={styles.planCountBadge}>
-            <Text style={styles.planCountText}>{worksheets.length}</Text>
-          </View>
-        </View>
-
-        {/* ── WORKSHEETS CARDS ── */}
-        <View style={styles.plansListContainer}>
-          {worksheets.map((ws) => (
-            <TouchableOpacity
-              key={ws.id}
-              style={styles.planItemCard}
-              onPress={() => setActiveWorksheet(ws)}
-              activeOpacity={0.86}
-            >
-
-              <View style={styles.planItemTopHighlight} />
-
-              <LinearGradient
-                colors={['#ECFEFF', '#CFFAFE']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.planItemIconWrapper}
-              >
-                <MaterialIcons name="description" size={22} color="#0891B2" />
-              </LinearGradient>
-
-              <View style={styles.planItemTextContent}>
-                <Text style={styles.planItemTopic} numberOfLines={1}>{ws.topic}</Text>
-                <View style={styles.planMetaRow}>
-                  <View style={styles.planMetaPill}>
-                    <MaterialIcons name="language" size={9} color="#0891B2" style={{ marginRight: 3 }} />
-                    <Text style={styles.planMetaPillText}>{ws.language}</Text>
-                  </View>
-                  <View style={[styles.planMetaPill, styles.planMetaPillTeal]}>
-                    <MaterialIcons name="school" size={9} color="#0E7490" style={{ marginRight: 3 }} />
-                    <Text style={[styles.planMetaPillText, { color: '#0E7490' }]}>{ws.level}</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* ── Premium Eye Button ── */}
-              <View style={styles.eyeBtnOuter}>
-                <LinearGradient
-                  colors={['#0E7490', '#06B6D4']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={styles.eyeBtnCore}
-                >
-                  <View style={styles.eyeBtnGloss} />
-                  <MaterialIcons name="remove-red-eye" size={18} color="#fff" />
-                </LinearGradient>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
       </ScrollView>
 
       {/* ── LEVEL SELECTOR PICKER MODAL ── */}
@@ -578,128 +655,6 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
             ))}
           </View>
         </PressableModalBackdrop>
-      </Modal>
-
-      {/* ── HIGH-FIDELITY WORKSHEET PRINT VIEWER MODAL ── */}
-      <Modal visible={activeWorksheet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafeArea} edges={['top']}>
-          {/* Viewer Navigation Bar */}
-          <View style={styles.sheetNavBar}>
-            <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setActiveWorksheet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#0E7490" />
-            </TouchableOpacity>
-
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeWorksheet?.topic}</Text>
-
-            <TouchableOpacity
-              style={styles.sheetPrintBtn}
-              onPress={() => Alert.alert('Print Worksheet', 'Worksheet sent to print queue as PDF.')}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="print" size={16} color="#fff" style={{ marginRight: 5 }} />
-              <Text style={styles.sheetPrintText}>Print</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Paper Sheet Container */}
-          <ScrollView contentContainerStyle={styles.sheetScrollContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperSheetCard}>
-              
-              {/* Paper Top Title Header */}
-              <View style={styles.paperHeader}>
-                <Text style={styles.paperMainTitle}>{activeWorksheet?.topic}</Text>
-                <View style={styles.paperBadgeRow}>
-                  <View style={styles.paperMetaBadge}>
-                    <Text style={styles.paperMetaBadgeText}>{activeWorksheet?.language}</Text>
-                  </View>
-                  <View style={[styles.paperMetaBadge, { backgroundColor: '#ECFEFF' }]}>
-                    <Text style={[styles.paperMetaBadgeText, { color: '#0E7490' }]}>{activeWorksheet?.level}</Text>
-                  </View>
-                </View>
-
-                {/* Fillable Student Info Line */}
-                <View style={styles.studentInfoBox}>
-                  <Text style={styles.studentInfoText}>Name: <Text style={styles.studentInfoLine}>___________________________</Text></Text>
-                  <Text style={styles.studentInfoText}>Date: <Text style={styles.studentInfoLine}>____________</Text></Text>
-                  <Text style={styles.studentInfoText}>Score: <Text style={styles.studentInfoLine}>______</Text></Text>
-                </View>
-              </View>
-
-              {/* Instructions Box */}
-              <View style={styles.instructionsContainer}>
-                <Text style={styles.instructionsHeading}>Instructions:</Text>
-                <Text style={styles.instructionsBody}>{activeWorksheet?.instructions}</Text>
-              </View>
-
-              {/* PART 1: FILL IN THE BLANKS */}
-              <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 1: Fill in the Blanks</Text>
-                
-                {/* Word Bank Box */}
-                <View style={styles.wordBankCard}>
-                  <Text style={styles.wordBankTitle}>Word Bank:</Text>
-                  <Text style={styles.wordBankWords}>{activeWorksheet?.wordBank.join(', ')}</Text>
-                </View>
-
-                {/* Questions */}
-                {activeWorksheet?.fillBlanks.map((q) => (
-                  <View key={q.id} style={styles.questionItem}>
-                    <Text style={styles.questionText}>
-                      <Text style={{ fontWeight: '800' }}>{q.id}. </Text>
-                      {q.question}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* PART 2: MULTIPLE CHOICE QUESTIONS */}
-              <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 2: Multiple Choice Questions</Text>
-                
-                {activeWorksheet?.mcqs.map((mcq) => (
-                  <View key={mcq.id} style={styles.mcqBlock}>
-                    <Text style={styles.questionText}>
-                      <Text style={{ fontWeight: '800' }}>{mcq.id}. </Text>
-                      {mcq.question}
-                    </Text>
-
-                    <View style={styles.mcqOptionsList}>
-                      {mcq.options.map((opt, idx) => {
-                        const letter = String.fromCharCode(65 + idx);
-                        return (
-                          <View key={idx} style={styles.mcqOptionRow}>
-                            <Text style={styles.mcqOptionLetter}>•  {letter}) </Text>
-                            <Text style={styles.mcqOptionText}>{opt}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </View>
-                ))}
-              </View>
-
-              {/* PART 3: SHORT ANSWER QUESTIONS */}
-              <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 3: Short Answer Questions</Text>
-
-                {activeWorksheet?.shortAnswers.map((sa) => (
-                  <View key={sa.id} style={styles.shortAnsBlock}>
-                    <Text style={styles.questionText}>
-                      <Text style={{ fontWeight: '800' }}>{sa.id}. </Text>
-                      {sa.question}
-                    </Text>
-
-                    <View style={styles.answerLinesContainer}>
-                      <View style={styles.writeLine} />
-                      <View style={styles.writeLine} />
-                    </View>
-                  </View>
-                ))}
-              </View>
-
-            </View>
-          </ScrollView>
-        </SafeAreaView>
       </Modal>
 
     </SafeAreaView>
@@ -808,53 +763,53 @@ const styles = StyleSheet.create({
   // FORM CARD
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 24,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: 'rgba(6, 182, 212, 0.12)',
     shadowColor: '#0891B2',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.1,
-    shadowRadius: 28,
-    elevation: 6,
-    marginBottom: 20,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 14,
   },
   fieldHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 7,
+    marginBottom: 5,
   },
   fieldDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#06B6D4',
-    marginRight: 7,
+    marginRight: 6,
   },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#334155',
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
+    letterSpacing: 0.6,
   },
   requestTextArea: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(6, 182, 212, 0.18)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
     color: '#0F172A',
     fontWeight: '600',
-    height: 88,
-    marginBottom: 16,
+    height: 60,
+    marginBottom: 10,
   },
   gridRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 10,
   },
   gridCol: {
     flex: 1,
@@ -864,11 +819,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FAFBFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: 'rgba(6,182,212,0.16)',
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    height: 52,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    height: 38,
   },
   pickerLeft: {
     flexDirection: 'row',
@@ -876,15 +831,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pickerIconOrb: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 6,
   },
   pickerButtonText: {
-    fontSize: 13.5,
+    fontSize: 12,
     fontWeight: '800',
     color: '#1E293B',
   },
@@ -894,13 +849,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: 'rgba(6, 182, 212, 0.2)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 54,
-    marginBottom: 22,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    marginBottom: 12,
   },
   fileAttachmentBoxActive: {
     backgroundColor: '#ECFEFF',
@@ -928,20 +883,20 @@ const styles = StyleSheet.create({
 
   // GENERATE BUTTON
   generateBtnContainer: {
-    marginTop: 6,
-    borderRadius: 18,
+    marginTop: 2,
+    borderRadius: 12,
     shadowColor: '#0E7490',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.55,
-    shadowRadius: 22,
-    elevation: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
     overflow: 'visible',
   },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
@@ -950,49 +905,51 @@ const styles = StyleSheet.create({
   generateBtnHighlight: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 1.5,
+    height: 1,
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
   generateBtnIconZone: {
-    width: 64,
-    height: 64,
+    width: 44,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.09)',
   },
   generateBtnDivider: {
     width: 1,
-    height: 40,
+    height: 28,
     backgroundColor: 'rgba(255,255,255,0.18)',
-    marginRight: 14,
+    marginRight: 8,
   },
   generateBtnLabelBlock: {
     flex: 1,
+    justifyContent: 'center',
   },
   generateBtnText: {
     color: '#FFFFFF',
-    fontSize: 15.5,
+    fontSize: 12.5,
     fontWeight: '900',
-    letterSpacing: 0.6,
-    lineHeight: 20,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
   generateBtnSubText: {
     color: 'rgba(255,255,255,0.75)',
-    fontSize: 10,
+    fontSize: 8.5,
     fontWeight: '700',
-    letterSpacing: 0.8,
-    marginTop: 2,
+    letterSpacing: 0.4,
+    marginTop: 1,
+    lineHeight: 11,
     textTransform: 'uppercase',
   },
   generateBtnArrow: {
-    height: 40,
-    paddingHorizontal: 13,
-    borderRadius: 11,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
 
   // Generating State
@@ -1265,43 +1222,65 @@ const styles = StyleSheet.create({
   },
 
   // ── HIGH-FIDELITY PRINT SHEET VIEWER MODAL STYLES ──
+  fullScreenModalWrapper: {
+    flex: 1,
+    backgroundColor: '#0E7490',
+  },
   sheetSafeArea: {
     flex: 1,
     backgroundColor: '#F1F5F9',
   },
   sheetNavBar: {
-    height: 56,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
   sheetCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   sheetNavTitle: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: '900',
     color: '#0F172A',
     flex: 1,
     textAlign: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 8,
+  },
+  sheetDownloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0E7490',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    shadowColor: '#0E7490',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sheetDownloadText: {
+    fontSize: 11.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
   sheetPrintBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#06B6D4',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     shadowColor: '#06B6D4',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -1309,13 +1288,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sheetPrintText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#FFFFFF',
   },
   sheetScrollContainer: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 10,
+    paddingBottom: 30,
     alignItems: 'center',
   },
 
@@ -1324,54 +1303,54 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
   paperHeader: {
-    marginBottom: 20,
-    borderBottomWidth: 2,
+    marginBottom: 12,
+    borderBottomWidth: 1.5,
     borderBottomColor: '#06B6D4',
-    paddingBottom: 16,
+    paddingBottom: 10,
   },
   paperMainTitle: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: '900',
     color: '#0E7490',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   paperBadgeRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 10,
   },
   paperMetaBadge: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 5,
   },
   paperMetaBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: '#64748B',
   },
   studentInfoBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 6,
+    paddingTop: 6,
   },
   studentInfoText: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#334155',
   },
@@ -1383,104 +1362,104 @@ const styles = StyleSheet.create({
   // Instructions
   instructionsContainer: {
     backgroundColor: '#ECFEFF',
-    borderRadius: 10,
-    padding: 14,
-    borderLeftWidth: 4,
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3.5,
     borderLeftColor: '#06B6D4',
-    marginBottom: 24,
+    marginBottom: 14,
   },
   instructionsHeading: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#0E7490',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   instructionsBody: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '600',
     color: '#334155',
-    lineHeight: 18,
+    lineHeight: 14.5,
   },
 
   // Section Blocks
   sectionBlock: {
-    marginBottom: 28,
+    marginBottom: 16,
   },
   sectionHeading: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: '900',
     color: '#0E7490',
-    marginBottom: 12,
+    marginBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#CBD5E1',
-    paddingBottom: 6,
+    paddingBottom: 4,
   },
 
   // Word Bank
   wordBankCard: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 8,
+    padding: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 14,
+    marginBottom: 10,
   },
   wordBankTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: '#0E7490',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   wordBankWords: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '600',
     color: '#475569',
-    lineHeight: 18,
+    lineHeight: 14.5,
     fontStyle: 'italic',
   },
 
   // Fill in blanks item
   questionItem: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   questionText: {
-    fontSize: 13.5,
+    fontSize: 11,
     fontWeight: '600',
     color: '#1E293B',
-    lineHeight: 22,
+    lineHeight: 15,
   },
 
   // MCQs
   mcqBlock: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   mcqOptionsList: {
-    marginTop: 6,
-    paddingLeft: 12,
+    marginTop: 4,
+    paddingLeft: 10,
   },
   mcqOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   mcqOptionLetter: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
     color: '#06B6D4',
   },
   mcqOptionText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
     color: '#334155',
   },
 
   // Short Answer
   shortAnsBlock: {
-    marginBottom: 18,
+    marginBottom: 12,
   },
   answerLinesContainer: {
-    marginTop: 10,
-    gap: 16,
+    marginTop: 6,
+    gap: 10,
   },
   writeLine: {
     height: 1,

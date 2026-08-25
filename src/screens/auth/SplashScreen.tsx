@@ -18,6 +18,39 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   const loaderProgress = useRef(new Animated.Value(-60)).current;
 
   useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const origBodyOverflow = document.body.style.overflow;
+      const origBodyPos = document.body.style.position;
+      const origBodyHeight = document.body.style.height;
+      const origDocOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      (document.body.style as any).touchAction = 'none';
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height = '100%';
+      (document.documentElement.style as any).touchAction = 'none';
+
+      const preventTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+      window.addEventListener('touchmove', preventTouchMove, { passive: false });
+
+      return () => {
+        window.removeEventListener('touchmove', preventTouchMove);
+        document.body.style.overflow = origBodyOverflow;
+        document.body.style.position = origBodyPos;
+        document.body.style.height = origBodyHeight;
+        (document.body.style as any).touchAction = '';
+        document.documentElement.style.overflow = origDocOverflow;
+        (document.documentElement.style as any).touchAction = '';
+      };
+    }
+  }, []);
+
+  useEffect(() => {
     // Fade up animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -145,8 +178,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
   // Soft, bright luminous glows
   glowTopLeft: {

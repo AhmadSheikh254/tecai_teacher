@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
 
   // ── DAY TABS ──
   tabsWrapper: {
-    paddingVertical: 12,
-    borderBottomWidth: 1.5,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
     borderColor: 'rgba(255,255,255,0.7)',
     position: 'relative',
     overflow: 'hidden',
@@ -367,14 +367,14 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   dayTab: {
     flex: 1,
-    marginHorizontal: 3,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    marginHorizontal: 2,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -387,14 +387,14 @@ const styles = StyleSheet.create({
   },
   dayTabActive: {
     borderColor: 'transparent',
-    elevation: 5,
+    elevation: 3,
     shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.30,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.20,
+    shadowRadius: 5,
   },
   dayTabText: {
-    fontSize: 13.5,
+    fontSize: 11,
     fontWeight: '800',
     color: '#475569',
   },
@@ -403,11 +403,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   activeTabIndicator: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: '#FFFFFF',
-    marginTop: 2,
+    marginTop: 1,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
@@ -415,112 +415,112 @@ const styles = StyleSheet.create({
   },
 
   // ── SCROLL ──
-  scrollContent: { padding: 16, paddingBottom: 100, gap: 14 },
+  scrollContent: { padding: 12, paddingBottom: 90, gap: 10 },
 
   // ── ADMIN BANNER ──
   adminBanner: {
-    borderRadius: 16, padding: 14, flexDirection: 'row',
-    alignItems: 'center', gap: 12,
+    borderRadius: 12, padding: 10, flexDirection: 'row',
+    alignItems: 'center', gap: 10,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)',
     overflow: 'hidden', position: 'relative',
     elevation: 2, shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8,
   },
   adminStripe: {
     position: 'absolute', left: 0, top: 0, bottom: 0,
-    width: 4, backgroundColor: '#2563EB',
+    width: 3, backgroundColor: '#2563EB',
   },
   adminIconBox: {
-    width: 40, height: 40, borderRadius: 13,
+    width: 32, height: 32, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden', position: 'relative',
   },
   iconShine: {
     position: 'absolute', top: 0, left: 0, right: 0, height: '55%',
-    backgroundColor: 'rgba(255,255,255,0.22)', borderTopLeftRadius: 13, borderTopRightRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.22)', borderTopLeftRadius: 10, borderTopRightRadius: 10,
   },
-  adminTitle: { fontSize: 13.5, fontWeight: '800', color: '#1E3A8A' },
-  adminSub: { fontSize: 10.5, fontWeight: '600', color: '#3B82F6', marginTop: 1 },
+  adminTitle: { fontSize: 12, fontWeight: '800', color: '#1E3A8A' },
+  adminSub: { fontSize: 9.5, fontWeight: '600', color: '#3B82F6', marginTop: 1 },
   liveDot: {
-    width: 9, height: 9, borderRadius: 5, backgroundColor: '#10B981',
-    borderWidth: 2, borderColor: 'rgba(16,185,129,0.25)',
+    width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#10B981',
+    borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.25)',
   },
 
   // ── TABLE CARD (glassmorphism) ──
   tableCard: {
-    borderRadius: 20,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.70)',
     overflow: 'hidden',
     position: 'relative',
-    elevation: 8,
+    elevation: 4,
     shadowColor: '#1E40AF',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
   },
 
   // Table header bar
   tableHeader: {
-    paddingVertical: 14, paddingHorizontal: 18,
+    paddingVertical: 10, paddingHorizontal: 14,
     position: 'relative', overflow: 'hidden',
   },
   tableHeaderRow: { flexDirection: 'row', alignItems: 'center' },
-  tableHeaderText: { fontSize: 14.5, fontWeight: '900', color: '#FFFFFF', flex: 1, letterSpacing: 0.1 },
+  tableHeaderText: { fontSize: 13, fontWeight: '900', color: '#FFFFFF', flex: 1, letterSpacing: 0.1 },
   countPill: {
     backgroundColor: 'rgba(255,255,255,0.20)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)',
-    paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20,
+    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12,
   },
-  countPillText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF' },
+  countPillText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF' },
 
   // Column header row
   colHeaderRow: {
     flexDirection: 'row',
     backgroundColor: 'rgba(248,250,255,0.88)',
     borderBottomWidth: 1, borderColor: 'rgba(226,232,240,0.60)',
-    paddingVertical: 11,
+    paddingVertical: 7,
   },
-  colHeaderCell: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
-  colHeaderText: { fontSize: 10, fontWeight: '900', color: '#64748B', letterSpacing: 0.8 },
-  colDivider: { width: 1, backgroundColor: 'rgba(226,232,240,0.70)', marginVertical: 4 },
+  colHeaderCell: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  colHeaderText: { fontSize: 9.5, fontWeight: '900', color: '#64748B', letterSpacing: 0.6 },
+  colDivider: { width: 1, backgroundColor: 'rgba(226,232,240,0.70)', marginVertical: 2 },
 
   // Data row
   dataRow: {
     flexDirection: 'row', alignItems: 'stretch',
-    minHeight: 102, position: 'relative',
+    minHeight: 64, position: 'relative',
     backgroundColor: 'rgba(255,255,255,0.0)',
   },
-  rowAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+  rowAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
   slotNum: {
-    position: 'absolute', top: 12, left: 10,
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 1.5, alignItems: 'center', justifyContent: 'center',
+    position: 'absolute', top: 8, left: 6,
+    width: 16, height: 16, borderRadius: 8,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center',
   },
-  slotNumText: { fontSize: 10, fontWeight: '900' },
+  slotNumText: { fontSize: 8.5, fontWeight: '900' },
 
   // Cells
-  cell: { justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 14 },
-  vLine: { width: 1, backgroundColor: 'rgba(226,232,240,0.65)', marginVertical: 14 },
+  cell: { justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 8 },
+  vLine: { width: 1, backgroundColor: 'rgba(226,232,240,0.65)', marginVertical: 8 },
 
   // Time text
-  timeStart: { fontSize: 16.5, fontWeight: '900', letterSpacing: 0.1, textAlign: 'center' },
-  timeDash: { width: 26, height: 2, borderRadius: 1, marginVertical: 4, alignSelf: 'center' },
-  timeEnd: { fontSize: 15.5, fontWeight: '800', letterSpacing: 0.1, textAlign: 'center' },
+  timeStart: { fontSize: 12, fontWeight: '900', letterSpacing: 0.1, textAlign: 'center' },
+  timeDash: { width: 18, height: 1.5, borderRadius: 1, marginVertical: 2, alignSelf: 'center' },
+  timeEnd: { fontSize: 11, fontWeight: '800', letterSpacing: 0.1, textAlign: 'center' },
 
   // Subject
-  subjectName: { fontSize: 18, fontWeight: '900', color: '#0F172A', letterSpacing: -0.3, marginBottom: 5 },
-  teacherRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  teacherName: { fontSize: 13, fontWeight: '700', color: '#475569' },
+  subjectName: { fontSize: 13, fontWeight: '900', color: '#0F172A', letterSpacing: -0.2, marginBottom: 2 },
+  teacherRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  teacherName: { fontSize: 11, fontWeight: '700', color: '#475569' },
 
   // Grade badge
   gradeBadge: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
     overflow: 'hidden', position: 'relative',
-    elevation: 3, shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 5,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.10, shadowRadius: 3,
   },
-  gradeBadgeText: { fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.4 },
+  gradeBadgeText: { fontSize: 10.5, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.3 },
 
   rowSep: { height: 1, backgroundColor: 'rgba(226,232,240,0.45)' },
   bottomBar: { height: 4, position: 'relative', overflow: 'hidden' },

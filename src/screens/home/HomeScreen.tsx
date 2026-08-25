@@ -304,16 +304,20 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* ====== ULTRA-PREMIUM HERO DASHBOARD CARD ====== */}
         <View style={styles.welcomeBanner}>
 
           {/* ── Premium Aurora Glow System ── */}
-          <View style={styles.auroraGlow1} />
-          <View style={styles.auroraGlow2} />
-          <View style={styles.auroraGlow3} />
+          <View style={styles.auroraGlow1} pointerEvents="none" />
+          <View style={styles.auroraGlow2} pointerEvents="none" />
+          <View style={styles.auroraGlow3} pointerEvents="none" />
           {/* ── Diagonal premium light streak ── */}
-          <View style={styles.lightStreak} />
+          <View style={styles.lightStreak} pointerEvents="none" />
 
           {/* ── TOP ROW ── */}
           <View style={styles.welcomeTopRow}>
@@ -352,7 +356,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.heroStatCard}>
               <View style={styles.glassCardShine} />
               <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(147,197,253,0.2)' }]}>
-                <MaterialIcons name="school" size={20} color="#93c5fd" />
+                <MaterialIcons name="school" size={15} color="#93c5fd" />
               </View>
               <Text style={styles.heroStatValue}>148</Text>
               <Text style={styles.heroStatLabel}>Students</Text>
@@ -369,7 +373,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             >
               <View style={styles.glassCardShine} />
               <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
-                <MaterialIcons name="how-to-reg" size={20} color="#34d399" />
+                <MaterialIcons name="how-to-reg" size={15} color="#34d399" />
               </View>
               <Text style={[styles.heroStatValue, { color: '#34d399' }]}>94%</Text>
               <Text style={[styles.heroStatLabel, { fontWeight: '700' }]}>Attendance</Text>
@@ -382,7 +386,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.heroStatCard}>
               <View style={styles.glassCardShine} />
               <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(196,181,253,0.2)' }]}>
-                <MaterialIcons name="groups" size={20} color="#c4b5fd" />
+                <MaterialIcons name="groups" size={15} color="#c4b5fd" />
               </View>
               <Text style={styles.heroStatValue}>182</Text>
               <Text style={styles.heroStatLabel}>Teachers</Text>
@@ -431,41 +435,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* -------------------- TAB 1: OVERVIEW -------------------- */}
         {activeTab === 'overview' && (
           <View style={styles.tabContent}>
-            {/* Quick Stats Grid — premium glow cards */}
-            <View style={styles.statsGrid}>
-              {stats.map((item) => {
-                const isAttendance = item.id === 'attendance';
-                const CardComponent = isAttendance ? TouchableOpacity : View;
-                return (
-                  <CardComponent 
-                    key={item.id} 
-                    style={[styles.statCard, theme.shadows.level1]}
-                    {...(isAttendance ? {
-                      activeOpacity: 0.8,
-                      onPress: () => navigation.navigate('More', { screen: 'Attendance' })
-                    } : {})}
-                  >
-                    <View style={styles.statHeader}>
-                      <View style={styles.statIconWrapper}>
-                        <MaterialIcons name={item.icon as any} size={20} color="#0052cc" />
-                      </View>
-                      {item.change && (
-                        <View style={[styles.changeBadge, { backgroundColor: item.changeBg }]}>
-                          <MaterialIcons name="trending-up" size={10} color={item.changeColor} />
-                          <Text style={[styles.changeText, { color: item.changeColor }]}>{item.change}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.statInfo}>
-                      <Text style={styles.statCount}>{item.count}</Text>
-                      <Text style={styles.statLabel} numberOfLines={1}>{item.label}</Text>
-                    </View>
-                    <View style={styles.statCardAccent} />
-                  </CardComponent>
-                );
-              })}
-            </View>
-
             {/* Schedule Alert Banner */}
             <View style={styles.errorBanner}>
               <View style={styles.errorBannerIconCircle}>
@@ -1014,23 +983,22 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
     gap: 12,
     maxWidth: 1200,
-    alignSelf: 'center',
     width: '100%',
+    marginHorizontal: 'auto',
   },
 
   // ===== ULTRA-PREMIUM HERO DASHBOARD CARD =====
   welcomeBanner: {
     backgroundColor: '#0C3090',
-    borderRadius: 28,
-    padding: 13,
-    paddingTop: 14,
+    borderRadius: 20,
+    padding: 12,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#071E6E',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 18,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
     borderTopWidth: 1.5,
     borderLeftWidth: 1,
     borderRightWidth: 1,
@@ -1203,18 +1171,18 @@ const styles = StyleSheet.create({
   },
   // Name — hero typography
   welcomeTitle: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: '900',
     color: '#ffffff',
-    marginBottom: 3,
-    letterSpacing: -1,
-    lineHeight: 34,
+    marginBottom: 2,
+    letterSpacing: -0.6,
+    lineHeight: 28,
     zIndex: 3,
   },
   welcomeSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(200, 225, 255, 0.72)',
-    lineHeight: 16,
+    lineHeight: 14,
     fontWeight: '400',
     marginBottom: 0,
     zIndex: 3,
@@ -1222,28 +1190,28 @@ const styles = StyleSheet.create({
   bannerSeparator: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginVertical: 10,
+    marginVertical: 4,
     zIndex: 3,
   },
   // === LIQUID GLASS STAT CARDS ===
   heroStatsRow: {
     flexDirection: 'row',
-    gap: 7,
+    gap: 6,
     zIndex: 3,
   },
   heroStatCard: {
     flex: 1,
     // Liquid glass base
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
-    paddingHorizontal: 8,
+    borderRadius: 12,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingHorizontal: 6,
     alignItems: 'center',
     overflow: 'hidden',
     position: 'relative',
     // Multi-directional glass border
-    borderTopWidth: 1.2,
+    borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 0.5,
     borderBottomWidth: 0.5,
@@ -1260,18 +1228,18 @@ const styles = StyleSheet.create({
   glassCardShine: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 20,
+    height: 16,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   heroStatIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 3,
     borderTopWidth: 1,
     borderLeftWidth: 0.5,
     borderTopColor: 'rgba(255,255,255,0.3)',
@@ -1280,19 +1248,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   heroStatValue: {
-    fontSize: 25,
+    fontSize: 18,
     fontWeight: '900',
     color: '#fff',
-    letterSpacing: -0.8,
-    lineHeight: 28,
-    marginBottom: 2,
+    letterSpacing: -0.5,
+    lineHeight: 20,
+    marginBottom: 1,
   },
   heroStatLabel: {
-    fontSize: 11.5,
+    fontSize: 10,
     color: 'rgba(220,238,255,0.92)',
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
     letterSpacing: 0.1,
   },
   heroStatBarTrack: {
@@ -2255,30 +2223,30 @@ const styles = StyleSheet.create({
   // ===== TIMELINE =====
   timelineContainer: {
     paddingLeft: 4,
-    marginTop: 6,
+    marginTop: 4,
   },
   timelineRow: {
     flexDirection: 'row',
-    minHeight: 64,
+    minHeight: 48,
   },
   timelineLeft: {
-    width: 24,
+    width: 20,
     alignItems: 'center',
   },
   timelineNode: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2.5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
   timelineNodeInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   timelineLine: {
     flex: 1,
@@ -2287,31 +2255,31 @@ const styles = StyleSheet.create({
   },
   timelineBody: {
     flex: 1,
-    paddingBottom: 16,
-    paddingLeft: 10,
+    paddingBottom: 8,
+    paddingLeft: 8,
   },
   timelineBodyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   timelineTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#0d1b3e',
   },
   timelineBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 16,
   },
   timelineBadgeText: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     fontWeight: '800',
   },
   timelineSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#64748b',
     fontWeight: '600',
   },
@@ -2320,58 +2288,58 @@ const styles = StyleSheet.create({
   examGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     marginTop: 4,
   },
   examGridCard: {
     width: '48%',
     backgroundColor: '#f8faff',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 12,
+    padding: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 82, 204, 0.07)',
-    borderTopWidth: 4,
+    borderTopWidth: 3,
   },
   examGridHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   examGridRank: {
     backgroundColor: 'rgba(0,82,204,0.08)',
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   examGridRankText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '800',
     color: '#0052cc',
   },
   examGridName: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '800',
     color: '#0d1b3e',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   examGridScoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   examGridMarks: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#0d1b3e',
   },
   examGridPct: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '700',
   },
   examGridBarBg: {
-    height: 4,
+    height: 3.5,
     backgroundColor: 'rgba(0,82,204,0.06)',
     borderRadius: 2,
     overflow: 'hidden',
@@ -2386,16 +2354,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8faff',
-    borderRadius: 14,
-    padding: 10,
+    borderRadius: 12,
+    padding: 6,
     borderWidth: 1,
     borderColor: 'rgba(0,82,204,0.07)',
-    gap: 10,
+    gap: 8,
   },
   calSheet: {
-    width: 44,
-    height: 48,
-    borderRadius: 10,
+    width: 36,
+    height: 38,
+    borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0,82,204,0.12)',
@@ -2403,13 +2371,13 @@ const styles = StyleSheet.create({
   },
   calSheetHeader: {
     width: '100%',
-    height: 16,
+    height: 13,
     backgroundColor: '#0052cc',
     alignItems: 'center',
     justifyContent: 'center',
   },
   calSheetMonth: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '800',
     color: '#fff',
   },
@@ -2421,31 +2389,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   calSheetDay: {
-    fontSize: 14,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#0d1b3e',
   },
   calStripBody: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   calStripInTime: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#64748b',
     fontWeight: '500',
   },
   calStripOutTime: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#64748b',
     fontWeight: '500',
   },
   calStripStatus: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 14,
   },
   calStripStatusText: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     fontWeight: '800',
   },
 

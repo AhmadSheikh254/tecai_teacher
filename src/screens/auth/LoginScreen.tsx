@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -7,7 +7,6 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform, 
-  ScrollView,
   SafeAreaView
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -23,6 +22,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const origBodyOverflow = document.body.style.overflow;
+      const origBodyPos = document.body.style.position;
+      const origBodyHeight = document.body.style.height;
+      const origDocOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height = '100%';
+
+      return () => {
+        document.body.style.overflow = origBodyOverflow;
+        document.body.style.position = origBodyPos;
+        document.body.style.height = origBodyHeight;
+        document.documentElement.style.overflow = origDocOverflow;
+      };
+    }
+  }, []);
 
   const handleLogin = () => {
     navigation.replace('Main');
@@ -43,10 +65,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         <View style={styles.glowCircle2} />
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
-          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.fixedContentContainer}>
             
             {/* Header (Top brand) */}
             <View style={styles.header}>
@@ -146,7 +168,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -156,18 +178,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   gradientBg: {
     flex: 1,
+    height: '100%',
+    overflow: 'hidden',
   },
   safeArea: {
     flex: 1,
+    height: '100%',
+    overflow: 'hidden',
   },
   keyboardView: {
     flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  scrollContent: {
-    flexGrow: 1,
+  fixedContentContainer: {
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 10,
   },
   glowCircle1: {
     position: 'absolute',
@@ -193,13 +222,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: 20,
-    gap: 10,
+    marginBottom: 12,
+    gap: 8,
   },
   logoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: '#0284C7',
     alignItems: 'center',
     justifyContent: 'center',
@@ -210,18 +239,18 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900',
     color: '#0F172A',
     letterSpacing: -0.3,
   },
   card: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
     alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#0284C7',
@@ -231,26 +260,26 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   titleContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
     gap: 2,
   },
   welcomeTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     color: '#0F172A',
     letterSpacing: -0.3,
   },
   welcomeSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748B',
     fontWeight: '600',
   },
   inputGroup: {
-    marginBottom: 14,
+    marginBottom: 10,
     gap: 4,
   },
   label: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#334155',
   },
@@ -261,8 +290,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#CBD5E1',
     borderRadius: 10,
-    height: 42,
-    paddingHorizontal: 12,
+    height: 38,
+    paddingHorizontal: 10,
     position: 'relative',
   },
   inputIcon: {
@@ -272,12 +301,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     color: '#0F172A',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   visibilityIcon: {
     position: 'absolute',
-    right: 12,
+    right: 10,
     height: '100%',
     justifyContent: 'center',
   },
@@ -286,16 +315,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 2,
-    marginBottom: 18,
+    marginBottom: 14,
   },
   rememberMeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 6,
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderWidth: 1.5,
     borderColor: '#94A3B8',
     borderRadius: 4,
@@ -308,12 +337,12 @@ const styles = StyleSheet.create({
     borderColor: '#0284C7',
   },
   rememberMeText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#475569',
   },
   forgotPasswordText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#0284C7',
   },
@@ -328,14 +357,14 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flexDirection: 'row',
-    height: 44,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
   },
   submitButtonText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.2,
   },
