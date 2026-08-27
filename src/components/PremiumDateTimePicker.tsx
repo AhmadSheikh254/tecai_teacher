@@ -156,15 +156,11 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
   const hoursList = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
   const minutesList = ['00', '15', '30', '45'];
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.backdropPressable} />
+    <View style={styles.modalOverlay}>
+      <TouchableOpacity style={styles.backdropPressable} activeOpacity={1} onPress={onClose} />
         <View style={[styles.sheetContainer, theme.shadows.level2]}>
           
           {/* Premium picker background waves */}
@@ -303,17 +299,21 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
           </ScrollView>
         </View>
       </View>
-    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(4, 27, 60, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    zIndex: 99999,
   },
   backdropPressable: {
     position: 'absolute',
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 330,
     backgroundColor: '#ffffff',
     borderRadius: 24,
     overflow: 'hidden',
@@ -334,8 +334,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -361,15 +361,15 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   scrollContent: {
-    padding: 16,
-    gap: 16,
+    padding: 12,
+    gap: 12,
   },
   sectionCard: {
     backgroundColor: '#ffffff',
     borderWidth: 1.2,
     borderColor: '#F1F5F9', // sleeker, cleaner border
     borderRadius: 20,
-    padding: 16,
+    padding: 12,
     shadowColor: '#1e293b',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.03,

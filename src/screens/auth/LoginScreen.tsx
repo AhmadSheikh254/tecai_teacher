@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform, 
-  SafeAreaView
+  SafeAreaView,
+  ScrollView
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -68,7 +69,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
-          <View style={styles.fixedContentContainer}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 24 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.fixedContentContainer}>
             
             {/* Header (Top brand) */}
             <View style={styles.header}>
@@ -169,7 +174,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </View>
 
           </View>
-        </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

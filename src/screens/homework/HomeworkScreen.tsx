@@ -9,7 +9,9 @@ import {
   Image, 
   Modal,
   Animated,
-  useWindowDimensions
+  useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
@@ -414,7 +416,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   if (createModalVisible) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
-                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
           <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
             {/* Form Header */}
             <View style={[styles.formHeader, { paddingTop: 36 }]}>
@@ -639,6 +645,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
             </View>
           </TouchableOpacity>
         </Modal>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }

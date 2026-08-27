@@ -202,8 +202,8 @@ const INITIAL_ASSIGNMENTS = [
     title: 'True And False Statements',
     class: 'GRADE-II A',
     course: 'English',
-    chapter: '—',
-    topic: '—',
+    chapter: 'â€”',
+    topic: 'â€”',
     teacher: 'suman',
     startDateTime: '21 Jul 2026, 12:18 PM',
     deadline: '05 Aug 2026, 5:00 PM',
@@ -214,8 +214,8 @@ const INITIAL_ASSIGNMENTS = [
     title: 'Label The Plant Cell Parts',
     class: 'GRADE-II A',
     course: 'Science',
-    chapter: '—',
-    topic: '—',
+    chapter: 'â€”',
+    topic: 'â€”',
     teacher: 'suman',
     startDateTime: '21 Jul 2026, 12:35 PM',
     deadline: '24 Jul 2026, 5:00 PM',
@@ -230,32 +230,32 @@ const INITIAL_ASSIGNMENTS = [
 ];
 
 const EN_TO_UR_MAP: Record<string, string> = {
-  'A': 'ا',
-  'B': 'ب',
-  'C': 'چ',
-  'D': 'د',
-  'E': 'ع',
-  'F': 'ف',
-  'G': 'گ',
-  'H': 'ہ',
-  'I': 'ی',
-  'J': 'ج',
-  'K': 'ک',
-  'L': 'ل',
-  'M': 'م',
-  'N': 'ن',
-  'O': 'و',
-  'P': 'پ',
-  'Q': 'ق',
-  'R': 'ر',
-  'S': 'س',
-  'T': 'ت',
-  'U': 'و',
-  'V': 'و',
-  'W': 'و',
-  'X': 'خ',
-  'Y': 'ی',
-  'Z': 'ز',
+  'A': 'Ø§',
+  'B': 'Ø¨',
+  'C': 'Ú†',
+  'D': 'Ø¯',
+  'E': 'Ø¹',
+  'F': 'Ù',
+  'G': 'Ú¯',
+  'H': 'Û',
+  'I': 'ÛŒ',
+  'J': 'Ø¬',
+  'K': 'Ú©',
+  'L': 'Ù„',
+  'M': 'Ù…',
+  'N': 'Ù†',
+  'O': 'Ùˆ',
+  'P': 'Ù¾',
+  'Q': 'Ù‚',
+  'R': 'Ø±',
+  'S': 'Ø³',
+  'T': 'Øª',
+  'U': 'Ùˆ',
+  'V': 'Ùˆ',
+  'W': 'Ùˆ',
+  'X': 'Ø®',
+  'Y': 'ÛŒ',
+  'Z': 'Ø²',
 };
 
 const generateCrosswordGrid = (clues: { word: string; clue: string }[]) => {
@@ -421,6 +421,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   const [crosswordAnswers, setCrosswordAnswers] = useState<Record<string, string>>({}); // key: 'r,c', value: user input char
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(false);
 
   // Sound player helper
   const playSound = async (type: 'click' | 'add' | 'win' | 'error') => {
@@ -802,6 +803,68 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   const [selectedThemeIndex, setSelectedThemeIndex] = useState<number>(0);
   const [customThemeUrl, setCustomThemeUrl] = useState('');
 
+  const clearFormFields = () => {
+    setFormTitle('');
+    setFormClass('');
+    setFormSection('');
+    setFormCourse('');
+    setFormChapter('');
+    setFormTopic('');
+    setFormType('blanks');
+    setFormStart('13 May 2026, 09:00 AM');
+    setFormDeadline('14 May 2026, 05:00 PM');
+    setCreateStep('details');
+
+    // Blanks
+    setBlanksText('');
+    setSelectedBlankIndices([]);
+    setIsSelectingBlanks(false);
+
+    // Match
+    setMatchPairs([]);
+    setColumnLeftText('');
+    setColumnRightText('');
+
+    // Crossword / Clues
+    setCrosswordClues([]);
+    setClueWord('');
+    setClueType('Text');
+    setClueText('');
+    setCrosswordPreviewActive(false);
+    setCrosswordSplashActive(true);
+    setCrosswordAnswers({});
+    setActiveCell(null);
+
+    // True/False
+    setTfQuestions([]);
+    setTfQuestionInput('');
+    setTfAnswerInput('true');
+
+    // Theme
+    setSelectedThemeIndex(0);
+    setCustomThemeUrl('');
+
+    // Parts
+    setPartsImage('');
+    setPartsImageName('NO FILE CHOSEN');
+    setPartsPinpoints([]);
+    setPartsLayoutMethod('drag');
+    setTempPinpointCoord(null);
+    setPinpointNameInput('');
+    setIsGeneratingParts(false);
+    setShowPartsSuccessUpload(false);
+    setShowImageSelectModal(false);
+    setShowPinpointDialog(false);
+
+    // MCQs
+    setMcqsWizardStep(1);
+    setMcqsClass('GRADE-II');
+    setMcqsSection('Section A');
+    setMcqsCourse('English');
+    setMcqsTitle('state of matter');
+    setGeneratedMcqs([]);
+  };
+
   // Interactive Blanks Player states
   const [activeBlanksPlayer, setActiveBlanksPlayer] = useState<any>(null);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
@@ -961,10 +1024,6 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     } else if (createStep === 'partsCreator') {
       if (!partsImage) {
         Alert.alert('Image Required', 'Please choose a diagram image first.');
-        return;
-      }
-      if (partsPinpoints.length === 0) {
-        Alert.alert('Pinpoints Required', 'Please click on the image to add at least one label pinpoint.');
         return;
       }
       setCreateStep('partsTheme');
@@ -1292,8 +1351,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       class: formClass,
       section: formSection,
       course: formCourse,
-      chapter: formChapter.trim() || '—',
-      topic: formTopic.trim() || '—',
+      chapter: formChapter.trim() || 'â€”',
+      topic: formTopic.trim() || 'â€”',
       teacher: 'suman',
       startDateTime: formStart,
       deadline: formDeadline,
@@ -1416,8 +1475,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
         class: `${mcqsClass || formClass || 'GRADE-II'} ${mcqsSection || formSection || 'A'}`,
         section: mcqsSection || formSection || 'A',
         course: mcqsCourse || formCourse || 'English',
-        chapter: '—',
-        topic: '—',
+        chapter: 'â€”',
+        topic: 'â€”',
         teacher: 'suman',
         startDateTime: formStart,
         deadline: formDeadline,
@@ -1453,8 +1512,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       class: formClass,
       section: formSection,
       course: formCourse,
-      chapter: formChapter.trim() || '—',
-      topic: formTopic.trim() || '—',
+      chapter: formChapter.trim() || 'â€”',
+      topic: formTopic.trim() || 'â€”',
       teacher: 'suman',
       startDateTime: formStart,
       deadline: formDeadline,
@@ -1633,7 +1692,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   };
 
 
-  // ── EARLY FULL-SCREEN RETURN: ASSIGNMENT DETAILS ──
+  // â”€â”€ EARLY FULL-SCREEN RETURN: ASSIGNMENT DETAILS â”€â”€
   if (isDetailVisible && selectedAssignment) {
     const accent = getAccentColor(selectedAssignment.type);
     return (
@@ -1657,7 +1716,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         </View>
                         <Text style={styles.detailBandTitle} numberOfLines={2}>{selectedAssignment.title}</Text>
                         <Text style={styles.detailBandSub}>
-                          {selectedAssignment.class}  •  {selectedAssignment.course}
+                          {selectedAssignment.class}  â€¢  {selectedAssignment.course}
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -1678,7 +1737,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Chapter & Topic */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>📚  Content</Text>
+                      <Text style={styles.detailSectionLabel}>ðŸ“š  Content</Text>
                       <View style={styles.detailRow}>
                         <View style={[styles.detailIconBox, { backgroundColor: accent + '15' }]}>
                           <MaterialIcons name="folder-open" size={16} color={accent} />
@@ -1702,7 +1761,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Teacher & Format */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>🧑‍🏫  Assignment Info</Text>
+                      <Text style={styles.detailSectionLabel}>ðŸ§‘â€ðŸ«  Assignment Info</Text>
                       <View style={styles.detailRow}>
                         <View style={[styles.detailIconBox, { backgroundColor: accent + '15' }]}>
                           <MaterialIcons name="person" size={16} color={accent} />
@@ -1728,7 +1787,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Timeline */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>📅  Timeline</Text>
+                      <Text style={styles.detailSectionLabel}>ðŸ“…  Timeline</Text>
                       <View style={styles.timelineStrip}>
                         <View style={styles.timelineSide}>
                           <View style={[styles.timelineDot, { backgroundColor: accent }]} />
@@ -1899,8 +1958,544 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     );
   }
 
-  // ── EARLY FULL-SCREEN RETURN: CREATE ASSIGNMENT ──
+  // â”€â”€ EARLY FULL-SCREEN RETURN: CREATE ASSIGNMENT â”€â”€
   if (isCreateVisible) {
+    if (crosswordPreviewActive) {
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f9ff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+
+          {/* â”€â”€ HEADER BAR â”€â”€ */}
+          <LinearGradient
+            colors={['#e0f2fe', '#f0f9ff']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={{
+              height: 62, flexDirection: 'row', alignItems: 'center',
+              justifyContent: 'space-between', paddingHorizontal: 14,
+              borderBottomWidth: 1.5, borderBottomColor: '#bae6fd',
+              elevation: 3, shadowColor: '#93c5fd', shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15, shadowRadius: 6
+            }}
+          >
+            {/* Left: Home + Volume */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => { playSound('click'); setCrosswordPreviewActive(false); }}
+                style={{
+                  width: 42, height: 42, borderRadius: 21,
+                  backgroundColor: '#ffffff',
+                  alignItems: 'center', justifyContent: 'center',
+                  borderWidth: 1.5, borderColor: '#bae6fd',
+                  borderBottomWidth: 3.5, borderBottomColor: '#93c5fd'
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="home" size={22} color="#0284c7" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setIsSoundMuted(!isSoundMuted)}
+                style={{
+                  width: 42, height: 42, borderRadius: 21,
+                  backgroundColor: '#ffffff',
+                  alignItems: 'center', justifyContent: 'center',
+                  borderWidth: 1.5, borderColor: '#bae6fd',
+                  borderBottomWidth: 3.5, borderBottomColor: '#93c5fd'
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name={isSoundMuted ? 'volume-off' : 'volume-up'} size={20} color="#0284c7" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Center Title */}
+            <Text style={{
+              fontSize: 20, fontWeight: '900', color: '#0369a1', letterSpacing: 2,
+              textShadowColor: 'rgba(59, 130, 246, 0.15)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4
+            }}>
+              CROSSWORD
+            </Text>
+
+            {/* Right: Words Left + Reveal + Keyboard */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{
+                backgroundColor: '#fef3c7', borderRadius: 14,
+                paddingHorizontal: 10, paddingVertical: 5,
+                borderWidth: 1.5, borderColor: '#fde68a',
+                borderBottomWidth: 3.5, borderBottomColor: '#f59e0b'
+              }}>
+                <Text style={{ color: '#b45309', fontWeight: '900', fontSize: 12 }}>
+                  {(() => {
+                    const total = crosswordGridData.cellCoords.length;
+                    const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
+                    return solved === total ? 'âœ“ Done!' : `${total - solved} left`;
+                  })()}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  playSound('click');
+                  const unsolved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] !== c.char);
+                  if (unsolved.length > 0) {
+                    const pick = unsolved[Math.floor(Math.random() * unsolved.length)];
+                    setCrosswordAnswers(prev => ({ ...prev, [`${pick.row},${pick.col}`]: pick.char }));
+                  }
+                }}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  backgroundColor: '#e0f7fa', borderRadius: 14,
+                  paddingHorizontal: 8, paddingVertical: 7,
+                  borderWidth: 1.5, borderColor: '#b2ebf2',
+                  borderBottomWidth: 3.5, borderBottomColor: '#80deea',
+                  elevation: 2
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="lightbulb-outline" size={14} color="#00838f" />
+                <Text style={{ color: '#00838f', fontWeight: '900', fontSize: 11 }}>Reveal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  playSound('click');
+                  setShowKeyboard(prev => !prev);
+                }}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  backgroundColor: showKeyboard ? '#e0f2fe' : '#ffffff', borderRadius: 14,
+                  paddingHorizontal: 8, paddingVertical: 7,
+                  borderWidth: 1.5, borderColor: showKeyboard ? '#bae6fd' : '#e2e8f0',
+                  borderBottomWidth: 3.5, borderBottomColor: showKeyboard ? '#0284c7' : '#cbd5e1',
+                  elevation: 2
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="keyboard" size={14} color={showKeyboard ? '#0284c7' : '#475569'} />
+                <Text style={{ color: showKeyboard ? '#0284c7' : '#475569', fontWeight: '900', fontSize: 11 }}>Keyboard</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+
+          {/* â”€â”€ SPLASH SCREEN â”€â”€ */}
+          {crosswordSplashActive ? (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <LinearGradient colors={['#e0f2fe', '#f0f9ff', '#dbeafe']} style={StyleSheet.absoluteFill} />
+
+              {/* decorative blobs */}
+              <View style={{ position: 'absolute', top: '5%', right: '8%', width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(37,99,235,0.04)' }} />
+              <View style={{ position: 'absolute', bottom: '10%', left: '5%', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(37,99,235,0.03)' }} />
+              <View style={{ position: 'absolute', top: '40%', left: '20%', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(37,99,235,0.03)' }} />
+
+              {/* Star decorations */}
+              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>â­</Text>
+              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>âœ¨</Text>
+              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>ðŸŒŸ</Text>
+
+              {/* Logo Box */}
+              <View style={{
+                width: 110, height: 110, borderRadius: 30,
+                backgroundColor: '#ffffff',
+                alignItems: 'center', justifyContent: 'center',
+                borderWidth: 1.5, borderColor: '#bae6fd',
+                borderBottomWidth: 4, borderBottomColor: '#93c5fd',
+                shadowColor: '#2563eb', shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.08, shadowRadius: 15, elevation: 4,
+                marginBottom: 20
+              }}>
+                <Text style={{ fontSize: 48 }}>ðŸ”¤</Text>
+              </View>
+
+              <Text style={{
+                fontSize: 26, fontWeight: '900', color: '#0369a1',
+                letterSpacing: 1.5, textAlign: 'center', marginBottom: 8,
+                textShadowColor: 'rgba(59, 130, 246, 0.15)',
+                textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6
+              }}>
+                Crossword{'\n'}Adventure!
+              </Text>
+
+              <Text style={{
+                fontSize: 13, color: '#0284c7', fontWeight: '700',
+                textAlign: 'center', marginBottom: 28,
+                paddingHorizontal: 36, lineHeight: 18
+              }}>
+                Solve the clues and fill the puzzle grid! ðŸŽ¯
+              </Text>
+
+              {/* 3D Play Button */}
+              <TouchableOpacity
+                onPress={() => { playSound('click'); setCrosswordSplashActive(false); }}
+                style={{
+                  height: 50, width: 200, borderRadius: 16,
+                  backgroundColor: '#10b981',
+                  borderBottomWidth: 4, borderBottomColor: '#047857',
+                  shadowColor: '#10b981', shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.2, shadowRadius: 12, elevation: 4
+                }}
+                activeOpacity={0.88}
+              >
+                <LinearGradient
+                  colors={['#34d399', '#10b981']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 12 }}
+                >
+                  <MaterialIcons name="play-arrow" size={24} color="#ffffff" />
+                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16, letterSpacing: 1.2 }}>PLAY GAME</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+          ) : (
+            /* â”€â”€ GAMEPLAY BOARD (Portrait Layout) â”€â”€ */
+            <View style={{ flex: 1 }}>
+              <LinearGradient colors={['#f0f9ff', '#e0f2fe', '#dbeafe']} style={StyleSheet.absoluteFill} />
+              
+              {/* Premium Background Graphics */}
+              <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+                  <Defs>
+                    <SvgLinearGradient id="gameGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <Stop offset="0%" stopColor="#93c5fd" stopOpacity={0.12} />
+                      <Stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.01} />
+                    </SvgLinearGradient>
+                  </Defs>
+                  <Circle cx="85%" cy="20%" r="120" fill="url(#gameGlow)" />
+                  <Circle cx="15%" cy="60%" r="150" fill="url(#gameGlow)" />
+                  <Circle cx="80%" cy="85%" r="100" fill="url(#gameGlow)" />
+                  
+                  {/* Floating abstract decorative graphics */}
+                  <Circle cx="25%" cy="35%" r="6" fill="#3b82f6" opacity={0.15} />
+                  <Circle cx="75%" cy="50%" r="8" fill="#3b82f6" opacity={0.12} />
+                  <Circle cx="30%" cy="75%" r="5" fill="#f59e0b" opacity={0.15} />
+                  
+                  {/* Soft mathematical grid pattern watermark */}
+                  <Path d="M0,100 L500,100 M0,200 L500,200 M0,300 L500,300 M0,400 L500,400 M0,500 L500,500 M0,600 L500,600 M0,700 L500,700" stroke="rgba(37, 99, 235, 0.04)" strokeWidth={1} />
+                  <Path d="M100,0 L100,1000 M200,0 L200,1000 M300,0 L300,1000 M400,0 L400,1000" stroke="rgba(37, 99, 235, 0.04)" strokeWidth={1} />
+                </Svg>
+              </View>
+
+              <ScrollView 
+                style={{ flex: 1 }} 
+                contentContainerStyle={{ paddingBottom: 24 }}
+                showsVerticalScrollIndicator={false}
+              >
+
+
+              {/* Clue Panel (top strip) */}
+              {(() => {
+                const total = crosswordGridData.cellCoords.length;
+                const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
+                const isWon = total > 0 && solved === total;
+                let clueText = 'Tap a cell to read its clue! ðŸ‘†';
+                if (activeCell) {
+                  const cell = crosswordGridData.grid[activeCell.row]?.[activeCell.col];
+                  if (cell) {
+                    const clueObj = crosswordClues[cell.wordIndex];
+                    if (clueObj) clueText = clueObj.clue;
+                  }
+                }
+                return (
+                  <View style={{
+                    marginHorizontal: 14, marginTop: 14, marginBottom: 10,
+                    borderRadius: 20, overflow: 'hidden',
+                    borderWidth: 1.5, borderColor: isWon ? '#a5d6a7' : '#bae6fd',
+                    borderBottomWidth: 4, borderBottomColor: isWon ? '#81c784' : '#93c5fd',
+                    elevation: 3, shadowColor: '#2563eb', shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.06, shadowRadius: 8
+                  }}>
+                    <LinearGradient
+                      colors={isWon ? ['#e8f5e9', '#c8e6c9'] : ['#eff6ff', '#e0f2fe']}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}
+                    >
+                      <View style={{
+                        width: 40, height: 40, borderRadius: 20,
+                        backgroundColor: 'rgba(255,255,255,0.7)',
+                        alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        <Text style={{ fontSize: 22 }}>{isWon ? 'ðŸ†' : 'ðŸ’¡'}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, color: '#0284c7', fontWeight: '900', marginBottom: 2 }}>
+                          {isWon ? 'PUZZLE COMPLETE!' : 'CLUE'}
+                        </Text>
+                        <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e293b', lineHeight: 20 }} numberOfLines={2}>
+                          {isWon ? 'ðŸŽ‰ Amazing! You solved the crossword!' : clueText}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </View>
+                );
+              })()}
+
+              {/* â”€â”€ 9Ã—9 CROSSWORD GRID â”€â”€ Full Width, portrait */}
+              <View style={{
+                marginHorizontal: 14,
+                aspectRatio: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.72)',
+                borderRadius: 24, padding: 12,
+                borderWidth: 1.5, borderColor: '#bae6fd',
+                borderBottomWidth: 5, borderBottomColor: '#93c5fd',
+                elevation: 4, shadowColor: '#2563eb',
+                shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 16
+              }}>
+                {crosswordGridData.grid.map((rowArr, rIdx) => (
+                  <View key={rIdx} style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
+                    {rowArr.map((cell, cIdx) => {
+                      if (!cell) {
+                        return (
+                          <View key={cIdx} style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                            borderRadius: 7,
+                            margin: 2
+                          }} />
+                        );
+                      }
+                      const val = crosswordAnswers[`${rIdx},${cIdx}`] || '';
+                      const isSelected = activeCell?.row === rIdx && activeCell?.col === cIdx;
+                      const total = crosswordGridData.cellCoords.length;
+                      const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
+                      const isWon = total > 0 && solved === total;
+                      const isCorrect = val !== '' && val === cell.char;
+                      const activeCellWordIndex = activeCell ? crosswordGridData.grid[activeCell.row]?.[activeCell.col]?.wordIndex : -1;
+                      const isActiveWordCell = activeCellWordIndex !== -1 && cell.wordIndex === activeCellWordIndex;
+
+                      const WORD_COLORS = [
+                        { bg: '#f0fdf4', border: '#bbf7d0', borderBottom: '#22c55e', text: '#15803d' }, // bright pastel green
+                        { bg: '#faf5ff', border: '#e9d5ff', borderBottom: '#a855f7', text: '#7e22ce' }, // bright pastel purple
+                        { bg: '#fff7ed', border: '#ffedd5', borderBottom: '#f97316', text: '#c2410c' }, // bright pastel orange
+                        { bg: '#fdf2f8', border: '#fce7f3', borderBottom: '#ec4899', text: '#be185d' }, // bright pastel pink
+                        { bg: '#ecfeff', border: '#cffafe', borderBottom: '#06b6d4', text: '#0e7490' }, // bright pastel cyan
+                        { bg: '#eff6ff', border: '#dbeafe', borderBottom: '#3b82f6', text: '#1d4ed8' }, // bright pastel blue
+                      ];
+
+                      // Base cell style
+                      const cellStyle: any = {
+                        flex: 1, margin: 2,
+                        backgroundColor: '#ffffff',
+                        borderRadius: 10,
+                        alignItems: 'center', justifyContent: 'center',
+                        borderWidth: 1.5, borderColor: '#e2e8f0',
+                        borderBottomWidth: 3.5, borderBottomColor: '#cbd5e1',
+                        elevation: 1.5
+                      };
+
+                      const textStyle: any = {
+                        fontSize: 16,
+                        fontWeight: '900',
+                        color: '#0f172a'
+                      };
+
+                      if (isWon) {
+                        cellStyle.backgroundColor = '#10b981';
+                        cellStyle.borderColor = '#059669';
+                        cellStyle.borderBottomColor = '#047857';
+                        textStyle.color = '#ffffff';
+                      } else if (isCorrect) {
+                        // Apply signature candy color theme per word index
+                        const colorTheme = WORD_COLORS[cell.wordIndex % WORD_COLORS.length];
+                        cellStyle.backgroundColor = colorTheme.bg;
+                        cellStyle.borderColor = colorTheme.border;
+                        cellStyle.borderBottomColor = colorTheme.borderBottom;
+                        textStyle.color = colorTheme.text;
+                      } else if (val !== '') {
+                        cellStyle.backgroundColor = '#fef2f2';
+                        cellStyle.borderColor = '#fca5a5';
+                        cellStyle.borderBottomColor = '#ef4444';
+                        textStyle.color = '#ef4444';
+                      } else if (isActiveWordCell) {
+                        if (isSelected) {
+                          cellStyle.backgroundColor = '#fef08a';
+                          cellStyle.borderColor = '#f59e0b';
+                          cellStyle.borderBottomColor = '#d97706';
+                          cellStyle.borderBottomWidth = 4.5;
+                        } else {
+                          cellStyle.backgroundColor = '#fffbeb';
+                          cellStyle.borderColor = '#fef08a';
+                          cellStyle.borderBottomColor = '#eab308';
+                        }
+                      } else if (isSelected) {
+                        cellStyle.backgroundColor = '#fef08a';
+                        cellStyle.borderColor = '#f59e0b';
+                        cellStyle.borderBottomColor = '#d97706';
+                      }
+
+                      return (
+                        <TouchableOpacity
+                          key={cIdx}
+                          onPress={() => { playSound('click'); setActiveCell({ row: rIdx, col: cIdx }); }}
+                          style={cellStyle}
+                          activeOpacity={0.75}
+                        >
+                          <Text style={textStyle}>
+                            {crosswordLanguage === 'UR'
+                              ? (val ? (EN_TO_UR_MAP[val] || val) : '')
+                              : val}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+
+              {/* â”€â”€ KEYBOARD â”€â”€ */}
+              {showKeyboard && (
+                <View style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.45)', // Premium translucent glassmorphism backdrop
+                  marginHorizontal: 16, marginTop: 12, marginBottom: 16,
+                  borderRadius: 24, paddingVertical: 16, paddingHorizontal: 12,
+                  borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.65)',
+                  borderBottomWidth: 4, borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+                  shadowColor: '#475569',
+                  shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.06, shadowRadius: 20,
+                  elevation: 4
+                }}>
+                {/* Keyboard Header Hint */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#64748b', letterSpacing: 1.5 }}>
+                    VIRTUAL KEYBOARD
+                  </Text>
+                </View>
+
+                {/* Keys Row */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
+                  {(() => {
+                    const keys = crosswordLanguage === 'UR'
+                      ? ['Ø§','Ø¨','Ù¾','Øª','Ù¹','Ø«','Ø¬','Ú†','Ø­','Ø®','Ø¯','Úˆ','Ø°','Ø±','Ú‘','Ø²','Ú˜','Ø³','Ø´','Øµ','Ø¶','Ø·','Ø¸','Ø¹','Øº','Ù','Ù‚','Ú©','Ú¯','Ù„','Ù…','Ù†','Ùˆ','Û','Ø¡','ÛŒ']
+                      : ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+
+                    // Premium, elegant black & white mechanical themes
+                    const MONO_THEME = {
+                      bg: 'rgba(255, 255, 255, 0.95)',
+                      innerBorder: 'rgba(255, 255, 255, 0.95)',
+                      bottom: '#64748b', // Elegant slate-gray tactile bezel bottom
+                      text: '#0f172a'    // Crisp dark slate/black lettering
+                    };
+
+                    return keys.map((keyChar) => {
+                      let actualChar = keyChar;
+                      if (crosswordLanguage === 'UR') {
+                        const matched = Object.keys(EN_TO_UR_MAP).find(k => EN_TO_UR_MAP[k] === keyChar);
+                        actualChar = matched || 'A';
+                      }
+
+                      return (
+                        <TouchableOpacity
+                          key={keyChar}
+                          onPress={() => {
+                            playSound('click');
+                            if (activeCell) {
+                              setCrosswordAnswers(prev => {
+                                const next = { ...prev, [`${activeCell.row},${activeCell.col}`]: actualChar };
+                                const cell = crosswordGridData.grid[activeCell.row][activeCell.col];
+                                if (cell) {
+                                  const nextCoord = crosswordGridData.cellCoords.find(c => c.wordIndex === cell.wordIndex && c.charIndex === cell.charIndex + 1);
+                                  if (nextCoord) setActiveCell({ row: nextCoord.row, col: nextCoord.col });
+                                }
+                                const total = crosswordGridData.cellCoords.length;
+                                const solved = crosswordGridData.cellCoords.filter(c => next[`${c.row},${c.col}`] === c.char).length;
+                                if (solved === total) playSound('win');
+                                return next;
+                              });
+                            }
+                          }}
+                          style={{
+                            width: '10.8%', aspectRatio: 1, borderRadius: 12,
+                            backgroundColor: MONO_THEME.bg,
+                            alignItems: 'center', justifyContent: 'center',
+                            borderWidth: 1.2, borderColor: 'rgba(203, 213, 225, 0.4)',
+                            borderBottomWidth: 3.5, borderBottomColor: MONO_THEME.bottom,
+                            elevation: 2,
+                            shadowColor: '#475569', shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.05, shadowRadius: 3
+                          }}
+                          activeOpacity={0.6}
+                        >
+                          {/* Inner Bevel Details Inset Frame */}
+                          <View style={{
+                            flex: 1, width: '100%', height: '100%',
+                            borderRadius: 10,
+                            borderWidth: 1, borderColor: MONO_THEME.innerBorder,
+                            alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            <Text style={{ fontSize: 16, fontWeight: '800', color: MONO_THEME.text }}>{keyChar}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    });
+                  })()}
+
+                  {/* Backspace */}
+                  <TouchableOpacity
+                    onPress={() => {
+                      playSound('click');
+                      if (activeCell) {
+                        setCrosswordAnswers(prev => {
+                          const next = { ...prev };
+                          delete next[`${activeCell.row},${activeCell.col}`];
+                          const cell = crosswordGridData.grid[activeCell.row][activeCell.col];
+                          if (cell) {
+                            const prevCoord = crosswordGridData.cellCoords.find(c => c.wordIndex === cell.wordIndex && c.charIndex === cell.charIndex - 1);
+                            if (prevCoord) setActiveCell({ row: prevCoord.row, col: prevCoord.col });
+                          }
+                          return next;
+                        });
+                      }
+                    }}
+                    style={{
+                      width: '10.8%', aspectRatio: 1, borderRadius: 12,
+                      backgroundColor: 'rgba(241, 245, 249, 0.95)', // Slate-white backspace keycap
+                      alignItems: 'center', justifyContent: 'center',
+                      borderWidth: 1.2, borderColor: 'rgba(203, 213, 225, 0.4)',
+                      borderBottomWidth: 3.5, borderBottomColor: '#475569',
+                      elevation: 2,
+                      shadowColor: '#475569', shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.05, shadowRadius: 3
+                    }}
+                    activeOpacity={0.6}
+                  >
+                    <View style={{
+                      flex: 1, width: '100%', height: '100%',
+                      borderRadius: 10,
+                      borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.95)',
+                      alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <MaterialIcons name="backspace" size={18} color="#334155" />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Globe Language Button */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 14 }}>
+                  <TouchableOpacity
+                    onPress={() => { playSound('click'); setCrosswordLanguage(crosswordLanguage === 'EN' ? 'UR' : 'EN'); }}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center', gap: 6,
+                      height: 38, paddingHorizontal: 20, borderRadius: 14,
+                      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                      borderWidth: 1.2, borderColor: 'rgba(203, 213, 225, 0.5)',
+                      borderBottomWidth: 3.5, borderBottomColor: '#475569',
+                      shadowColor: '#475569', shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.06, shadowRadius: 4,
+                      elevation: 2
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons name="public" size={18} color="#334155" />
+                    <Text style={{ color: '#334155', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>
+                      {crosswordLanguage === 'EN' ? 'Ø§Ø±Ø¯Ùˆ Ú©ÛŒ Ø¨ÙˆØ±Úˆ' : 'English Keyboard'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              )}
+
+              </ScrollView>
+            </View>
+          )}
+        </SafeAreaView>
+      );
+    }
+
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
         <KeyboardAvoidingView 
@@ -1975,6 +2570,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     setShowClassDropdown(false);
                     setShowCourseDropdown(false);
                     setShowTypeDropdown(false);
+                    clearFormFields();
                   }}
                 >
                   <MaterialIcons name="close" size={18} color="#ffffff" />
@@ -2318,18 +2914,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                     : 'Create New Blanks'}
                           </Text>
                         </View>
-                        <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '500', marginLeft: 12, letterSpacing: 0.2 }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '500', marginLeft: 10, letterSpacing: 0.1 }}>
                           {formType === 'match' 
-                            ? 'Step 2 of 4 — Build your matching column pairs' 
+                            ? 'Step 2 of 4 â€” Build your matching column pairs' 
                             : (formType === 'crosswords' || formType === 'cluegames')
                               ? 'Build your clues and word grids'
                               : formType === 'parts'
                                 ? (createStep === 'partsCreator'
-                                    ? 'Step 2 of 3 — Choose image and click to place label pinpoints'
-                                    : 'Step 3 of 3 — Select theme wallpaper')
+                                    ? 'Step 2 of 3 â€” Choose image and click to place label pinpoints'
+                                    : 'Step 3 of 3 â€” Select theme wallpaper')
                                 : formType === 'truefalse'
-                                  ? 'Step 2 of 2 — Add statements and set correct answers'
-                                  : 'Step 1 of 4 — Write your text and select blanks'}
+                                  ? 'Step 2 of 2 â€” Add statements and set correct answers'
+                                  : 'Step 1 of 4 â€” Write your text and select blanks'}
                         </Text>
                       </View>
                     </View>
@@ -2338,7 +2934,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     {createStep === 'blanks' && (
                       <>
                         <View style={styles.blanksCard}>
-                          {/* Card Header — Electric Blue Neural Theme */}
+                          {/* Card Header â€” Electric Blue Neural Theme */}
                           <View style={styles.blanksCardHeader}>
                             <LinearGradient
                               colors={['#2563EB', '#1D4ED8', '#1E3A8A']}
@@ -2362,7 +2958,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           </View>
 
                           <View style={styles.blanksCardBody}>
-                            {/* ══ Neural Circuit AI Button ══ */}
+                            {/* â•â• Neural Circuit AI Button â•â• */}
                             <TouchableOpacity
                               style={styles.aiGenButton}
                               onPress={() => {
@@ -2579,15 +3175,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         {!isSelectingBlanks && (
                           <View style={styles.stepFooterButtons}>
                             <TouchableOpacity
-                              style={[styles.stepFooterBtn, styles.stepFooterBtnPrev, { minWidth: 110 }]}
+                              style={{ flex: 1 }}
                               onPress={handleStepPrev}
                               activeOpacity={0.7}
                             >
-                              <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
-                              <Text style={styles.stepFooterTextPrev}>Previous</Text>
+                              <View style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}>
+                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                                <Text style={styles.stepFooterTextPrev}>Previous</Text>
+                              </View>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#2563EB' }]}
+                              style={{ flex: 1 }}
                               onPress={handleStepNext}
                               activeOpacity={0.8}
                             >
@@ -2595,10 +3193,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 colors={['#3B82F6', '#2563EB', '#1D4ED8']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14 }}
-                              />
-                              <Text style={styles.stepFooterTextNext}>Next</Text>
-                              <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                                style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
+                              >
+                                <Text style={styles.stepFooterTextNext}>Next</Text>
+                                <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                              </LinearGradient>
                             </TouchableOpacity>
                           </View>
                         )}
@@ -2609,7 +3208,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     {createStep === 'match' && (
                       <>
                         <View style={styles.matchCard}>
-                          {/* Card Header — Electric Neural Theme */}
+                          {/* Card Header â€” Electric Neural Theme */}
                           <View style={styles.blanksCardHeader}>
                             <LinearGradient
                               colors={['#2563EB', '#1D4ED8', '#1E3A8A']}
@@ -2635,8 +3234,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           <View style={styles.matchContentContainer}>
 
                             {/* Input row - simple two column layout with clear labels */}
-                            <View style={styles.matchInputRow}>
-                              <View style={[styles.matchInputCol, { marginRight: 8 }]}>
+                            <View style={{ flexDirection: 'row', gap: 10, width: '100%', marginBottom: 12 }}>
+                              <View style={{ flex: 1 }}>
                                 <Text style={styles.matchInputLabel}>Left Item</Text>
                                 <TextInput
                                   style={styles.matchTextInput}
@@ -2646,12 +3245,12 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                   onChangeText={setColumnLeftText}
                                 />
                               </View>
-                              <View style={styles.matchInputCol}>
+                              <View style={{ flex: 1 }}>
                                 <Text style={styles.matchInputLabel}>Right Match</Text>
                                 <View style={styles.matchInputRightWrapper}>
                                   <TextInput
                                     style={[styles.matchTextInput, { paddingRight: 36 }]}
-                                    placeholder="e.g. H₂O"
+                                    placeholder="e.g. Hâ‚‚O"
                                     placeholderTextColor="#94A3B8"
                                     value={columnRightText}
                                     onChangeText={setColumnRightText}
@@ -2669,24 +3268,35 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                   )}
                                 </View>
                               </View>
-                              
-                              {/* ADD Button - Premium */}
-                              <TouchableOpacity 
-                                style={[styles.addPairBtn, { marginTop: 22 }]}
-                                onPress={handleAddMatchPair}
-                                activeOpacity={0.75}
-                              >
-                                <LinearGradient
-                                  colors={['#3B82F6', '#2563EB', '#1D4ED8']}
-                                  start={{ x: 0, y: 0 }}
-                                  end={{ x: 0, y: 1 }}
-                                  style={styles.addPairBtnGrad}
-                                >
-                                  <MaterialIcons name="add-circle" size={22} color="#ffffff" />
-                                  <Text style={styles.addPairBtnText}>ADD</Text>
-                                </LinearGradient>
-                              </TouchableOpacity>
                             </View>
+                            
+                            {/* ADD Button - Full Width Premium */}
+                            <TouchableOpacity 
+                              style={{
+                                height: 48,
+                                borderRadius: 12,
+                                overflow: 'hidden',
+                                width: '100%',
+                                shadowColor: '#2563EB',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 8,
+                                elevation: 3,
+                                marginBottom: 6,
+                              }}
+                              onPress={handleAddMatchPair}
+                              activeOpacity={0.8}
+                            >
+                              <LinearGradient
+                                colors={['#3B82F6', '#2563EB', '#1D4ED8']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                              >
+                                <MaterialIcons name="add-circle" size={18} color="#ffffff" />
+                                <Text style={{ fontSize: 14, fontWeight: '800', color: '#ffffff', letterSpacing: 0.5 }}>Add Matching Pair</Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
 
                             {/* Pairs Table */}
                             <View style={styles.pairsTableContainer}>
@@ -2739,15 +3349,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           {/* Step Footer Navigation - Match */}
                           <View style={styles.stepFooterButtons}>
                             <TouchableOpacity
-                              style={[styles.stepFooterBtn, styles.stepFooterBtnPrev, { minWidth: 110 }]}
+                              style={{ flex: 1 }}
                               onPress={handleStepPrev}
                               activeOpacity={0.7}
                             >
-                              <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
-                              <Text style={styles.stepFooterTextPrev}>Previous</Text>
+                              <View style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}>
+                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                                <Text style={styles.stepFooterTextPrev}>Previous</Text>
+                              </View>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#2563EB' }]}
+                              style={{ flex: 1 }}
                               onPress={handleStepNext}
                               activeOpacity={0.8}
                             >
@@ -2755,10 +3367,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 colors={['#3B82F6', '#2563EB', '#1D4ED8']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14 }}
-                              />
-                              <Text style={styles.stepFooterTextNext}>Next → Select Theme</Text>
-                              <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                                style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
+                              >
+                                <Text style={styles.stepFooterTextNext}>Next</Text>
+                                <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                              </LinearGradient>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -2866,7 +3479,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           elevation: 4,
                           overflow: 'hidden'
                         }}>
-                          {/* Card Header — Beautiful Neural theme matching Blanks */}
+                          {/* Card Header â€” Beautiful Neural theme matching Blanks */}
                           <View style={{ height: 54, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8, position: 'relative' }}>
                             <LinearGradient
                               colors={['#2563eb', '#1d4ed8']}
@@ -3029,36 +3642,36 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         {/* 1. Instruction Card */}
                         <View style={{
                           backgroundColor: '#ffffff',
-                          borderRadius: 20, padding: 18, borderWidth: 1.5,
+                          borderRadius: 14, padding: 12, borderWidth: 1.5,
                           borderColor: '#bfdbfe',
-                          shadowColor: '#1e3a8a', shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.06, shadowRadius: 10, elevation: 2
+                          shadowColor: '#1e3a8a', shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.05, shadowRadius: 8, elevation: 1
                         }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
-                              <MaterialIcons name="image" size={22} color="#2563eb" />
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
+                              <MaterialIcons name="image" size={16} color="#2563eb" />
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{ fontSize: 18, fontWeight: '900', color: '#1e3a8a' }}>Label The Diagram</Text>
-                              <Text style={{ fontSize: 13, fontWeight: '700', color: '#64748b' }}>Step 2 of 3</Text>
+                              <Text style={{ fontSize: 13, fontWeight: '900', color: '#1e3a8a' }}>Label The Diagram</Text>
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: '#64748b' }}>Step 2 of 3</Text>
                             </View>
                           </View>
-                          <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#e11d48', lineHeight: 20, marginTop: 4 }}>
-                            * Click "Choose File" to select a diagram template, then tap anywhere on the canvas below to place pinpoint dots and assign names.
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: '#e11d48', lineHeight: 16, marginTop: 2 }}>
+                            * Click "Choose File" to select a diagram template, then tap on the canvas to place pinpoint dots and assign names.
                           </Text>
                         </View>
 
                         {/* 2. Choose File / Select Image Box */}
                         <View style={{
                           flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                          backgroundColor: '#eff6ff', padding: 16, borderRadius: 20,
+                          backgroundColor: '#eff6ff', padding: 10, borderRadius: 14,
                           borderWidth: 1.5, borderColor: '#bfdbfe', elevation: 1
                         }}>
-                          <View style={{ flex: 1, marginRight: 12 }}>
-                            <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e3a8a' }}>
+                          <View style={{ flex: 1, marginRight: 10 }}>
+                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#1e3a8a' }}>
                               Diagram Image File:
                             </Text>
-                            <Text style={{ fontSize: 14, fontWeight: '700', color: '#4b5563', marginTop: 4 }} numberOfLines={1}>
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: '#4b5563', marginTop: 2 }} numberOfLines={1}>
                               {partsImageName || "No file chosen"}
                             </Text>
                           </View>
@@ -3067,13 +3680,13 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             onPress={() => { playSound('click'); setShowImageSelectModal(true); }}
                             style={{
                               backgroundColor: '#2563eb',
-                              paddingVertical: 10, paddingHorizontal: 20,
-                              borderRadius: 14, borderWidth: 1.2, borderColor: '#60a5fa',
-                              borderBottomWidth: 3.5, borderBottomColor: '#1d4ed8'
+                              paddingVertical: 8, paddingHorizontal: 14,
+                              borderRadius: 10, borderWidth: 1.2, borderColor: '#60a5fa',
+                              borderBottomWidth: 3, borderBottomColor: '#1d4ed8'
                             }}
                             activeOpacity={0.8}
                           >
-                            <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 14 }}>Choose File</Text>
+                            <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>Choose File</Text>
                           </TouchableOpacity>
                         </View>
 
@@ -3311,58 +3924,58 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Step: TRUE/FALSE QUESTION CREATOR (ULTRA PREMIUM MODERN CARD UI) */}
                     {createStep === 'truefalse' && (
-                      <View style={{ gap: 20, width: '100%' }}>
+                      <View style={{ gap: 12, width: '100%' }}>
                         {/* Main Input Form Card */}
                         <View style={{
                           backgroundColor: '#ffffff',
-                          borderRadius: 26,
+                          borderRadius: 16,
                           overflow: 'hidden',
-                          borderWidth: 1.8,
+                          borderWidth: 1.5,
                           borderColor: '#E2E8F0',
                           shadowColor: '#2563EB',
-                          shadowOffset: { width: 0, height: 8 },
-                          shadowOpacity: 0.08,
-                          shadowRadius: 16,
-                          elevation: 4
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 10,
+                          elevation: 3
                         }}>
                           {/* Top Gradient Accent Bar */}
                           <LinearGradient
                             colors={['#3B82F6', '#2563EB', '#6366F1']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
-                            style={{ height: 5, width: '100%' }}
+                            style={{ height: 4, width: '100%' }}
                           />
 
-                          <View style={{ padding: 20, gap: 16 }}>
+                          <View style={{ padding: 12, gap: 10 }}>
                             {/* Card Section Header */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                 <View style={{
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: 10,
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 8,
                                   backgroundColor: '#EFF6FF',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   borderWidth: 1,
                                   borderColor: '#BFDBFE'
                                 }}>
-                                  <MaterialIcons name="edit-note" size={20} color="#2563EB" />
+                                  <MaterialIcons name="edit-note" size={16} color="#2563EB" />
                                 </View>
-                                <Text style={{ fontSize: 13, fontWeight: '900', color: '#1E3A8A', letterSpacing: 0.5 }}>
+                                <Text style={{ fontSize: 11, fontWeight: '900', color: '#1E3A8A', letterSpacing: 0.5 }}>
                                   QUESTION STATEMENT
                                 </Text>
                               </View>
 
                               <View style={{
-                                paddingVertical: 4,
-                                paddingHorizontal: 10,
-                                borderRadius: 12,
+                                paddingVertical: 2,
+                                paddingHorizontal: 8,
+                                borderRadius: 8,
                                 backgroundColor: '#EFF6FF',
                                 borderWidth: 1,
                                 borderColor: '#BFDBFE'
                               }}>
-                                <Text style={{ fontSize: 11, fontWeight: '900', color: '#2563EB' }}>
+                                <Text style={{ fontSize: 9, fontWeight: '900', color: '#2563EB' }}>
                                   Statement #{tfQuestions.length + 1}
                                 </Text>
                               </View>
@@ -3373,20 +3986,20 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               flexDirection: 'row',
                               alignItems: 'center',
                               backgroundColor: '#F8FAFC',
-                              borderWidth: 1.8,
+                              borderWidth: 1.2,
                               borderColor: '#CBD5E1',
-                              borderRadius: 16,
-                              paddingHorizontal: 14,
-                              paddingVertical: 4
+                              borderRadius: 10,
+                              paddingHorizontal: 10,
+                              paddingVertical: 2
                             }}>
-                              <MaterialIcons name="help-outline" size={20} color="#94A3B8" style={{ marginRight: 8 }} />
+                              <MaterialIcons name="help-outline" size={16} color="#94A3B8" style={{ marginRight: 4 }} />
                               <TextInput
                                 style={{
                                   flex: 1,
-                                  paddingVertical: 10,
-                                  fontSize: 15,
+                                  paddingVertical: 6,
+                                  fontSize: 13,
                                   color: '#0F172A',
-                                  fontWeight: '700'
+                                  fontWeight: '600'
                                 }}
                                 placeholder="Enter statement e.g. Water boils at 100°C"
                                 placeholderTextColor="#94A3B8"
@@ -3396,56 +4009,56 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             </View>
 
                             {/* Correct Answer Header */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                              <MaterialIcons name="task-alt" size={16} color="#475569" />
-                              <Text style={{ fontSize: 12, fontWeight: '900', color: '#475569', letterSpacing: 0.5 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <MaterialIcons name="task-alt" size={12} color="#475569" />
+                              <Text style={{ fontSize: 10, fontWeight: '900', color: '#475569', letterSpacing: 0.5 }}>
                                 SELECT CORRECT ANSWER
                               </Text>
                             </View>
 
                             {/* TRUE / FALSE Choice Buttons */}
-                            <View style={{ flexDirection: 'row', gap: 14 }}>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
                               {/* TRUE Choice Card */}
                               <TouchableOpacity
                                 style={{
                                   flex: 1,
-                                  borderRadius: 18,
+                                  borderRadius: 12,
                                   overflow: 'hidden',
-                                  borderWidth: 2,
+                                  borderWidth: 1.5,
                                   borderColor: tfAnswerInput === 'true' ? '#10B981' : '#E2E8F0',
                                   backgroundColor: tfAnswerInput === 'true' ? '#ECFDF5' : '#F8FAFC',
                                   shadowColor: tfAnswerInput === 'true' ? '#10B981' : 'transparent',
-                                  shadowOffset: { width: 0, height: 4 },
-                                  shadowOpacity: 0.2,
-                                  shadowRadius: 8,
-                                  elevation: tfAnswerInput === 'true' ? 3 : 0
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 4,
+                                  elevation: tfAnswerInput === 'true' ? 2 : 0
                                 }}
                                 onPress={() => setTfAnswerInput('true')}
                                 activeOpacity={0.85}
                               >
                                 <View style={{
-                                  paddingVertical: 14,
+                                  paddingVertical: 8,
                                   alignItems: 'center',
                                   flexDirection: 'row',
                                   justifyContent: 'center',
-                                  gap: 8
+                                  gap: 6
                                 }}>
                                   <View style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: 12,
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: 9,
                                     backgroundColor: tfAnswerInput === 'true' ? '#10B981' : 'transparent',
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                   }}>
                                     <MaterialIcons
                                       name={tfAnswerInput === 'true' ? 'check' : 'radio-button-unchecked'}
-                                      size={16}
+                                      size={12}
                                       color={tfAnswerInput === 'true' ? '#ffffff' : '#64748B'}
                                     />
                                   </View>
                                   <Text style={{
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     fontWeight: '900',
                                     color: tfAnswerInput === 'true' ? '#047857' : '#64748B',
                                     letterSpacing: 0.8
@@ -3459,43 +4072,43 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               <TouchableOpacity
                                 style={{
                                   flex: 1,
-                                  borderRadius: 18,
+                                  borderRadius: 12,
                                   overflow: 'hidden',
-                                  borderWidth: 2,
+                                  borderWidth: 1.5,
                                   borderColor: tfAnswerInput === 'false' ? '#F43F5E' : '#E2E8F0',
                                   backgroundColor: tfAnswerInput === 'false' ? '#FFF1F2' : '#F8FAFC',
                                   shadowColor: tfAnswerInput === 'false' ? '#F43F5E' : 'transparent',
-                                  shadowOffset: { width: 0, height: 4 },
-                                  shadowOpacity: 0.2,
-                                  shadowRadius: 8,
-                                  elevation: tfAnswerInput === 'false' ? 3 : 0
+                                  shadowOffset: { width: 0, height: 2 },
+                                  shadowOpacity: 0.1,
+                                  shadowRadius: 4,
+                                  elevation: tfAnswerInput === 'false' ? 2 : 0
                                 }}
                                 onPress={() => setTfAnswerInput('false')}
                                 activeOpacity={0.85}
                               >
                                 <View style={{
-                                  paddingVertical: 14,
+                                  paddingVertical: 8,
                                   alignItems: 'center',
                                   flexDirection: 'row',
                                   justifyContent: 'center',
-                                  gap: 8
+                                  gap: 6
                                 }}>
                                   <View style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: 12,
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: 9,
                                     backgroundColor: tfAnswerInput === 'false' ? '#F43F5E' : 'transparent',
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                   }}>
                                     <MaterialIcons
                                       name={tfAnswerInput === 'false' ? 'close' : 'radio-button-unchecked'}
-                                      size={16}
+                                      size={12}
                                       color={tfAnswerInput === 'false' ? '#ffffff' : '#64748B'}
                                     />
                                   </View>
                                   <Text style={{
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     fontWeight: '900',
                                     color: tfAnswerInput === 'false' ? '#BE123C' : '#64748B',
                                     letterSpacing: 0.8
@@ -3509,14 +4122,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             {/* + ADD QUESTION Button */}
                             <TouchableOpacity
                               style={{
-                                borderRadius: 16,
+                                borderRadius: 10,
                                 overflow: 'hidden',
-                                marginTop: 4,
+                                marginTop: 2,
                                 shadowColor: '#2563EB',
-                                shadowOffset: { width: 0, height: 6 },
-                                shadowOpacity: 0.3,
-                                shadowRadius: 10,
-                                elevation: 4
+                                shadowOffset: { width: 0, height: 3 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 6,
+                                elevation: 3
                               }}
                               onPress={handleAddTfQuestion}
                               activeOpacity={0.85}
@@ -3526,26 +4139,26 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={{
-                                  paddingVertical: 14,
+                                  paddingVertical: 10,
                                   alignItems: 'center',
                                   flexDirection: 'row',
                                   justifyContent: 'center',
-                                  gap: 10,
-                                  borderBottomWidth: 4,
+                                  gap: 8,
+                                  borderBottomWidth: 3,
                                   borderBottomColor: '#1E40AF'
                                 }}
                               >
                                 <View style={{
-                                  width: 26,
-                                  height: 26,
-                                  borderRadius: 13,
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: 10,
                                   backgroundColor: 'rgba(255, 255, 255, 0.25)',
                                   alignItems: 'center',
                                   justifyContent: 'center'
                                 }}>
-                                  <MaterialIcons name="add" size={18} color="#ffffff" />
+                                  <MaterialIcons name="add" size={14} color="#ffffff" />
                                 </View>
-                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16, letterSpacing: 0.8 }}>
+                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 13, letterSpacing: 0.8 }}>
                                   ADD QUESTION
                                 </Text>
                               </LinearGradient>
@@ -3554,20 +4167,20 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         </View>
 
                         {/* List of Added Questions */}
-                        <View style={{ gap: 12 }}>
+                        <View style={{ gap: 8 }}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              <MaterialIcons name="format-list-bulleted" size={18} color="#1E293B" />
-                              <Text style={{ fontSize: 15, fontWeight: '900', color: '#1E293B', letterSpacing: 0.3 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <MaterialIcons name="format-list-bulleted" size={14} color="#1E293B" />
+                              <Text style={{ fontSize: 12, fontWeight: '900', color: '#1E293B', letterSpacing: 0.3 }}>
                                 Added Questions ({tfQuestions.length})
                               </Text>
                             </View>
 
                             {tfQuestions.length > 0 && (
                               <View style={{
-                                paddingVertical: 4,
-                                paddingHorizontal: 10,
-                                borderRadius: 12,
+                                paddingVertical: 2,
+                                paddingHorizontal: 8,
+                                borderRadius: 8,
                                 backgroundColor: '#ECFDF5',
                                 borderWidth: 1,
                                 borderColor: '#A7F3D0',
@@ -3575,8 +4188,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 alignItems: 'center',
                                 gap: 4
                               }}>
-                                <MaterialIcons name="check-circle" size={12} color="#047857" />
-                                <Text style={{ fontSize: 11, fontWeight: '900', color: '#047857' }}>
+                                <MaterialIcons name="check-circle" size={10} color="#047857" />
+                                <Text style={{ fontSize: 9, fontWeight: '900', color: '#047857' }}>
                                   Ready to generate
                                 </Text>
                               </View>
@@ -3586,96 +4199,96 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           {tfQuestions.length === 0 ? (
                             <View style={{
                               backgroundColor: '#FFFFFF',
-                              borderRadius: 22,
-                              padding: 24,
-                              borderWidth: 1.8,
+                              borderRadius: 14,
+                              padding: 16,
+                              borderWidth: 1.5,
                               borderColor: '#CBD5E1',
                               borderStyle: 'dashed',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: 8,
+                              gap: 6,
                               shadowColor: '#64748B',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: 0.04,
-                              shadowRadius: 8
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.02,
+                              shadowRadius: 6
                             }}>
                               <View style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 22,
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
                                 backgroundColor: '#F1F5F9',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}>
-                                <MaterialIcons name="playlist-add" size={24} color="#64748B" />
+                                <MaterialIcons name="playlist-add" size={16} color="#64748B" />
                               </View>
-                              <Text style={{ fontSize: 14, fontWeight: '900', color: '#334155' }}>No questions added yet</Text>
-                              <Text style={{ fontSize: 12, fontWeight: '600', color: '#94A3B8', textAlign: 'center' }}>
+                              <Text style={{ fontSize: 11, fontWeight: '900', color: '#334155' }}>No questions added yet</Text>
+                              <Text style={{ fontSize: 10, fontWeight: '600', color: '#94A3B8', textAlign: 'center' }}>
                                 Enter a statement above & select TRUE or FALSE to add questions.
                               </Text>
                             </View>
                           ) : (
-                            <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled showsVerticalScrollIndicator>
-                              <View style={{ gap: 12 }}>
+                            <ScrollView style={{ maxHeight: 180 }} nestedScrollEnabled showsVerticalScrollIndicator>
+                              <View style={{ gap: 8 }}>
                                 {tfQuestions.map((q, idx) => (
                                   <View key={q.id} style={{
                                     backgroundColor: '#ffffff',
-                                    borderRadius: 18,
+                                    borderRadius: 10,
                                     overflow: 'hidden',
-                                    borderWidth: 1.6,
+                                    borderWidth: 1.2,
                                     borderColor: '#E2E8F0',
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     shadowColor: '#64748B',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: 0.06,
-                                    shadowRadius: 8,
-                                    elevation: 2
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.04,
+                                    shadowRadius: 6,
+                                    elevation: 1
                                   }}>
                                     {/* Accent Color Left Edge Bar */}
                                     <View style={{
-                                      width: 5,
+                                      width: 4,
                                       alignSelf: 'stretch',
                                       backgroundColor: q.answer === 'true' ? '#10B981' : '#F43F5E'
                                     }} />
 
-                                    <View style={{ flex: 1, padding: 16, marginRight: 8 }}>
-                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                    <View style={{ flex: 1, padding: 10, marginRight: 6 }}>
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
                                         <View style={{
-                                          paddingVertical: 3,
-                                          paddingHorizontal: 10,
-                                          borderRadius: 10,
+                                          paddingVertical: 2,
+                                          paddingHorizontal: 6,
+                                          borderRadius: 6,
                                           backgroundColor: '#EFF6FF',
                                           borderWidth: 1,
                                           borderColor: '#BFDBFE'
                                         }}>
-                                          <Text style={{ fontSize: 13, fontWeight: '900', color: '#2563EB' }}>Q{idx + 1}</Text>
+                                          <Text style={{ fontSize: 10, fontWeight: '900', color: '#2563EB' }}>Q{idx + 1}</Text>
                                         </View>
                                       </View>
-                                      <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A', lineHeight: 25 }}>
+                                      <Text style={{ fontSize: 13, fontWeight: '900', color: '#0F172A', lineHeight: 18 }}>
                                         {q.question}
                                       </Text>
                                     </View>
 
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingRight: 16 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 10 }}>
                                       <View style={{
-                                        paddingVertical: 7,
-                                        paddingHorizontal: 14,
-                                        borderRadius: 14,
+                                        paddingVertical: 4,
+                                        paddingHorizontal: 8,
+                                        borderRadius: 8,
                                         backgroundColor: q.answer === 'true' ? '#ECFDF5' : '#FFF1F2',
-                                        borderWidth: 1.5,
+                                        borderWidth: 1.2,
                                         borderColor: q.answer === 'true' ? '#A7F3D0' : '#FECDD3',
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        gap: 5
+                                        gap: 4
                                       }}>
                                         <MaterialIcons
                                           name={q.answer === 'true' ? 'check-circle' : 'cancel'}
-                                          size={16}
+                                          size={12}
                                           color={q.answer === 'true' ? '#047857' : '#BE123C'}
                                         />
-                                        <Text style={{ fontSize: 13, fontWeight: '900', color: q.answer === 'true' ? '#047857' : '#BE123C', letterSpacing: 0.5 }}>
+                                        <Text style={{ fontSize: 10, fontWeight: '900', color: q.answer === 'true' ? '#047857' : '#BE123C', letterSpacing: 0.5 }}>
                                           {q.answer.toUpperCase()}
                                         </Text>
                                       </View>
@@ -3683,18 +4296,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                       <TouchableOpacity
                                         onPress={() => handleRemoveTfQuestion(q.id)}
                                         style={{
-                                          width: 38,
-                                          height: 38,
-                                          borderRadius: 19,
+                                          width: 28,
+                                          height: 28,
+                                          borderRadius: 14,
                                           backgroundColor: '#FFF1F2',
-                                          borderWidth: 1.2,
+                                          borderWidth: 1,
                                           borderColor: '#FECDD3',
                                           alignItems: 'center',
                                           justifyContent: 'center'
                                         }}
                                         activeOpacity={0.8}
                                       >
-                                        <MaterialIcons name="delete-outline" size={20} color="#F43F5E" />
+                                        <MaterialIcons name="delete-outline" size={16} color="#F43F5E" />
                                       </TouchableOpacity>
                                     </View>
                                   </View>
@@ -3902,7 +4515,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                   }}
                                   value={mcqsTitle}
                                   onChangeText={setMcqsTitle}
-                                  placeholder="e.g., Chapter 5 — solutions and solubility quiz"
+                                  placeholder="e.g., Chapter 5 â€” solutions and solubility quiz"
                                 />
                               </View>
 
@@ -3933,7 +4546,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                     Click to upload or drag & drop
                                   </Text>
                                   <Text style={{ fontSize: 12, color: '#64748B' }}>
-                                    PDF, JPG, PNG — max 10 MB
+                                    PDF, JPG, PNG â€” max 10 MB
                                   </Text>
                                 </TouchableOpacity>
 
@@ -4097,7 +4710,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                         <View style={{ flex: 1, marginRight: 10 }}>
                                           <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A' }}>{item.title}</Text>
                                           <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                                            📄 {item.docName} • {item.slosCount} SLOs
+                                            ðŸ“„ {item.docName} â€¢ {item.slosCount} SLOs
                                           </Text>
                                         </View>
                                         <View style={{
@@ -4109,7 +4722,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                           borderColor: item.status === 'Published' ? '#A7F3D0' : '#FDE68A'
                                         }}>
                                           <Text style={{ fontSize: 11, fontWeight: '900', color: item.status === 'Published' ? '#047857' : '#B45309' }}>
-                                            • {item.status}
+                                            â€¢ {item.status}
                                           </Text>
                                         </View>
                                       </View>
@@ -4125,7 +4738,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                           <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{item.course}</Text>
                                         </View>
                                         <Text style={{ fontSize: 12, color: '#64748B', marginLeft: 8 }}>
-                                          {item.qsCount} Qs • Completion: {item.completionText}
+                                          {item.qsCount} Qs â€¢ Completion: {item.completionText}
                                         </Text>
                                       </View>
 
@@ -4167,7 +4780,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             <View>
                               <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A' }}>Student Learning Outcomes</Text>
                               <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
-                                Define 2–6 Learning Objectives (AI will generate MCQs targeted to these outcomes)
+                                Define 2â€“6 Learning Objectives (AI will generate MCQs targeted to these outcomes)
                               </Text>
                             </View>
 
@@ -4261,7 +4874,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               </TouchableOpacity>
 
                               <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#0EA5E9' }]} onPress={handleStepNext}>
-                                <Text style={styles.stepFooterTextNext}>Generate Questions →</Text>
+                                <Text style={styles.stepFooterTextNext}>Generate Questions â†’</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -4421,7 +5034,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               </TouchableOpacity>
 
                               <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#0EA5E9' }]} onPress={handleStepNext}>
-                                <Text style={styles.stepFooterTextNext}>Continue to Publish →</Text>
+                                <Text style={styles.stepFooterTextNext}>Continue to Publish â†’</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -4486,7 +5099,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 padding: 14
                               }}>
                                 <Text style={{ fontSize: 14, fontWeight: '700', color: '#0F172A' }}>
-                                  Published — Students can see and take it now
+                                  Published â€” Students can see and take it now
                                 </Text>
                                 <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748B" />
                               </View>
@@ -4500,7 +5113,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               </TouchableOpacity>
 
                               <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#10B981' }]} onPress={handleCreateAssignment}>
-                                <Text style={styles.stepFooterTextNext}>✓ Save Assessment</Text>
+                                <Text style={styles.stepFooterTextNext}>âœ“ Save Assessment</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -4835,11 +5448,308 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
+        <PremiumDateTimePicker
+          visible={isDatePickerVisible}
+          onClose={() => setIsDatePickerVisible(false)}
+          value={datePickerValue}
+          title={datePickerTitle}
+          onSelect={(val) => {
+            if (datePickerTarget === 'start') {
+              setFormStart(val);
+            } else if (datePickerTarget === 'deadline') {
+              setFormDeadline(val);
+            }
+            setIsDatePickerVisible(false);
+          }}
+        />
+
+        {/* â”€â”€ OVERLAY 1: SELECT DIAGRAM IMAGE TEMPLATE â”€â”€ */}
+        {showImageSelectModal && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+            zIndex: 9999,
+          }}>
+            <View style={{
+              backgroundColor: '#ffffff',
+              width: '100%',
+              maxWidth: 360,
+              borderRadius: 18,
+              padding: 16,
+              borderWidth: 1.5,
+              borderColor: '#e2e8f0',
+              shadowColor: '#0f172a',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              elevation: 6
+            }}>
+              {/* Title Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e3a8a', letterSpacing: 0.2 }}>
+                  Choose Diagram File
+                </Text>
+                <TouchableOpacity
+                  onPress={() => { playSound('click'); setShowImageSelectModal(false); }}
+                  style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <MaterialIcons name="close" size={14} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748b', lineHeight: 16, marginBottom: 10 }}>
+                Select an educational diagram to add label pinpoints:
+              </Text>
+
+              {/* Grid or Stack of Educational Diagrams */}
+              <View style={{ gap: 7 }}>
+                {[
+                  { id: 'FACE', name: 'Human Face Template', icon: 'face', desc: 'Eyes, nose, mouth, hair, etc.' },
+                  { id: 'SKELETON', name: 'Human Skeleton Template', icon: 'accessibility', desc: 'Skull, ribs, limbs, joints, etc.' },
+                  { id: 'PLANT_CELL', name: 'Plant Cell Structure', icon: 'nature', desc: 'Vacuole, nucleus, chloroplast, etc.' },
+                ].map((diagram) => (
+                  <TouchableOpacity
+                    key={diagram.id}
+                    onPress={() => {
+                      playSound('click');
+                      setPartsImage(diagram.id);
+                      setPartsImageName(diagram.name);
+                      setShowImageSelectModal(false);
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#f8fafc',
+                      padding: 10,
+                      borderRadius: 12,
+                      borderWidth: 1.5,
+                      borderColor: '#e2e8f0',
+                      borderBottomWidth: 3,
+                      borderBottomColor: '#cbd5e1',
+                      gap: 10
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 17,
+                      backgroundColor: '#eff6ff',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: '#bfdbfe'
+                    }}>
+                      <MaterialIcons name={diagram.icon as any} size={17} color="#2563eb" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e293b' }}>
+                        {diagram.name}
+                      </Text>
+                      <Text style={{ fontSize: 10, fontWeight: '600', color: '#64748b', marginTop: 1 }}>
+                        {diagram.desc}
+                      </Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={16} color="#94a3b8" />
+                  </TouchableOpacity>
+                ))}
+
+                {/* Custom file picking option */}
+                <TouchableOpacity
+                  onPress={async () => {
+                    playSound('click');
+                    try {
+                      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permission Denied', 'Camera roll permission required.');
+                        return;
+                      }
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ['images'],
+                        allowsEditing: true,
+                        quality: 1,
+                      });
+                      if (!result.canceled && result.assets && result.assets.length > 0) {
+                        const selectedAsset = result.assets[0];
+                        setPartsImage(selectedAsset.uri);
+                        setPartsImageName(selectedAsset.fileName || 'Custom Diagram Image');
+                        setShowImageSelectModal(false);
+                      }
+                    } catch (err) {
+                      Alert.alert('Error', 'Unable to pick image. Please try again.');
+                    }
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#faf5ff',
+                    padding: 10,
+                    borderRadius: 12,
+                    borderWidth: 1.5,
+                    borderColor: '#f3e8ff',
+                    borderBottomWidth: 3,
+                    borderBottomColor: '#e9d5ff',
+                    gap: 10,
+                    marginTop: 2
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    backgroundColor: '#f5f3ff',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 1,
+                    borderColor: '#e9d5ff'
+                  }}>
+                    <MaterialIcons name="add-a-photo" size={16} color="#7c3aed" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#5b21b6' }}>
+                      Choose Custom File
+                    </Text>
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: '#7c3aed', marginTop: 1 }}>
+                      Select any diagram image from your gallery
+                    </Text>
+                  </View>
+                  <MaterialIcons name="cloud-upload" size={15} color="#c084fc" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* â”€â”€ OVERLAY 2: ADD DIAGRAM PINPOINT LABEL NAME â”€â”€ */}
+        {showPinpointDialog && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+            zIndex: 9999,
+          }}>
+            <View style={{
+              backgroundColor: '#ffffff',
+              width: '100%',
+              maxWidth: 380,
+              borderRadius: 24,
+              padding: 22,
+              borderWidth: 1.5,
+              borderColor: '#e2e8f0',
+              shadowColor: '#0f172a',
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.15,
+              shadowRadius: 16,
+              elevation: 8
+            }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#1e3a8a', marginBottom: 6 }}>
+                Name Your Pinpoint
+              </Text>
+
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b', lineHeight: 18, marginBottom: 16 }}>
+                Enter a label name for the pinpoint at coordinates:
+                <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>
+                  {tempPinpointCoord ? ` X: ${Math.round(tempPinpointCoord.x)}%, Y: ${Math.round(tempPinpointCoord.y)}%` : ''}
+                </Text>
+              </Text>
+
+              <TextInput
+                style={{
+                  width: '100%',
+                  height: 48,
+                  borderRadius: 14,
+                  borderWidth: 1.5,
+                  borderColor: '#cbd5e1',
+                  paddingHorizontal: 16,
+                  fontSize: 15,
+                  color: '#1e293b',
+                  backgroundColor: '#f8fafc',
+                  marginBottom: 20,
+                  fontWeight: '700'
+                }}
+                placeholder="e.g. Nucleus, Nose, Skull, etc."
+                placeholderTextColor="#94a3b8"
+                value={pinpointNameInput}
+                onChangeText={setPinpointNameInput}
+                autoFocus={true}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    playSound('click');
+                    setShowPinpointDialog(false);
+                    setTempPinpointCoord(null);
+                    setPinpointNameInput('');
+                  }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                    backgroundColor: '#f1f5f9',
+                    borderWidth: 1,
+                    borderColor: '#e2e8f0'
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: '#475569', fontSize: 14, fontWeight: 'bold' }}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!pinpointNameInput.trim()) {
+                      Alert.alert('Required Info', 'Please enter a label name for the pinpoint.');
+                      return;
+                    }
+                    if (tempPinpointCoord) {
+                      playSound('add');
+                      const newPin = {
+                        id: Date.now().toString(),
+                        x: tempPinpointCoord.x,
+                        y: tempPinpointCoord.y,
+                        name: pinpointNameInput.trim()
+                      };
+                      setPartsPinpoints([...partsPinpoints, newPin]);
+                      setTempPinpointCoord(null);
+                      setPinpointNameInput('');
+                      setShowPinpointDialog(false);
+                    }
+                  }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 12,
+                    backgroundColor: '#2563eb',
+                    elevation: 2
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>Add Pinpoint</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
       </SafeAreaView>
     );
   }
 
-  // ── EARLY FULL-SCREEN RETURN: INTERACTIVE BLANKS PLAYER ──
+  // â”€â”€ EARLY FULL-SCREEN RETURN: INTERACTIVE BLANKS PLAYER â”€â”€
   if (activeBlanksPlayer) {
     // Add safe guards to prevent crashes when Firestore data is incomplete
     const originalWords = activeBlanksPlayer.originalWords || [];
@@ -4946,8 +5856,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
-        <Modal visible={showSuccessUpload} transparent={true} animationType="fade" onRequestClose={() => setShowSuccessUpload(false)}>
-          <View style={styles.successOverlay}>
+        {showSuccessUpload && (
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
             <View style={styles.successCard}>
               <View style={styles.successIconRing}>
                 <LinearGradient colors={['#10B981', '#059669']} style={styles.successIconRingGrad}>
@@ -4963,27 +5873,26 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               </TouchableOpacity>
             </View>
           </View>
-        </Modal>
+        )}
       </ImageBackground>
     );
   }
-
-  // ── EARLY FULL-SCREEN RETURN: MATCH THE FOLLOWING PLAYING MODAL ──
   if (activeMatchPlayer) {
     const themeConfig = getThemeColorConfig(activeMatchPlayer.themeUrl);
     const totalPairs = activeMatchPlayer.matchPairs?.length || 0;
     return (
-                  <ImageBackground
-              source={{ uri: activeMatchPlayer.themeUrl }}
-              style={{ flex: 1 }}
-              resizeMode="cover"
-            >
-              {/* Soft dark tinted overlay for maximum text contrast */}
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.3)' }} />
-              
-              <SafeAreaView style={{ flex: 1 }}>
-                {/* Header row with Close button & title */}
-                <View style={styles.playerHeaderBar}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f1f5f9', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+        <ImageBackground
+          source={{ uri: activeMatchPlayer.themeUrl }}
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        >
+          {/* Soft dark tinted overlay for maximum text contrast */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.3)' }} />
+          
+          <View style={{ flex: 1 }}>
+            {/* Header row with Close button & title */}
+            <View style={[styles.playerHeaderBar, { paddingTop: 36, paddingHorizontal: 16 }]}>
                   <TouchableOpacity
                     style={styles.playerExitBtn}
                     onPress={() => setActiveMatchPlayer(null)}
@@ -5205,15 +6114,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </LinearGradient>
                   </TouchableOpacity>
                 </ScrollView>
-              </SafeAreaView>
+              </View>
 
               {/* Upload Success Modal Sheet */}
-              <Modal
-                visible={showMatchSuccessUpload}
-                transparent={true}
-                animationType="fade"
-              >
-                <View style={styles.successOverlay}>
+              {showMatchSuccessUpload && (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
                   <View style={styles.successCard}>
                     <View style={styles.successIconRing}>
                       <LinearGradient
@@ -5247,13 +6152,244 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </Modal>
 
+              )}
             </ImageBackground>
+      </SafeAreaView>
     );
   }
 
-  // ── EARLY FULL-SCREEN RETURN: TRUE / FALSE QUIZ PLAYER ──
+  // â”€â”€ EARLY FULL-SCREEN RETURN: TRUE / FALSE QUIZ PLAYER â”€â”€
+
+  // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
+  // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
+  // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
+  if (activePartsPlayer) {
+    const themeConfig = getThemeColorConfig(activePartsPlayer.themeUrl);
+    const totalPinpoints = activePartsPlayer.partsPinpoints?.length || 0;
+    const correctCount = Object.keys(partsAnswers).filter(
+      id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === partsAnswers[id]
+    ).length;
+    
+    return (
+      <ImageBackground source={{ uri: activePartsPlayer.themeUrl }} style={{ flex: 1 }} resizeMode="cover">
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.3)' }} />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={[styles.playerHeaderBar, { paddingVertical: 8, paddingHorizontal: 12 }]}>
+            <TouchableOpacity style={[styles.playerExitBtn, { width: 30, height: 30, borderRadius: 15 }]} onPress={() => setActivePartsPlayer(null)} activeOpacity={0.7}>
+              <MaterialIcons name="close" size={16} color="#0F172A" />
+            </TouchableOpacity>
+            <Text style={[styles.playerHeaderTitle, { fontSize: 14 }]} numberOfLines={1}>{activePartsPlayer.title}</Text>
+            <View style={[styles.playerScoreBadge, { paddingHorizontal: 10, paddingVertical: 4 }]}>
+              <Text style={[styles.playerScoreBadgeLabel, { fontSize: 10 }]}>SCORE : {correctCount}/{totalPinpoints}</Text>
+            </View>
+          </View>
+          
+          <ScrollView contentContainerStyle={{ padding: 12, alignItems: 'center', paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+            {/* Optimized Instruction Card */}
+            <View style={{ width: '100%', backgroundColor: themeConfig.headerBg, borderRadius: 12, padding: 12, alignItems: 'center', marginBottom: 12, elevation: 3 }}>
+              <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>Label the Diagram</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 4, marginBottom: 8 }}>
+                {activePartsPlayer.partsLayoutMethod === 'drag'
+                  ? 'Tap a label pill from the tray at the bottom, then click its pinpoint dot on the canvas.'
+                  : activePartsPlayer.partsLayoutMethod === 'match'
+                  ? 'Tap a pinpoint dot first, then click its matching label name below.'
+                  : 'Tap any pinpoint dot on the diagram and select the correct option.'}
+              </Text>
+              <View style={{ backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 }} />
+                <Text style={{ color: '#0F172A', fontSize: 10, fontWeight: '800' }}>
+                  {isPlayerSubmitted ? `${correctCount}/${totalPinpoints} Correct` : `${correctCount}/${totalPinpoints} Completed`}
+                </Text>
+              </View>
+            </View>
+            
+            {/* Diagram Canvas Card */}
+            <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 18, padding: 12, alignItems: 'center', marginBottom: 12, elevation: 3 }}>
+              <View
+                onLayout={(e) => {
+                  const { width, height } = e.nativeEvent.layout;
+                  if (width && height) setPlayerCanvasLayout({ width, height });
+                }}
+                style={{ width: '100%', height: 260, position: 'relative' }}
+              >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, overflow: 'hidden', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1' }}>
+                  <DiagramRenderer
+                    name={activePartsPlayer.partsImage || activePartsPlayer.partsImageName}
+                    onImageAspectMeasured={(asp) => {
+                      if (activePartsPlayer && activePartsPlayer.partsImageAspect !== asp) {
+                        activePartsPlayer.partsImageAspect = asp;
+                      }
+                    }}
+                  />
+                </View>
+                {(() => {
+                  const playerImgName = activePartsPlayer.partsImage || activePartsPlayer.partsImageName;
+                  let playerAspect = activePartsPlayer.partsImageAspect || 1.25;
+                  if (playerImgName && !activePartsPlayer.partsImageAspect) {
+                    const pNorm = playerImgName.trim().toUpperCase();
+                    if (pNorm === 'FACE' || pNorm === 'SKELETON' || pNorm === 'PLANT' || pNorm === 'PRESET_FACE') playerAspect = 1.25;
+                  }
+                  const pWidth = playerCanvasLayout.width || 400;
+                  const pHeight = playerCanvasLayout.height || 260;
+                  const { dispL, dispT, dispW, dispH } = getImageDisplayRect(pWidth, pHeight, playerAspect);
+                  const getScreenCoords = (pin: any) => {
+                    const normX = (pin.x ?? 50) / 100;
+                    const normY = (pin.y ?? 50) / 100;
+                    return { displayX: ((dispL + normX * dispW) / pWidth) * 100, displayY: ((dispT + normY * dispH) / pHeight) * 100 };
+                  };
+                  const leftPins = (activePartsPlayer.partsPinpoints || []).filter((p: any) => getScreenCoords(p).displayX < 50);
+                  const rightPins = (activePartsPlayer.partsPinpoints || []).filter((p: any) => getScreenCoords(p).displayX >= 50);
+                  const resolveSpacing = (pins: any[]) => {
+                    const res: Record<string, number> = {};
+                    if (pins.length === 0) return res;
+                    const sorted = [...pins].sort((a, b) => getScreenCoords(a).displayY - getScreenCoords(b).displayY);
+                    const ys = sorted.map(p => Math.max(12, Math.min(88, getScreenCoords(p).displayY)));
+                    for (let pass = 0; pass < 12; pass++) {
+                      for (let i = 0; i < ys.length - 1; i++) {
+                        if (ys[i + 1] - ys[i] < 13) { const overlap = 13 - (ys[i + 1] - ys[i]); ys[i] = Math.max(12, ys[i] - overlap / 2); ys[i + 1] = Math.min(88, ys[i + 1] + overlap / 2); }
+                      }
+                    }
+                    sorted.forEach((pin, idx) => { res[pin.id] = ys[idx]; });
+                    return res;
+                  };
+                  const spacedYMap: Record<string, number> = { ...resolveSpacing(leftPins), ...resolveSpacing(rightPins) };
+                  return (
+                    <>
+                      <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} pointerEvents="none">
+                        {activePartsPlayer.partsPinpoints?.map((pin: any) => {
+                          const isCorrect = partsAnswers[pin.id] === pin.name;
+                          const isActivePinpoint = partsDropdownActiveId === pin.id;
+                          const { displayX, displayY } = getScreenCoords(pin);
+                          const spacedY = spacedYMap[pin.id] || displayY;
+                          const isLeft = displayX < 50;
+                          const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
+                          const lineTargetX = isLeft ? boxLeftPct + 20 : boxLeftPct;
+                          return (<Line key={pin.id} x1={`${displayX}%`} y1={`${displayY}%`} x2={`${lineTargetX}%`} y2={`${spacedY}%`} stroke={isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#64748b')} strokeWidth="1.5" strokeLinecap="round" />);
+                        })}
+                      </Svg>
+                      {activePartsPlayer.partsPinpoints?.map((pin: any) => {
+                        const isCorrect = partsAnswers[pin.id] === pin.name;
+                        const isActivePinpoint = partsDropdownActiveId === pin.id;
+                        const { displayX, displayY } = getScreenCoords(pin);
+                        const spacedY = spacedYMap[pin.id] || displayY;
+                        const isLeft = displayX < 50;
+                        const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
+                        const handlePress = () => {
+                          playSound('click');
+                          if (activePartsPlayer.partsLayoutMethod === 'drag' && partsSelectedLabel) {
+                            if (partsSelectedLabel === pin.name) { playSound('win'); const newAnswers: Record<string, string> = { ...partsAnswers, [pin.id]: partsSelectedLabel as string }; setPartsAnswers(newAnswers); setPartsSelectedLabel(null); const cCount = Object.keys(newAnswers).filter(id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]).length; if (cCount === totalPinpoints) { setIsPlayerSubmitted(true); setPlayerScore(`${cCount}/${totalPinpoints}`); playSound('win'); setShowPartsSuccessUpload(true); } } else { playSound('error'); setPartsWrongAlert(true); }
+                          } else { setPartsDropdownActiveId(pin.id); }
+                        };
+                        return (
+                          <React.Fragment key={pin.id}>
+                            <View style={{ position: 'absolute', left: `${displayX}%` as any, top: `${displayY}%` as any, transform: [{ translateX: -6 }, { translateY: -6 }], width: 12, height: 12, borderRadius: 6, backgroundColor: isCorrect ? 'rgba(34,197,94,0.25)' : (isActivePinpoint ? 'rgba(59,130,246,0.28)' : 'rgba(239,68,68,0.25)'), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#ef4444'), borderWidth: 1, borderColor: '#ffffff', elevation: 2 }} />
+                            </View>
+                            <TouchableOpacity disabled={isCorrect || isPlayerSubmitted} onPress={handlePress} style={{ position: 'absolute', left: `${boxLeftPct}%` as any, width: '20%', top: `${spacedY}%` as any, transform: [{ translateY: -12 }], backgroundColor: isCorrect ? '#f0fdf4' : (isActivePinpoint ? '#eff6ff' : '#f8fafc'), borderWidth: 1.2, borderColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#cbd5e1'), borderStyle: isCorrect ? 'solid' : 'dashed', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', elevation: 2, zIndex: 15 }}>
+                              <Text style={{ color: isCorrect ? '#15803d' : (isActivePinpoint ? '#1d4ed8' : '#94a3b8'), fontWeight: '900', fontSize: 9.5, textAlign: 'center' }}>{isCorrect ? pin.name : '?'}</Text>
+                            </TouchableOpacity>
+                          </React.Fragment>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </View>
+            </View>
+            
+            {/* Labels Tray */}
+            {activePartsPlayer.partsLayoutMethod === 'drag' && (
+              <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 16, padding: 12, elevation: 2 }}>
+                <Text style={{ fontSize: 12, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 8 }}>LABELS TRAY</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {shuffledPartsLabels.map((lbl, idx) => {
+                    const isAlreadyUsed = Object.values(partsAnswers).includes(lbl);
+                    const isSelected = partsSelectedLabel === lbl;
+                    if (isAlreadyUsed) return null;
+                    return (<TouchableOpacity key={idx} onPress={() => { playSound('click'); setPartsSelectedLabel(isSelected ? null : lbl); }} style={{ backgroundColor: isSelected ? '#3b82f6' : '#ffffff', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.2, borderColor: isSelected ? '#2563eb' : '#e2e8f0', borderBottomWidth: 3, borderBottomColor: isSelected ? '#1d4ed8' : '#cbd5e1' }} activeOpacity={0.7}><Text style={{ fontSize: 12, fontWeight: '900', color: isSelected ? '#ffffff' : '#334155' }}>{lbl}</Text></TouchableOpacity>);
+                  })}
+                </View>
+              </View>
+            )}
+            {activePartsPlayer.partsLayoutMethod === 'match' && !partsDropdownActiveId && (
+              <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 16, padding: 12, elevation: 2 }}>
+                <Text style={{ fontSize: 12, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 6, textAlign: 'center' }}>First, tap a red pinpoint dot on the diagram above!</Text>
+              </View>
+            )}
+          </ScrollView>
+          
+          {partsWrongAlert && (
+            <View style={{ position: 'absolute', top: '40%' as any, alignSelf: 'center', backgroundColor: 'rgba(225,29,72,0.95)', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 6, elevation: 5, zIndex: 9999 }}>
+              <MaterialIcons name="error-outline" size={16} color="#ffffff" />
+              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14 }}>Wrong Answer!</Text>
+            </View>
+          )}
+          
+          {showPartsSuccessUpload && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+              <View style={[styles.successCard, { padding: 20, borderRadius: 20 }]}>
+                <View style={[styles.successIconRing, { width: 54, height: 54, borderRadius: 27 }]}>
+                  <LinearGradient colors={['#10B981', '#059669']} style={styles.successIconRingGrad}>
+                    <MaterialIcons name="cloud-done" size={26} color="#ffffff" />
+                  </LinearGradient>
+                </View>
+                <Text style={[styles.successTitle, { fontSize: 18, marginTop: 12 }]}>Uploaded Successfully!</Text>
+                <Text style={[styles.successDesc, { fontSize: 12, marginTop: 6, marginBottom: 16 }]}>Your diagram labeling score ({playerScore}) has been submitted to the teacher portal.</Text>
+                <TouchableOpacity style={[styles.successDoneBtn, { height: 40, borderRadius: 10 }]} onPress={() => { setShowPartsSuccessUpload(false); setIsPlayerSubmitted(false); setPartsAnswers({}); setActivePartsPlayer(null); }} activeOpacity={0.8}>
+                  <LinearGradient colors={['#10B981', '#059669']} style={styles.successDoneGradient}>
+                    <Text style={[styles.successDoneText, { fontSize: 14 }]}>Done</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          
+          {/* Optimized Bottom Sheet Selector */}
+          {partsDropdownActiveId !== null && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.4)', justifyContent: 'flex-end', zIndex: 9998 }}>
+              <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setPartsDropdownActiveId(null)} />
+              <View style={{ backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 16, paddingBottom: Platform.OS === 'ios' ? 30 : 16, borderTopWidth: 1.5, borderColor: '#e2e8f0', elevation: 20 }}>
+                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#cbd5e1', alignSelf: 'center', marginBottom: 12 }} />
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e3a8a' }}>Choose the Correct Label</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748b', marginTop: 1 }}>Tap the matching term for this pinpoint</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setPartsDropdownActiveId(null)} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                    <MaterialIcons name="close" size={16} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  {(() => {
+                    const activePinpoint = activePartsPlayer?.partsPinpoints?.find((p: any) => p.id === partsDropdownActiveId);
+                    if (!activePinpoint) return null;
+                    return shuffledPartsLabels.map((lbl, idx) => {
+                      const isAlreadyUsed = Object.entries(partsAnswers).some(([ansId, ansVal]) => ansVal === lbl && ansId !== activePinpoint.id);
+                      if (isAlreadyUsed) return null;
+                      return (
+                        <TouchableOpacity key={idx}
+                          onPress={() => {
+                            playSound('click');
+                            if (lbl === activePinpoint.name) { playSound('win'); const newAnswers: Record<string, string> = { ...partsAnswers, [activePinpoint.id]: lbl }; setPartsAnswers(newAnswers); setPartsDropdownActiveId(null); const cCount = Object.keys(newAnswers).filter(id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]).length; if (cCount === totalPinpoints) { setIsPlayerSubmitted(true); setPlayerScore(`${cCount}/${totalPinpoints}`); playSound('win'); setShowPartsSuccessUpload(true); } } else { playSound('error'); setPartsWrongAlert(true); }
+                          }}
+                          style={{ backgroundColor: '#eff6ff', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.2, borderColor: '#bfdbfe', borderBottomWidth: 3, borderBottomColor: '#3b82f6', minWidth: '45%' }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#1e40af', textAlign: 'center' }}>{lbl}</Text>
+                        </TouchableOpacity>
+                      );
+                    });
+                  })()}
+                </View>
+              </View>
+            </View>
+          )}
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
   if (activeTfPlayer) {
     const tfQuestions = activeTfPlayer.tfQuestions || [];
     return (
@@ -5269,17 +6405,6 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           <View style={{ position: 'absolute', top: -60, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(56, 189, 248, 0.25)' }} />
           <View style={{ position: 'absolute', bottom: -80, right: -60, width: 320, height: 320, borderRadius: 160, backgroundColor: 'rgba(167, 243, 208, 0.3)' }} />
           <View style={{ position: 'absolute', top: '40%', right: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(196, 181, 253, 0.25)' }} />
-                    <View style={{ flex: 1, backgroundColor: '#F0F9FF' }}>
-            {/* Ambient Bright Background Gradients & Floating Glass Circles */}
-            <LinearGradient
-              colors={['#E0F2FE', '#F0F9FF', '#EEF2FF', '#F0FDF4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-            <View style={{ position: 'absolute', top: -60, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(56, 189, 248, 0.25)' }} />
-            <View style={{ position: 'absolute', bottom: -80, right: -60, width: 320, height: 320, borderRadius: 160, backgroundColor: 'rgba(167, 243, 208, 0.3)' }} />
-            <View style={{ position: 'absolute', top: '40%', right: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(196, 181, 253, 0.25)' }} />
 
             {/* Top Navbar */}
             <SafeAreaView style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
@@ -5290,49 +6415,50 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 justifyContent: 'space-between',
                 paddingHorizontal: 20
               }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                   <View style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 12,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
                     backgroundColor: '#2563EB',
                     alignItems: 'center',
                     justifyContent: 'center',
                     shadowColor: '#2563EB',
-                    shadowOffset: { width: 0, height: 3 },
+                    shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.3,
-                    shadowRadius: 6,
-                    elevation: 3
+                    shadowRadius: 4,
+                    elevation: 3,
+                    flexShrink: 0
                   }}>
-                    <MaterialIcons name="flaky" size={24} color="#ffffff" />
+                    <MaterialIcons name="flaky" size={20} color="#ffffff" />
                   </View>
-                  <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 19, letterSpacing: 0.5 }}>
+                  <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 15, letterSpacing: 0.3 }} numberOfLines={1}>
                     TRUE<Text style={{ color: '#2563EB' }}>/FALSE</Text>
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                   <View style={{
-                    paddingVertical: 6,
-                    paddingHorizontal: 14,
-                    borderRadius: 20,
+                    paddingVertical: 5,
+                    paddingHorizontal: 10,
+                    borderRadius: 16,
                     backgroundColor: '#EFF6FF',
                     borderWidth: 1.5,
                     borderColor: '#BFDBFE',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 6
+                    gap: 4
                   }}>
-                    <MaterialIcons name="flash-on" size={16} color="#2563EB" />
-                    <Text style={{ color: '#2563EB', fontSize: 12, fontWeight: '900', letterSpacing: 0.3 }}>Interactive Mode</Text>
+                    <MaterialIcons name="flash-on" size={14} color="#2563EB" />
+                    <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '900', letterSpacing: 0.3 }}>Interactive Mode</Text>
                   </View>
 
                   <TouchableOpacity
                     onPress={() => setActiveTfPlayer(null)}
                     style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
                       backgroundColor: '#F1F5F9',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -5341,68 +6467,68 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     }}
                     activeOpacity={0.8}
                   >
-                    <MaterialIcons name="close" size={22} color="#475569" />
+                    <MaterialIcons name="close" size={18} color="#475569" />
                   </TouchableOpacity>
                 </View>
               </View>
             </SafeAreaView>
 
-            {/* Content Container (PERFECTLY VERTICALLY CENTERED - NO EMPTY SPACE) */}
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 40, alignItems: 'center' }}>
-              {/* Top Header Card (ULTRA-PREMIUM ENHANCED INNER DESIGN) */}
+            {/* Content Container */}
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 12, paddingBottom: 24, alignItems: 'center' }}>
+              {/* Top Header Card */}
               <View style={{
                 width: '100%',
                 maxWidth: 620,
                 backgroundColor: '#FFFFFF',
-                borderRadius: 24,
+                borderRadius: 16,
                 overflow: 'hidden',
-                borderWidth: 1.8,
+                borderWidth: 1.5,
                 borderColor: '#BFDBFE',
-                marginBottom: 20,
+                marginBottom: 12,
                 shadowColor: '#2563EB',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.1,
-                shadowRadius: 16,
-                elevation: 4
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 10,
+                elevation: 3
               }}>
                 {/* Top Gradient Accent Bar */}
                 <LinearGradient
                   colors={['#38BDF8', '#2563EB', '#6366F1']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ height: 5, width: '100%' }}
+                  style={{ height: 4, width: '100%' }}
                 />
 
-                <View style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 14,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
                     backgroundColor: '#EFF6FF',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderWidth: 1.5,
                     borderColor: '#BFDBFE',
                     shadowColor: '#2563EB',
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 6
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4
                   }}>
-                    <MaterialIcons name="sports-esports" size={26} color="#2563EB" />
+                    <MaterialIcons name="sports-esports" size={20} color="#2563EB" />
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <Text style={{ color: '#1E3A8A', fontWeight: '900', fontSize: 19, letterSpacing: 0.3 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <Text style={{ color: '#1E3A8A', fontWeight: '900', fontSize: 14, letterSpacing: 0.3 }} numberOfLines={1}>
                         {activeTfPlayer.title || 'True or False Assignment'}
                       </Text>
-                      <View style={{ backgroundColor: '#2563EB', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 10 }}>
-                        <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900' }}>TRUE/FALSE</Text>
+                      <View style={{ backgroundColor: '#2563EB', paddingVertical: 2, paddingHorizontal: 6, borderRadius: 8 }}>
+                        <Text style={{ color: '#ffffff', fontSize: 9, fontWeight: '900' }}>TRUE/FALSE</Text>
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <MaterialIcons name="info-outline" size={14} color="#64748B" />
-                      <Text style={{ color: '#475569', fontSize: 13, fontWeight: '600' }}>
+                      <MaterialIcons name="info-outline" size={12} color="#64748B" />
+                      <Text style={{ color: '#475569', fontSize: 11, fontWeight: '600' }}>
                         Read each statement carefully and select TRUE or FALSE
                       </Text>
                     </View>
@@ -5410,20 +6536,20 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 </View>
               </View>
 
-              {/* Stage 1: WELCOME / START SCREEN (ULTRA-PREMIUM HERO CARD WITH DETAILED INNER DESIGN) */}
+              {/* Stage 1: WELCOME / START SCREEN */}
               {tfQuizStage === 'welcome' && (
-                <View style={{ gap: 20, width: '100%', maxWidth: 620, alignItems: 'center' }}>
+                <View style={{ gap: 12, width: '100%', maxWidth: 620, alignItems: 'center' }}>
                   <View style={{
                     width: '100%',
-                    borderRadius: 32,
+                    borderRadius: 20,
                     overflow: 'hidden',
-                    borderWidth: 2,
+                    borderWidth: 1.5,
                     borderColor: '#BFDBFE',
                     shadowColor: '#2563EB',
-                    shadowOffset: { width: 0, height: 16 },
-                    shadowOpacity: 0.14,
-                    shadowRadius: 30,
-                    elevation: 10
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 16,
+                    elevation: 6
                   }}>
                     <LinearGradient
                       colors={['#FFFFFF', '#F8FAFC', '#EFF6FF']}
@@ -5436,152 +6562,144 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         colors={['#38BDF8', '#2563EB', '#6366F1']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={{ height: 5, width: '100%' }}
+                        style={{ height: 4, width: '100%' }}
                       />
 
-                      <View style={{ padding: 32, alignItems: 'center', gap: 22 }}>
-                        {/* Inner Meta Stats Grid (3 Distinct Glass Capsules) */}
+                      <View style={{ padding: 18, alignItems: 'center', gap: 14 }}>
+                        {/* Meta Stats Grid */}
                         <View style={{
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: 8,
+                          gap: 6,
                           width: '100%',
                           flexWrap: 'wrap'
                         }}>
                           <View style={{
-                            paddingVertical: 6,
-                            paddingHorizontal: 12,
-                            borderRadius: 14,
+                            paddingVertical: 5,
+                            paddingHorizontal: 10,
+                            borderRadius: 12,
                             backgroundColor: '#EFF6FF',
                             borderWidth: 1.5,
                             borderColor: '#BFDBFE',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 5
+                            gap: 4
                           }}>
-                            <MaterialIcons name="quiz" size={15} color="#2563EB" />
-                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#1E3A8A' }}>
+                            <MaterialIcons name="quiz" size={13} color="#2563EB" />
+                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#1E3A8A' }}>
                               {(activeTfPlayer.tfQuestions || []).length} Statements
                             </Text>
                           </View>
 
                           <View style={{
-                            paddingVertical: 6,
-                            paddingHorizontal: 12,
-                            borderRadius: 14,
+                            paddingVertical: 5,
+                            paddingHorizontal: 10,
+                            borderRadius: 12,
                             backgroundColor: '#ECFDF5',
                             borderWidth: 1.5,
                             borderColor: '#A7F3D0',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 5
+                            gap: 4
                           }}>
-                            <MaterialIcons name="timer-off" size={15} color="#059669" />
-                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#065F46' }}>
-                              Untimed Quiz
-                            </Text>
+                            <MaterialIcons name="timer-off" size={13} color="#059669" />
+                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#065F46' }}>Untimed Quiz</Text>
                           </View>
 
                           <View style={{
-                            paddingVertical: 6,
-                            paddingHorizontal: 12,
-                            borderRadius: 14,
+                            paddingVertical: 5,
+                            paddingHorizontal: 10,
+                            borderRadius: 12,
                             backgroundColor: '#FEF3C7',
                             borderWidth: 1.5,
                             borderColor: '#FDE68A',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 5
+                            gap: 4
                           }}>
-                            <MaterialIcons name="bolt" size={15} color="#D97706" />
-                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#92400E' }}>
-                              Instant Score
-                            </Text>
+                            <MaterialIcons name="bolt" size={13} color="#D97706" />
+                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#92400E' }}>Instant Score</Text>
                           </View>
                         </View>
 
-                        {/* Center Play Spotlight Stage Box */}
+                        {/* Center Play Button Box */}
                         <View style={{
                           width: '100%',
                           backgroundColor: 'rgba(239, 246, 255, 0.75)',
-                          borderRadius: 26,
-                          padding: 24,
-                          borderWidth: 1.8,
+                          borderRadius: 18,
+                          padding: 16,
+                          borderWidth: 1.5,
                           borderColor: '#BFDBFE',
                           alignItems: 'center',
-                          gap: 14,
+                          gap: 10,
                           shadowColor: '#2563EB',
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.06,
-                          shadowRadius: 10
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 8
                         }}>
-                          {/* Glowing 3D Play Ring */}
+                          {/* Play Ring */}
                           <View style={{
-                            width: 98,
-                            height: 98,
-                            borderRadius: 49,
+                            width: 76,
+                            height: 76,
+                            borderRadius: 38,
                             backgroundColor: '#DBEAFE',
-                            borderWidth: 2.5,
+                            borderWidth: 2,
                             borderColor: '#93C5FD',
                             alignItems: 'center',
                             justifyContent: 'center',
                             shadowColor: '#2563EB',
-                            shadowOffset: { width: 0, height: 8 },
-                            shadowOpacity: 0.22,
-                            shadowRadius: 14
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.18,
+                            shadowRadius: 10
                           }}>
                             <LinearGradient
                               colors={['#38BDF8', '#2563EB', '#1D4ED8']}
                               style={{
-                                width: 76,
-                                height: 76,
-                                borderRadius: 38,
+                                width: 58,
+                                height: 58,
+                                borderRadius: 29,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                shadowColor: '#2563EB',
-                                shadowOffset: { width: 0, height: 6 },
-                                shadowOpacity: 0.4,
-                                shadowRadius: 12,
-                                elevation: 6
+                                elevation: 4
                               }}
                             >
-                              <MaterialIcons name="play-arrow" size={52} color="#ffffff" style={{ marginLeft: 4 }} />
+                              <MaterialIcons name="play-arrow" size={38} color="#ffffff" style={{ marginLeft: 3 }} />
                             </LinearGradient>
                           </View>
 
                           <View style={{
                             backgroundColor: '#2563EB',
                             paddingVertical: 3,
-                            paddingHorizontal: 12,
-                            borderRadius: 12
+                            paddingHorizontal: 10,
+                            borderRadius: 10
                           }}>
-                            <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>
+                            <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>
                               MODE: TRUE OR FALSE
                             </Text>
                           </View>
                         </View>
 
-                        {/* Title & Description Block */}
-                        <View style={{ alignItems: 'center', gap: 10 }}>
-                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 28, textAlign: 'center', letterSpacing: 0.3 }}>
+                        {/* Title & Description */}
+                        <View style={{ alignItems: 'center', gap: 8 }}>
+                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 22, textAlign: 'center', letterSpacing: 0.3 }}>
                             Ready to Challenge Yourself?
                           </Text>
 
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 6,
+                            gap: 5,
                             backgroundColor: '#F8FAFC',
-                            paddingVertical: 8,
-                            paddingHorizontal: 16,
-                            borderRadius: 14,
+                            paddingVertical: 6,
+                            paddingHorizontal: 12,
+                            borderRadius: 12,
                             borderWidth: 1,
                             borderColor: '#E2E8F0'
                           }}>
-                            <MaterialIcons name="touch-app" size={16} color="#64748B" />
-                            <Text style={{ color: '#475569', fontSize: 14, fontWeight: '600', textAlign: 'center', maxWidth: 420 }}>
-                              Test your knowledge across statements and get your score instantly.
+                            <MaterialIcons name="touch-app" size={14} color="#64748B" />
+                            <Text style={{ color: '#475569', fontSize: 12, fontWeight: '600', textAlign: 'center', maxWidth: 420 }}>
+                              Test your knowledge and get your score instantly.
                             </Text>
                           </View>
                         </View>
@@ -5590,14 +6708,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <TouchableOpacity
                           style={{
                             width: '100%',
-                            maxWidth: 320,
-                            borderRadius: 20,
+                            maxWidth: 280,
+                            borderRadius: 16,
                             overflow: 'hidden',
                             shadowColor: '#2563EB',
-                            shadowOffset: { width: 0, height: 8 },
-                            shadowOpacity: 0.35,
-                            shadowRadius: 14,
-                            elevation: 6
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 10,
+                            elevation: 5
                           }}
                           onPress={() => {
                             playSound('click');
@@ -5611,76 +6729,76 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={{
-                              paddingVertical: 18,
+                              paddingVertical: 14,
                               alignItems: 'center',
                               flexDirection: 'row',
                               justifyContent: 'center',
-                              gap: 12,
-                              borderBottomWidth: 4,
+                              gap: 10,
+                              borderBottomWidth: 3,
                               borderBottomColor: '#1E40AF'
                             }}
                           >
-                            <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 19, letterSpacing: 0.8 }}>
+                            <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>
                               START QUIZ
                             </Text>
-                            <MaterialIcons name="arrow-forward" size={24} color="#ffffff" />
+                            <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
                           </LinearGradient>
                         </TouchableOpacity>
                       </View>
                     </LinearGradient>
                   </View>
 
-                  {/* Feature Stats Ribbon to Enrich & Fill Screen Gracefully */}
+                  {/* Feature Stats Ribbon */}
                   <View style={{
                     flexDirection: 'row',
-                    gap: 10,
+                    gap: 8,
                     width: '100%',
                     justifyContent: 'center',
                     flexWrap: 'wrap'
                   }}>
                     <View style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                      borderRadius: 16,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      borderRadius: 12,
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       borderWidth: 1.5,
                       borderColor: '#BFDBFE',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 6
+                      gap: 5
                     }}>
-                      <MaterialIcons name="flash-on" size={16} color="#2563EB" />
-                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#1E3A8A' }}>Interactive Mode</Text>
+                      <MaterialIcons name="flash-on" size={14} color="#2563EB" />
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#1E3A8A' }}>Interactive Mode</Text>
                     </View>
 
                     <View style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                      borderRadius: 16,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      borderRadius: 12,
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       borderWidth: 1.5,
                       borderColor: '#FDE68A',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 6
+                      gap: 5
                     }}>
-                      <MaterialIcons name="emoji-events" size={16} color="#D97706" />
-                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#92400E' }}>Instant Scoring</Text>
+                      <MaterialIcons name="emoji-events" size={14} color="#D97706" />
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#92400E' }}>Instant Scoring</Text>
                     </View>
 
                     <View style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                      borderRadius: 16,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      borderRadius: 12,
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       borderWidth: 1.5,
                       borderColor: '#A7F3D0',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 6
+                      gap: 5
                     }}>
-                      <MaterialIcons name="verified" size={16} color="#059669" />
-                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#065F46' }}>Verified Quiz</Text>
+                      <MaterialIcons name="verified" size={14} color="#059669" />
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#065F46' }}>Verified Quiz</Text>
                     </View>
                   </View>
                 </View>
@@ -5692,49 +6810,49 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   width: '100%',
                   maxWidth: 620,
                   backgroundColor: '#FFFFFF',
-                  borderRadius: 30,
-                  padding: 28,
-                  borderWidth: 2,
+                  borderRadius: 20,
+                  padding: 18,
+                  borderWidth: 1.5,
                   borderColor: '#E2E8F0',
-                  gap: 22,
+                  gap: 14,
                   shadowColor: '#64748B',
-                  shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 20,
-                  elevation: 6
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.06,
+                  shadowRadius: 14,
+                  elevation: 4
                 }}>
                   {/* Category & Progress Bar */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={{
-                      paddingVertical: 6,
-                      paddingHorizontal: 14,
-                      borderRadius: 20,
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 16,
                       backgroundColor: '#EFF6FF',
                       borderWidth: 1.5,
                       borderColor: '#BFDBFE'
                     }}>
-                      <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '900', letterSpacing: 0.3 }}>
+                      <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '900', letterSpacing: 0.3 }}>
                         Topic: {activeTfPlayer.topic || 'General'}
                       </Text>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ color: '#0F172A', fontSize: 15, fontWeight: '900' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>
                         Question {tfCurrentIndex + 1}
                       </Text>
-                      <Text style={{ color: '#64748B', fontSize: 13, fontWeight: '700' }}>
+                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700' }}>
                         / {(activeTfPlayer.tfQuestions || []).length}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Visual Progress Bar Line */}
-                  <View style={{ width: '100%', height: 7, borderRadius: 4, backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
+                  {/* Visual Progress Bar */}
+                  <View style={{ width: '100%', height: 5, borderRadius: 3, backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
                     <View style={{
                       width: `${((tfCurrentIndex + 1) / (activeTfPlayer.tfQuestions || []).length) * 100}%`,
                       height: '100%',
                       backgroundColor: '#2563EB',
-                      borderRadius: 4
+                      borderRadius: 3
                     }} />
                   </View>
 
@@ -5745,36 +6863,36 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       <>
                         <View style={{
                           backgroundColor: '#F0F9FF',
-                          borderRadius: 24,
-                          padding: 32,
-                          minHeight: 180,
+                          borderRadius: 16,
+                          padding: 20,
+                          minHeight: 130,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderWidth: 2,
+                          borderWidth: 1.5,
                           borderColor: '#93C5FD',
                           shadowColor: '#2563EB',
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.08,
-                          shadowRadius: 10
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.06,
+                          shadowRadius: 8
                         }}>
-                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 22, textAlign: 'center', lineHeight: 32, letterSpacing: 0.2 }}>
+                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 17, textAlign: 'center', lineHeight: 26, letterSpacing: 0.2 }}>
                             {currentQ.question}
                           </Text>
                         </View>
 
-                        {/* TRUE / FALSE Choice Buttons (3D Gradient Buttons) */}
-                        <View style={{ flexDirection: 'row', gap: 16 }}>
+                        {/* TRUE / FALSE Buttons */}
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
                           {/* TRUE BUTTON */}
                           <TouchableOpacity
                             style={{
                               flex: 1,
-                              borderRadius: 20,
+                              borderRadius: 16,
                               overflow: 'hidden',
                               shadowColor: '#10B981',
-                              shadowOffset: { width: 0, height: 6 },
-                              shadowOpacity: 0.35,
-                              shadowRadius: 10,
-                              elevation: 6
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.3,
+                              shadowRadius: 8,
+                              elevation: 4
                             }}
                             onPress={() => {
                               const isCorrect = currentQ.answer === 'true';
@@ -5796,17 +6914,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               start={{ x: 0, y: 0 }}
                               end={{ x: 0, y: 1 }}
                               style={{
-                                paddingVertical: 18,
+                                paddingVertical: 14,
                                 alignItems: 'center',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                gap: 10,
-                                borderBottomWidth: 4,
+                                gap: 8,
+                                borderBottomWidth: 3,
                                 borderBottomColor: '#047857'
                               }}
                             >
-                              <MaterialIcons name="check-circle" size={24} color="#ffffff" />
-                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 18, letterSpacing: 0.8 }}>TRUE</Text>
+                              <MaterialIcons name="check-circle" size={20} color="#ffffff" />
+                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>TRUE</Text>
                             </LinearGradient>
                           </TouchableOpacity>
 
@@ -5814,13 +6932,13 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           <TouchableOpacity
                             style={{
                               flex: 1,
-                              borderRadius: 20,
+                              borderRadius: 16,
                               overflow: 'hidden',
                               shadowColor: '#F43F5E',
-                              shadowOffset: { width: 0, height: 6 },
-                              shadowOpacity: 0.35,
-                              shadowRadius: 10,
-                              elevation: 6
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.3,
+                              shadowRadius: 8,
+                              elevation: 4
                             }}
                             onPress={() => {
                               const isCorrect = currentQ.answer === 'false';
@@ -5842,17 +6960,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               start={{ x: 0, y: 0 }}
                               end={{ x: 0, y: 1 }}
                               style={{
-                                paddingVertical: 18,
+                                paddingVertical: 14,
                                 alignItems: 'center',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                gap: 10,
-                                borderBottomWidth: 4,
+                                gap: 8,
+                                borderBottomWidth: 3,
                                 borderBottomColor: '#BE123C'
                               }}
                             >
-                              <MaterialIcons name="cancel" size={24} color="#ffffff" />
-                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 18, letterSpacing: 0.8 }}>FALSE</Text>
+                              <MaterialIcons name="cancel" size={20} color="#ffffff" />
+                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>FALSE</Text>
                             </LinearGradient>
                           </TouchableOpacity>
                         </View>
@@ -5864,22 +6982,22 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
               {/* Stage 3: QUIZ COMPLETED / RESULTS SCREEN */}
               {tfQuizStage === 'completed' && (
-                <View style={{
-                  width: '100%',
-                  maxWidth: 620,
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 30,
-                  padding: 36,
-                  borderWidth: 2,
-                  borderColor: '#A7F3D0',
-                  alignItems: 'center',
-                  gap: 24,
-                  shadowColor: '#10B981',
-                  shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 20,
-                  elevation: 8
-                }}>
+                  <View style={{
+                    width: '100%',
+                    maxWidth: 620,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 20,
+                    padding: 24,
+                    borderWidth: 1.5,
+                    borderColor: '#A7F3D0',
+                    alignItems: 'center',
+                    gap: 16,
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 14,
+                    elevation: 5
+                  }}>
                   {/* Category Pill */}
                   <View style={{
                     paddingVertical: 6,
@@ -5894,9 +7012,24 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </Text>
                   </View>
 
-                  {/* Golden Trophy */}
-                  <Text style={{ fontSize: 72 }}>🏆</Text>
-
+                  {/* Golden Trophy Icon */}
+                  <View style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    backgroundColor: '#FEF9C3',
+                    borderWidth: 3,
+                    borderColor: '#FDE047',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#EAB308',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 10,
+                    elevation: 6
+                  }}>
+                    <MaterialIcons name="emoji-events" size={46} color="#CA8A04" />
+                  </View>
                   <View style={{ alignItems: 'center', gap: 8 }}>
                     <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 28, letterSpacing: 0.5 }}>
                       Quiz Completed!
@@ -5952,8 +7085,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           </View>
 
           {/* Success Upload Modal */}
-          <Modal visible={showTfSuccessUpload} transparent animationType="fade">
-            <View style={styles.successOverlay}>
+          {showTfSuccessUpload && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
               <View style={styles.successCard}>
                 <View style={styles.successIconRing}>
                   <LinearGradient colors={['#10B981', '#059669']} style={styles.successIconRingGrad}>
@@ -5964,7 +7097,6 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 <Text style={styles.successDesc}>
                   Your True/False Quiz score ({Math.min(tfScore, (activeTfPlayer?.tfQuestions || []).length)}/{(activeTfPlayer?.tfQuestions || []).length}) has been submitted to the teacher portal.
                 </Text>
-
                 <TouchableOpacity
                   style={styles.successDoneBtn}
                   onPress={() => {
@@ -5979,12 +7111,134 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 </TouchableOpacity>
               </View>
             </View>
-          </Modal>
-        </View>
+          )}
       </SafeAreaView>
     );
   }
+  // -- EARLY FULL-SCREEN RETURN: MCQ PLAYER --
+  if (activeMcqPlayer) {
+    return (
+          <View style={{ flex: 1, backgroundColor: '#F0F9FF' }}>
+            <LinearGradient
+              colors={['#E0F2FE', '#F0F9FF', '#F0FDFA']}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
 
+            <SafeAreaView style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
+              <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' }}
+                    onPress={() => setActiveMcqPlayer(null)}
+                  >
+                    <MaterialIcons name="close" size={20} color="#0F172A" />
+                  </TouchableOpacity>
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>{activeMcqPlayer.title}</Text>
+                    <Text style={{ fontSize: 12, color: '#64748B' }}>MCQ AI Interactive Quiz</Text>
+                  </View>
+                </View>
+                <View style={{ paddingVertical: 4, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#E0F2FE' }}>
+                  <Text style={{ fontSize: 13, fontWeight: '900', color: '#0369A1' }}>Score: {Object.keys(mcqUserAnswers).length} Answered</Text>
+                </View>
+              </View>
+            </SafeAreaView>
+
+            <ScrollView contentContainerStyle={{ padding: 24, alignItems: 'center' }}>
+              <View style={{ width: '100%', maxWidth: 620, backgroundColor: '#ffffff', borderRadius: 28, padding: 24, borderWidth: 1.6, borderColor: '#CBD5E1', gap: 18 }}>
+                {activeMcqPlayer.mcqs && activeMcqPlayer.mcqs.length > 0 ? (
+                  <>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#0EA5E9' }}>Question {mcqPlayerIndex + 1} of {activeMcqPlayer.mcqs.length}</Text>
+                    </View>
+
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', lineHeight: 26 }}>
+                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.question}
+                    </Text>
+
+                    <View style={{ gap: 10 }}>
+                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.options.map((opt: string, idx: number) => {
+                        const isSelected = mcqUserAnswers[mcqPlayerIndex] === idx;
+                        const isCorrect = activeMcqPlayer.mcqs[mcqPlayerIndex].correctAnswer === idx;
+                        let bg = '#F8FAFC';
+                        let border = '#CBD5E1';
+                        if (isSelected) {
+                          bg = isCorrect ? '#ECFDF5' : '#FFF1F2';
+                          border = isCorrect ? '#10B981' : '#F43F5E';
+                        }
+
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            style={{
+                              padding: 16,
+                              borderRadius: 16,
+                              backgroundColor: bg,
+                              borderWidth: 1.5,
+                              borderColor: border,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                            onPress={() => {
+                              setMcqUserAnswers(prev => ({ ...prev, [mcqPlayerIndex]: idx }));
+                              playSound('click');
+                            }}
+                          >
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', flex: 1 }}>{opt}</Text>
+                            {isSelected && (
+                              <MaterialIcons name={isCorrect ? "check-circle" : "cancel"} size={22} color={isCorrect ? "#10B981" : "#F43F5E"} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+                      <TouchableOpacity
+                        disabled={mcqPlayerIndex === 0}
+                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: mcqPlayerIndex === 0 ? '#F1F5F9' : '#0EA5E9' }}
+                        onPress={() => setMcqPlayerIndex(prev => Math.max(0, prev - 1))}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>â† Prev</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: '#10B981' }}
+                        onPress={() => {
+                          if (mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1) {
+                            setMcqPlayerIndex(prev => prev + 1);
+                          } else {
+                            setShowMcqSuccessUpload(true);
+                          }
+                        }}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>
+                          {mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1 ? 'Next â†’' : 'Finish Quiz âœ“'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={{ alignItems: 'center', padding: 24, gap: 12 }}>
+                    <MaterialIcons name="quiz" size={48} color="#0EA5E9" />
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>Quiz Ready!</Text>
+                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center' }}>
+                      10 Questions generated for {activeMcqPlayer.title}.
+                    </Text>
+                    <TouchableOpacity
+                      style={{ paddingVertical: 12, paddingHorizontal: 24, borderRadius: 16, backgroundColor: '#0EA5E9' }}
+                      onPress={() => setActiveMcqPlayer(null)}
+                    >
+                      <Text style={{ color: '#ffffff', fontWeight: '900' }}>Close Player</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+    );
+  }
   return (
     <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 600 }]} edges={['top']}>
       {/* 1. MOBILE HEADER */}
@@ -6090,12 +7344,12 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               const isSelected = selectedType === type;
               const chipAccent = getAccentColor(type);
               const chipIcon =
-                type === 'blanks' ? '✏' :
-                type === 'match' ? '⇄' :
-                type === 'crosswords' ? '⊞' :
-                type === 'parts' ? '◈' :
-                type === 'truefalse' ? '✓' :
-                type === 'cluegames' ? '🔍' : '✦';
+                type === 'blanks' ? 'âœ' :
+                type === 'match' ? 'â‡„' :
+                type === 'crosswords' ? 'âŠž' :
+                type === 'parts' ? 'â—ˆ' :
+                type === 'truefalse' ? 'âœ“' :
+                type === 'cluegames' ? 'ðŸ”' : 'âœ¦';
               const chipLabel = type === 'All' ? 'All' : getTypeLabel(type);
               return (
                 <TouchableOpacity
@@ -6161,7 +7415,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             filteredAssignments.map(item => {
               const accent = getAccentColor(item.type);
 
-              /* ── SPECIAL PREMIUM MCQ BUILDER CARD ── */
+              /* â”€â”€ SPECIAL PREMIUM MCQ BUILDER CARD â”€â”€ */
               if (item.type === 'mcqs') {
                 return (
                   <TouchableOpacity
@@ -6263,7 +7517,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         </View>
                       </View>
 
-                      {/* Extra info row: class • subject */}
+                      {/* Extra info row: class â€¢ subject */}
                       <View style={{
                         marginTop: 14,
                         paddingTop: 12,
@@ -6275,10 +7529,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       }}>
                         <MaterialIcons name="school" size={13} color="#059669" />
                         <Text style={{ fontSize: 12, fontWeight: '700', color: '#047857' }}>
-                          {item.class}  •  {item.course}  •  {item.topic}
+                          {item.class}  â€¢  {item.course}  â€¢  {item.topic}
                         </Text>
                         <View style={{ flex: 1 }} />
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#0EA5E9' }}>Tap to open →</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#0EA5E9' }}>Tap to open â†’</Text>
                       </View>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -6289,7 +7543,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               return (
                 <View key={item.sNo} style={[styles.card, { shadowColor: accent }]}>
 
-                   {/* ── Header Band ── */}
+                   {/* â”€â”€ Header Band â”€â”€ */}
                   <LinearGradient
                     colors={[accent, accent + 'CC']}
                     start={{ x: 0, y: 0 }}
@@ -6305,7 +7559,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <Text style={styles.cardTitleBand} numberOfLines={1}>{item.title}</Text>
                         <View style={styles.subtitleRow}>
                           <MaterialIcons name="school" size={11} color="rgba(255,255,255,0.75)" style={{ marginRight: 4 }} />
-                          <Text style={styles.cardSubtitleBand}>{item.class}  •  {item.course}</Text>
+                          <Text style={styles.cardSubtitleBand}>{item.class}  â€¢  {item.course}</Text>
                         </View>
                       </View>
                       <View style={styles.bandRight}>
@@ -6319,7 +7573,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </View>
                   </LinearGradient>
 
-                  {/* ── Body ── */}
+                  {/* â”€â”€ Body â”€â”€ */}
                   <View style={styles.cardBody}>
 
                     {/* Chapter & Topic capsules */}
@@ -9659,7 +10913,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f9ff' }} edges={['top', 'bottom']}>
 
-          {/* ── HEADER BAR ── */}
+          {/* â”€â”€ HEADER BAR â”€â”€ */}
           <LinearGradient
             colors={['#e0f2fe', '#f0f9ff']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -9709,8 +10963,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               CROSSWORD
             </Text>
 
-            {/* Right: Words Left + Reveal */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {/* Right: Words Left + Reveal + Keyboard */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{
                 backgroundColor: '#fef3c7', borderRadius: 14,
                 paddingHorizontal: 10, paddingVertical: 5,
@@ -9721,7 +10975,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   {(() => {
                     const total = crosswordGridData.cellCoords.length;
                     const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
-                    return solved === total ? '✓ Done!' : `${total - solved} left`;
+                    return solved === total ? 'âœ“ Done!' : `${total - solved} left`;
                   })()}
                 </Text>
               </View>
@@ -9737,20 +10991,38 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 style={{
                   flexDirection: 'row', alignItems: 'center', gap: 4,
                   backgroundColor: '#e0f7fa', borderRadius: 14,
-                  paddingHorizontal: 10, paddingVertical: 7,
+                  paddingHorizontal: 8, paddingVertical: 7,
                   borderWidth: 1.5, borderColor: '#b2ebf2',
                   borderBottomWidth: 3.5, borderBottomColor: '#80deea',
                   elevation: 2
                 }}
                 activeOpacity={0.8}
               >
-                <MaterialIcons name="lightbulb-outline" size={15} color="#00838f" />
-                <Text style={{ color: '#00838f', fontWeight: '900', fontSize: 12 }}>Reveal</Text>
+                <MaterialIcons name="lightbulb-outline" size={14} color="#00838f" />
+                <Text style={{ color: '#00838f', fontWeight: '900', fontSize: 11 }}>Reveal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  playSound('click');
+                  setShowKeyboard(prev => !prev);
+                }}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  backgroundColor: showKeyboard ? '#e0f2fe' : '#ffffff', borderRadius: 14,
+                  paddingHorizontal: 8, paddingVertical: 7,
+                  borderWidth: 1.5, borderColor: showKeyboard ? '#bae6fd' : '#e2e8f0',
+                  borderBottomWidth: 3.5, borderBottomColor: showKeyboard ? '#0284c7' : '#cbd5e1',
+                  elevation: 2
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="keyboard" size={14} color={showKeyboard ? '#0284c7' : '#475569'} />
+                <Text style={{ color: showKeyboard ? '#0284c7' : '#475569', fontWeight: '900', fontSize: 11 }}>Keyboard</Text>
               </TouchableOpacity>
             </View>
           </LinearGradient>
 
-          {/* ── SPLASH SCREEN ── */}
+          {/* â”€â”€ SPLASH SCREEN â”€â”€ */}
           {crosswordSplashActive ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <LinearGradient colors={['#e0f2fe', '#f0f9ff', '#dbeafe']} style={StyleSheet.absoluteFill} />
@@ -9761,66 +11033,66 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={{ position: 'absolute', top: '40%', left: '20%', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(37,99,235,0.03)' }} />
 
               {/* Star decorations */}
-              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>⭐</Text>
-              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>✨</Text>
-              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>🌟</Text>
+              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>â­</Text>
+              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>âœ¨</Text>
+              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>ðŸŒŸ</Text>
 
               {/* Logo Box */}
               <View style={{
-                width: 150, height: 150, borderRadius: 40,
+                width: 110, height: 110, borderRadius: 30,
                 backgroundColor: '#ffffff',
                 alignItems: 'center', justifyContent: 'center',
                 borderWidth: 1.5, borderColor: '#bae6fd',
-                borderBottomWidth: 6, borderBottomColor: '#93c5fd',
-                shadowColor: '#2563eb', shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.1, shadowRadius: 20, elevation: 6,
-                marginBottom: 36
+                borderBottomWidth: 4, borderBottomColor: '#93c5fd',
+                shadowColor: '#2563eb', shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.08, shadowRadius: 15, elevation: 4,
+                marginBottom: 20
               }}>
-                <Text style={{ fontSize: 72 }}>🔤</Text>
+                <Text style={{ fontSize: 48 }}>ðŸ”¤</Text>
               </View>
 
               <Text style={{
-                fontSize: 36, fontWeight: '900', color: '#0369a1',
-                letterSpacing: 1.5, textAlign: 'center', marginBottom: 12,
+                fontSize: 26, fontWeight: '900', color: '#0369a1',
+                letterSpacing: 1.5, textAlign: 'center', marginBottom: 8,
                 textShadowColor: 'rgba(59, 130, 246, 0.15)',
-                textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 8
+                textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6
               }}>
                 Crossword{'\n'}Adventure!
               </Text>
 
               <Text style={{
-                fontSize: 16, color: '#0284c7', fontWeight: '700',
-                textAlign: 'center', marginBottom: 52,
-                paddingHorizontal: 36, lineHeight: 24
+                fontSize: 13, color: '#0284c7', fontWeight: '700',
+                textAlign: 'center', marginBottom: 28,
+                paddingHorizontal: 36, lineHeight: 18
               }}>
-                Solve the clues and fill the puzzle grid! 🎯
+                Solve the clues and fill the puzzle grid! ðŸŽ¯
               </Text>
 
               {/* 3D Play Button */}
               <TouchableOpacity
                 onPress={() => { playSound('click'); setCrosswordSplashActive(false); }}
                 style={{
-                  height: 66, width: 250, borderRadius: 22,
+                  height: 50, width: 200, borderRadius: 16,
                   backgroundColor: '#10b981',
-                  borderBottomWidth: 6, borderBottomColor: '#047857',
-                  shadowColor: '#10b981', shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.25, shadowRadius: 18, elevation: 6
+                  borderBottomWidth: 4, borderBottomColor: '#047857',
+                  shadowColor: '#10b981', shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.2, shadowRadius: 12, elevation: 4
                 }}
                 activeOpacity={0.88}
               >
                 <LinearGradient
                   colors={['#34d399', '#10b981']}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 16 }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 12 }}
                 >
-                  <MaterialIcons name="play-arrow" size={34} color="#ffffff" />
-                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 22, letterSpacing: 1.5 }}>PLAY GAME</Text>
+                  <MaterialIcons name="play-arrow" size={24} color="#ffffff" />
+                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16, letterSpacing: 1.2 }}>PLAY GAME</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
           ) : (
-            /* ── GAMEPLAY BOARD (Portrait Layout) ── */
+            /* â”€â”€ GAMEPLAY BOARD (Portrait Layout) â”€â”€ */
             <View style={{ flex: 1 }}>
               <LinearGradient colors={['#f0f9ff', '#e0f2fe', '#dbeafe']} style={StyleSheet.absoluteFill} />
               
@@ -9848,12 +11120,19 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 </Svg>
               </View>
 
+              <ScrollView 
+                style={{ flex: 1 }} 
+                contentContainerStyle={{ paddingBottom: 24 }}
+                showsVerticalScrollIndicator={false}
+              >
+
+
               {/* Clue Panel (top strip) */}
               {(() => {
                 const total = crosswordGridData.cellCoords.length;
                 const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
                 const isWon = total > 0 && solved === total;
-                let clueText = 'Tap a cell to read its clue! 👆';
+                let clueText = 'Tap a cell to read its clue! ðŸ‘†';
                 if (activeCell) {
                   const cell = crosswordGridData.grid[activeCell.row]?.[activeCell.col];
                   if (cell) {
@@ -9880,14 +11159,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         backgroundColor: 'rgba(255,255,255,0.7)',
                         alignItems: 'center', justifyContent: 'center'
                       }}>
-                        <Text style={{ fontSize: 22 }}>{isWon ? '🏆' : '💡'}</Text>
+                        <Text style={{ fontSize: 22 }}>{isWon ? 'ðŸ†' : 'ðŸ’¡'}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 13, color: '#0284c7', fontWeight: '900', marginBottom: 2 }}>
                           {isWon ? 'PUZZLE COMPLETE!' : 'CLUE'}
                         </Text>
                         <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e293b', lineHeight: 20 }} numberOfLines={2}>
-                          {isWon ? '🎉 Amazing! You solved the crossword!' : clueText}
+                          {isWon ? 'ðŸŽ‰ Amazing! You solved the crossword!' : clueText}
                         </Text>
                       </View>
                     </LinearGradient>
@@ -9895,10 +11174,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 );
               })()}
 
-              {/* ── 9×9 CROSSWORD GRID ── Full Width, portrait */}
+              {/* â”€â”€ 9Ã—9 CROSSWORD GRID â”€â”€ Full Width, portrait */}
               <View style={{
                 marginHorizontal: 14,
-                flex: 1,
+                aspectRatio: 1,
                 backgroundColor: 'rgba(255, 255, 255, 0.72)',
                 borderRadius: 24, padding: 12,
                 borderWidth: 1.5, borderColor: '#bae6fd',
@@ -9949,7 +11228,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       };
 
                       const textStyle: any = {
-                        fontSize: 19,
+                        fontSize: 16,
                         fontWeight: '900',
                         color: '#0f172a'
                       };
@@ -10007,17 +11286,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 ))}
               </View>
 
-              {/* ── KEYBOARD ── */}
-              <View style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.45)', // Premium translucent glassmorphism backdrop
-                marginHorizontal: 16, marginTop: 12, marginBottom: 16,
-                borderRadius: 24, paddingVertical: 16, paddingHorizontal: 12,
-                borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.65)',
-                borderBottomWidth: 4, borderBottomColor: 'rgba(15, 23, 42, 0.08)',
-                shadowColor: '#475569',
-                shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.06, shadowRadius: 20,
-                elevation: 4
-              }}>
+              {/* â”€â”€ KEYBOARD â”€â”€ */}
+              {showKeyboard && (
+                <View style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.45)', // Premium translucent glassmorphism backdrop
+                  marginHorizontal: 16, marginTop: 12, marginBottom: 16,
+                  borderRadius: 24, paddingVertical: 16, paddingHorizontal: 12,
+                  borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.65)',
+                  borderBottomWidth: 4, borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+                  shadowColor: '#475569',
+                  shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.06, shadowRadius: 20,
+                  elevation: 4
+                }}>
                 {/* Keyboard Header Hint */}
                 <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
                   <Text style={{ fontSize: 10, fontWeight: '800', color: '#64748b', letterSpacing: 1.5 }}>
@@ -10029,7 +11309,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
                   {(() => {
                     const keys = crosswordLanguage === 'UR'
-                      ? ['ا','ب','پ','ت','ٹ','ث','ج','چ','ح','خ','د','ڈ','ذ','ر','ڑ','ز','ژ','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ک','گ','ل','م','ن','و','ہ','ء','ی']
+                      ? ['Ø§','Ø¨','Ù¾','Øª','Ù¹','Ø«','Ø¬','Ú†','Ø­','Ø®','Ø¯','Úˆ','Ø°','Ø±','Ú‘','Ø²','Ú˜','Ø³','Ø´','Øµ','Ø¶','Ø·','Ø¸','Ø¹','Øº','Ù','Ù‚','Ú©','Ú¯','Ù„','Ù…','Ù†','Ùˆ','Û','Ø¡','ÛŒ']
                       : ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 
                     // Premium, elegant black & white mechanical themes
@@ -10151,16 +11431,19 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   >
                     <MaterialIcons name="public" size={18} color="#334155" />
                     <Text style={{ color: '#334155', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>
-                      {crosswordLanguage === 'EN' ? 'اردو کی بورڈ' : 'English Keyboard'}
+                      {crosswordLanguage === 'EN' ? 'Ø§Ø±Ø¯Ùˆ Ú©ÛŒ Ø¨ÙˆØ±Úˆ' : 'English Keyboard'}
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
+              )}
 
+              </ScrollView>
             </View>
           )}
         </SafeAreaView>
       </Modal>
+
 
 
 
@@ -10733,53 +12016,49 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
 
 
-      {/* ── MODAL 1: SELECT DIAGRAM IMAGE TEMPLATE ── */}
-      <Modal
-        visible={showImageSelectModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowImageSelectModal(false)}
-      >
+      {/* â”€â”€ MODAL 1: SELECT DIAGRAM IMAGE TEMPLATE â”€â”€ */}
+      {showImageSelectModal && (
         <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.65)',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 20
+          padding: 20,
+          zIndex: 9999
         }}>
           <View style={{
             backgroundColor: '#ffffff',
             width: '100%',
-            maxWidth: 400,
-            borderRadius: 24,
-            padding: 22,
+            maxWidth: 360,
+            borderRadius: 18,
+            padding: 16,
             borderWidth: 1.5,
             borderColor: '#e2e8f0',
             shadowColor: '#0f172a',
-            shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 8
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+            elevation: 6
           }}>
             {/* Title Header */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <Text style={{ fontSize: 20, fontWeight: '900', color: '#1e3a8a', letterSpacing: 0.2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e3a8a', letterSpacing: 0.2 }}>
                 Choose Diagram File
               </Text>
               <TouchableOpacity 
                 onPress={() => { playSound('click'); setShowImageSelectModal(false); }}
-                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
               >
-                <MaterialIcons name="close" size={18} color="#64748b" />
+                <MaterialIcons name="close" size={14} color="#64748b" />
               </TouchableOpacity>
             </View>
 
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#64748b', lineHeight: 20, marginBottom: 18 }}>
-              Select one of the educational diagrams below to begin adding label pinpoints:
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748b', lineHeight: 16, marginBottom: 10 }}>
+              Select an educational diagram to add label pinpoints:
             </Text>
 
             {/* Grid or Stack of Educational Diagrams */}
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 7 }}>
               {[
                 { id: 'FACE', name: 'Human Face Template', icon: 'face', desc: 'Eyes, nose, mouth, hair, etc.' },
                 { id: 'SKELETON', name: 'Human Skeleton Template', icon: 'accessibility', desc: 'Skull, ribs, limbs, joints, etc.' },
@@ -10797,37 +12076,37 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     backgroundColor: '#f8fafc',
-                    padding: 16,
-                    borderRadius: 16,
+                    padding: 10,
+                    borderRadius: 12,
                     borderWidth: 1.5,
                     borderColor: '#e2e8f0',
-                    borderBottomWidth: 4,
+                    borderBottomWidth: 3,
                     borderBottomColor: '#cbd5e1',
-                    gap: 12
+                    gap: 10
                   }}
                   activeOpacity={0.7}
                 >
                   <View style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
                     backgroundColor: '#eff6ff',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderWidth: 1,
                     borderColor: '#bfdbfe'
                   }}>
-                    <MaterialIcons name={diagram.icon as any} size={22} color="#2563eb" />
+                    <MaterialIcons name={diagram.icon as any} size={17} color="#2563eb" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 15, fontWeight: '800', color: '#1e293b' }}>
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e293b' }}>
                       {diagram.name}
                     </Text>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748b', marginTop: 2 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: '#64748b', marginTop: 1 }}>
                       {diagram.desc}
                     </Text>
                   </View>
-                  <MaterialIcons name="chevron-right" size={20} color="#94a3b8" />
+                  <MaterialIcons name="chevron-right" size={16} color="#94a3b8" />
                 </TouchableOpacity>
               ))}
 
@@ -10865,60 +12144,53 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   backgroundColor: '#faf5ff',
-                  padding: 16,
-                  borderRadius: 16,
+                  padding: 10,
+                  borderRadius: 12,
                   borderWidth: 1.5,
                   borderColor: '#f3e8ff',
-                  borderBottomWidth: 4,
+                  borderBottomWidth: 3,
                   borderBottomColor: '#e9d5ff',
-                  gap: 12,
-                  marginTop: 4
+                  gap: 10,
+                  marginTop: 2
                 }}
                 activeOpacity={0.7}
               >
                 <View style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
                   backgroundColor: '#f5f3ff',
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderWidth: 1,
                   borderColor: '#e9d5ff'
                 }}>
-                  <MaterialIcons name="add-a-photo" size={20} color="#7c3aed" />
+                  <MaterialIcons name="add-a-photo" size={16} color="#7c3aed" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#5b21b6' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#5b21b6' }}>
                     Choose Custom File
                   </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#7c3aed', marginTop: 2 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: '#7c3aed', marginTop: 1 }}>
                     Select any diagram image from your gallery
                   </Text>
                 </View>
-                <MaterialIcons name="cloud-upload" size={18} color="#c084fc" />
+                <MaterialIcons name="cloud-upload" size={15} color="#c084fc" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </Modal>
+      )}
 
-      {/* ── MODAL 2: ADD DIAGRAM PINPOINT LABEL NAME ── */}
-      <Modal
-        visible={showPinpointDialog}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => {
-          setShowPinpointDialog(false);
-          setTempPinpointCoord(null);
-        }}
-      >
+      {/* â”€â”€ MODAL 2: ADD DIAGRAM PINPOINT LABEL NAME â”€â”€ */}
+      {showPinpointDialog && (
         <View style={{
-          flex: 1,
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(15, 23, 42, 0.65)',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 24
+          padding: 24,
+          zIndex: 9999
         }}>
           <View style={{
             backgroundColor: '#ffffff',
@@ -11021,1431 +12293,732 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             </View>
           </View>
         </View>
-      </Modal>
-
-      {/* ── MODAL 3: DIAGRAM PARTS PLAYING MODAL ── */}
-      <Modal
-        visible={activePartsPlayer !== null}
-        animationType="slide"
-        transparent={false}
-        onRequestClose={() => setActivePartsPlayer(null)}
-      >
-        {activePartsPlayer && (() => {
-          const themeConfig = getThemeColorConfig(activePartsPlayer.themeUrl);
-          const totalPinpoints = activePartsPlayer.partsPinpoints?.length || 0;
-          
-          // Calculate correct answers count
-          const correctCount = Object.keys(partsAnswers).filter(
-            id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === partsAnswers[id]
-          ).length;
-          
-          return (
-            <ImageBackground
-              source={{ uri: activePartsPlayer.themeUrl }}
-              style={{ flex: 1 }}
-              resizeMode="cover"
-            >
-              {/* Soft dark tinted overlay for maximum text contrast */}
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.3)' }} />
-              
-              <SafeAreaView style={{ flex: 1 }}>
-                {/* Header row with Close button & title */}
-                <View style={styles.playerHeaderBar}>
-                  <TouchableOpacity
-                    style={styles.playerExitBtn}
-                    onPress={() => setActivePartsPlayer(null)}
-                    activeOpacity={0.7}
-                  >
-                    <MaterialIcons name="close" size={20} color="#0F172A" />
-                  </TouchableOpacity>
-
-                  <Text style={styles.playerHeaderTitle} numberOfLines={1}>{activePartsPlayer.title}</Text>
-                  
-                  <View style={styles.playerScoreBadge}>
-                    <Text style={styles.playerScoreBadgeLabel}>SCORE : {correctCount}/{totalPinpoints}</Text>
-                  </View>
-                </View>
-
-                <ScrollView contentContainerStyle={{ padding: 16, alignItems: 'center', paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-                  {/* Premium Title Block */}
-                  <View style={[styles.matchHeaderBlock, { backgroundColor: themeConfig.headerBg }]}>
-                    <Text style={styles.matchHeaderTitleText}>Label the Diagram</Text>
-                    <Text style={styles.matchHeaderSubText}>
-                      {activePartsPlayer.partsLayoutMethod === 'drag' 
-                        ? 'Tap a label pill from the tray at the bottom, then click its pinpoint dot on the canvas.'
-                        : activePartsPlayer.partsLayoutMethod === 'match'
-                        ? 'Tap a pinpoint dot first, then click its matching label name below.'
-                        : 'Tap any pinpoint dot on the diagram and select the correct option.'}
-                    </Text>
-                    
-                    <View style={styles.matchHeaderScorePill}>
-                      <View style={[styles.matchScoreDot, { backgroundColor: '#10B981' }]} />
-                      <Text style={styles.matchHeaderScoreText}>
-                        {isPlayerSubmitted ? `${correctCount}/${totalPinpoints} Correctly Labeled` : `${correctCount}/${totalPinpoints} Completed`}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Interactive Diagram Canvas Card */}
-                  <View style={{
-                    width: '100%',
-                    backgroundColor: themeConfig.bodyCardBg,
-                    borderColor: themeConfig.cardBorder,
-                    borderWidth: 2,
-                    borderRadius: 24,
-                    padding: 16,
-                    alignItems: 'center',
-                    marginBottom: 16,
-                    elevation: 4,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8
-                  }}>
-                    <View 
-                      onLayout={(e) => {
-                        const { width, height } = e.nativeEvent.layout;
-                        if (width && height) {
-                          setPlayerCanvasLayout({ width, height });
-                        }
-                      }}
-                      style={{ width: '100%', height: 300, position: 'relative' }}
-                    >
-                      {/* Diagram representation wrapper to hold rounded corners */}
-                      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20, overflow: 'hidden', backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-                        <DiagramRenderer 
-                          name={activePartsPlayer.partsImage || activePartsPlayer.partsImageName} 
-                          onImageAspectMeasured={(asp) => {
-                            if (activePartsPlayer && activePartsPlayer.partsImageAspect !== asp) {
-                              activePartsPlayer.partsImageAspect = asp;
-                            }
-                          }}
-                        />
-                      </View>
-
-                      {(() => {
-                        const playerImgName = activePartsPlayer.partsImage || activePartsPlayer.partsImageName;
-                        let playerAspect = activePartsPlayer.partsImageAspect || 1.25;
-                        if (playerImgName && !activePartsPlayer.partsImageAspect) {
-                          const pNorm = playerImgName.trim().toUpperCase();
-                          if (pNorm === 'FACE' || pNorm === 'SKELETON' || pNorm === 'PLANT' || pNorm === 'PRESET_FACE') {
-                            playerAspect = 1.25;
-                          }
-                        }
-
-                        const pWidth = playerCanvasLayout.width || 400;
-                        const pHeight = playerCanvasLayout.height || 300;
-                        const { dispL, dispT, dispW, dispH } = getImageDisplayRect(pWidth, pHeight, playerAspect);
-
-                        const getScreenCoords = (pin: any) => {
-                          const normX = (pin.x ?? 50) / 100;
-                          const normY = (pin.y ?? 50) / 100;
-                          const dotPxX = dispL + normX * dispW;
-                          const dotPxY = dispT + normY * dispH;
-                          const displayX = (dotPxX / pWidth) * 100;
-                          const displayY = (dotPxY / pHeight) * 100;
-                          return { displayX, displayY };
-                        };
-
-                        const leftPins = (activePartsPlayer.partsPinpoints || [])
-                          .filter((p: any) => getScreenCoords(p).displayX < 50);
-                        const rightPins = (activePartsPlayer.partsPinpoints || [])
-                          .filter((p: any) => getScreenCoords(p).displayX >= 50);
-
-                        const resolveSpacing = (pins: any[]) => {
-                          const res: Record<string, number> = {};
-                          if (pins.length === 0) return res;
-                          const sorted = [...pins].sort((a, b) => getScreenCoords(a).displayY - getScreenCoords(b).displayY);
-                          const ys = sorted.map(p => Math.max(12, Math.min(88, getScreenCoords(p).displayY)));
-                          for (let pass = 0; pass < 12; pass++) {
-                            for (let i = 0; i < ys.length - 1; i++) {
-                              if (ys[i + 1] - ys[i] < 13) {
-                                const overlap = 13 - (ys[i + 1] - ys[i]);
-                                ys[i] = Math.max(12, ys[i] - overlap / 2);
-                                ys[i + 1] = Math.min(88, ys[i + 1] + overlap / 2);
-                              }
-                            }
-                          }
-                          sorted.forEach((pin, idx) => {
-                            res[pin.id] = ys[idx];
-                          });
-                          return res;
-                        };
-
-                        const spacedYMap: Record<string, number> = {
-                          ...resolveSpacing(leftPins),
-                          ...resolveSpacing(rightPins)
-                        };
-
-                        return (
-                          <>
-                            {/* Svg Connector Lines */}
-                            <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} pointerEvents="none">
-                              {activePartsPlayer.partsPinpoints?.map((pin: any) => {
-                                const isCorrect = partsAnswers[pin.id] === pin.name;
-                                const isActivePinpoint = partsDropdownActiveId === pin.id;
-                                const { displayX, displayY } = getScreenCoords(pin);
-                                const spacedY = spacedYMap[pin.id] || displayY;
-                                const isLeft = displayX < 50;
-                                const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
-                                const lineTargetX = isLeft ? boxLeftPct + 20 : boxLeftPct;
-                                return (
-                                  <Line
-                                    key={pin.id}
-                                    x1={`${displayX}%`}
-                                    y1={`${displayY}%`}
-                                    x2={`${lineTargetX}%`}
-                                    y2={`${spacedY}%`}
-                                    stroke={isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#64748b')}
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                  />
-                                );
-                              })}
-                            </Svg>
-
-                            {/* Pinpoints & Textbox Labels overlay */}
-                            {activePartsPlayer.partsPinpoints?.map((pin: any) => {
-                              const isCorrect = partsAnswers[pin.id] === pin.name;
-                              const isActivePinpoint = partsDropdownActiveId === pin.id;
-                              const { displayX, displayY } = getScreenCoords(pin);
-                              const spacedY = spacedYMap[pin.id] || displayY;
-                              const isLeft = displayX < 50;
-                              const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
-
-                              const handlePress = () => {
-                                playSound('click');
-                                if (activePartsPlayer.partsLayoutMethod === 'drag' && partsSelectedLabel) {
-                                  if (partsSelectedLabel === pin.name) {
-                                    playSound('win');
-                                    const newAnswers: Record<string, string> = { ...partsAnswers, [pin.id]: partsSelectedLabel as string };
-                                    setPartsAnswers(newAnswers);
-                                    setPartsSelectedLabel(null);
-                                    
-                                    // Check if finished
-                                    const cCount = Object.keys(newAnswers).filter(
-                                      id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]
-                                    ).length;
-                                    if (cCount === totalPinpoints) {
-                                      setIsPlayerSubmitted(true);
-                                      setPlayerScore(`${cCount}/${totalPinpoints}`);
-                                      playSound('win');
-                                      setShowPartsSuccessUpload(true);
-                                    }
-                                  } else {
-                                    playSound('error');
-                                    setPartsWrongAlert(true);
-                                  }
-                                } else {
-                                  // Open bottom sheet selector
-                                  setPartsDropdownActiveId(pin.id);
-                                }
-                              };
-
-                              return (
-                                <React.Fragment key={pin.id}>
-                                  {/* Upgraded Premium Dual-Layer Radar Anchor Dot */}
-                                  <View
-                                    style={{
-                                      position: 'absolute',
-                                      left: `${displayX}%`,
-                                      top: `${displayY}%`,
-                                      transform: [{ translateX: -8 }, { translateY: -8 }],
-                                      width: 16,
-                                      height: 16,
-                                      borderRadius: 8,
-                                      backgroundColor: isCorrect 
-                                        ? 'rgba(34, 197, 94, 0.25)' 
-                                        : (isActivePinpoint ? 'rgba(59, 130, 246, 0.28)' : 'rgba(239, 68, 68, 0.25)'),
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      zIndex: 10
-                                    }}
-                                  >
-                                    <View
-                                      style={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: 4,
-                                        backgroundColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#ef4444'),
-                                        borderWidth: 1.5,
-                                        borderColor: '#ffffff',
-                                        shadowColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#ef4444'),
-                                        shadowOffset: { width: 0, height: 1 },
-                                        shadowOpacity: 0.4,
-                                        shadowRadius: 2,
-                                        elevation: 3
-                                      }}
-                                    />
-                                  </View>
-
-                                  {/* Label Box floating adjacent to pinpoint */}
-                                  <TouchableOpacity
-                                    disabled={isCorrect || isPlayerSubmitted}
-                                    onPress={handlePress}
-                                    style={{
-                                      position: 'absolute',
-                                      left: `${boxLeftPct}%`,
-                                      width: '20%',
-                                      top: `${spacedY}%`,
-                                      transform: [{ translateY: -16 }],
-                                      backgroundColor: isCorrect ? '#f0fdf4' : (isActivePinpoint ? '#eff6ff' : '#f8fafc'),
-                                      borderWidth: 1.5,
-                                      borderColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#cbd5e1'),
-                                      borderStyle: isCorrect ? 'solid' : 'dashed',
-                                      borderRadius: 10,
-                                      paddingVertical: 5,
-                                      paddingHorizontal: 6,
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      shadowColor: isCorrect ? '#22c55e' : '#cbd5e1',
-                                      shadowOffset: { width: 0, height: 2 },
-                                      shadowOpacity: 0.1,
-                                      shadowRadius: 3,
-                                      elevation: 2,
-                                      zIndex: 15
-                                    }}
-                                  >
-                                    <Text 
-                                      style={{
-                                        color: isCorrect ? '#15803d' : (isActivePinpoint ? '#1d4ed8' : '#94a3b8'),
-                                        fontWeight: '900',
-                                        fontSize: 11,
-                                        textAlign: 'center'
-                                      }}
-                                    >
-                                      {isCorrect ? pin.name : '?'}
-                                    </Text>
-                                  </TouchableOpacity>
-                                </React.Fragment>
-                              );
-                            })}
-                          </>
-                        );
-                      })()}
-                    </View>
-                  </View>
-
-                  {/* Tray of Labels */}
-                  {activePartsPlayer.partsLayoutMethod === 'drag' && (
-                    <View style={{
-                      width: '100%',
-                      backgroundColor: themeConfig.bodyCardBg,
-                      borderColor: themeConfig.cardBorder,
-                      borderWidth: 2,
-                      borderRadius: 20,
-                      padding: 16,
-                      elevation: 2
-                    }}>
-                      <Text style={{ fontSize: 14, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 10 }}>
-                        LABELS TRAY
-                      </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                        {shuffledPartsLabels.map((lbl, idx) => {
-                          const isAlreadyUsed = Object.values(partsAnswers).includes(lbl);
-                          const isSelected = partsSelectedLabel === lbl;
-                          if (isAlreadyUsed) return null;
-                          return (
-                            <TouchableOpacity
-                              key={idx}
-                              onPress={() => {
-                                playSound('click');
-                                setPartsSelectedLabel(isSelected ? null : lbl);
-                              }}
-                              style={{
-                                backgroundColor: isSelected ? '#3b82f6' : '#ffffff',
-                                paddingVertical: 10,
-                                paddingHorizontal: 16,
-                                borderRadius: 12,
-                                borderWidth: 1.5,
-                                borderColor: isSelected ? '#2563eb' : '#e2e8f0',
-                                borderBottomWidth: 4,
-                                borderBottomColor: isSelected ? '#1d4ed8' : '#cbd5e1'
-                              }}
-                              activeOpacity={0.7}
-                            >
-                              <Text style={{ fontSize: 14, fontWeight: '900', color: isSelected ? '#ffffff' : '#334155' }}>
-                                {lbl}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Tray of Labels for Click to Match mode */}
-                  {activePartsPlayer.partsLayoutMethod === 'match' && !partsDropdownActiveId && (
-                    <View style={{
-                      width: '100%',
-                      backgroundColor: themeConfig.bodyCardBg,
-                      borderColor: themeConfig.cardBorder,
-                      borderWidth: 2,
-                      borderRadius: 20,
-                      padding: 16,
-                      elevation: 2
-                    }}>
-                      <Text style={{ fontSize: 14, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 8, textAlign: 'center' }}>
-                        First, tap a red pinpoint dot on the diagram above!
-                      </Text>
-                    </View>
-                  )}
-                </ScrollView>
-              </SafeAreaView>
-
-              {/* Mismatch Alert Overlay Toast */}
-              {partsWrongAlert && (
-                <View style={{
-                  position: 'absolute',
-                  top: '40%',
-                  alignSelf: 'center',
-                  backgroundColor: 'rgba(225, 29, 72, 0.95)',
-                  paddingVertical: 14,
-                  paddingHorizontal: 28,
-                  borderRadius: 20,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 5,
-                  zIndex: 9999
-                }}>
-                  <MaterialIcons name="error-outline" size={20} color="#ffffff" />
-                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16 }}>Wrong Answer!</Text>
-                </View>
-              )}
-
-              {/* Upload Success Modal Sheet */}
-              <Modal
-                visible={showPartsSuccessUpload}
-                transparent={true}
-                animationType="fade"
-              >
-                <View style={styles.successOverlay}>
-                  <View style={styles.successCard}>
-                    <View style={styles.successIconRing}>
-                      <LinearGradient
-                        colors={['#10B981', '#059669']}
-                        style={styles.successIconRingGrad}
-                      >
-                        <MaterialIcons name="cloud-done" size={32} color="#ffffff" />
-                      </LinearGradient>
-                    </View>
-                    <Text style={styles.successTitle}>Uploaded Successfully!</Text>
-                    <Text style={styles.successDesc}>
-                      Your diagram labeling score ({playerScore}) has been submitted to the teacher portal.
-                    </Text>
-                    
-                    <TouchableOpacity
-                      style={styles.successDoneBtn}
-                      onPress={() => {
-                        setShowPartsSuccessUpload(false);
-                        setIsPlayerSubmitted(false);
-                        setPartsAnswers({});
-                        setActivePartsPlayer(null); // Exit player - full clean reset
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <LinearGradient
-                        colors={['#10B981', '#059669']}
-                        style={styles.successDoneGradient}
-                      >
-                        <Text style={styles.successDoneText}>Done</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-
-              {/* ── PREMIUM BOTTOM SHEET SELECTOR FOR PINPOINTS ── */}
-              <Modal
-                visible={partsDropdownActiveId !== null}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setPartsDropdownActiveId(null)}
-              >
-                <View style={{
-                  flex: 1,
-                  backgroundColor: 'rgba(15, 23, 42, 0.4)',
-                  justifyContent: 'flex-end',
-                }}>
-                  {/* Touch outside to close */}
-                  <TouchableOpacity 
-                    style={{ flex: 1 }} 
-                    activeOpacity={1} 
-                    onPress={() => setPartsDropdownActiveId(null)} 
-                  />
-                  
-                  <View style={{
-                    backgroundColor: '#ffffff',
-                    borderTopLeftRadius: 28,
-                    borderTopRightRadius: 28,
-                    padding: 24,
-                    paddingBottom: Platform.OS === 'ios' ? 40 : 28,
-                    borderTopWidth: 1.5,
-                    borderColor: '#e2e8f0',
-                    shadowColor: '#0f172a',
-                    shadowOffset: { width: 0, height: -10 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 12,
-                    elevation: 20
-                  }}>
-                    {/* Drag Indicator handle */}
-                    <View style={{
-                      width: 48,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: '#cbd5e1',
-                      alignSelf: 'center',
-                      marginBottom: 20
-                    }} />
-
-                    {/* Header */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <View>
-                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#1e3a8a' }}>
-                          Choose the Correct Label
-                        </Text>
-                        <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b', marginTop: 2 }}>
-                          Tap the matching term for this pinpoint
-                        </Text>
-                      </View>
-                      <TouchableOpacity 
-                        onPress={() => setPartsDropdownActiveId(null)}
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 18,
-                          backgroundColor: '#f1f5f9',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <MaterialIcons name="close" size={20} color="#64748b" />
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Grid of Options */}
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
-                      {(() => {
-                        const activePinpoint = activePartsPlayer?.partsPinpoints?.find((p: any) => p.id === partsDropdownActiveId);
-                        if (!activePinpoint) return null;
-                        
-                        return shuffledPartsLabels.map((lbl, idx) => {
-                          const isAlreadyUsed = Object.entries(partsAnswers).some(
-                            ([ansId, ansVal]) => ansVal === lbl && ansId !== activePinpoint.id
-                          );
-                          if (isAlreadyUsed) return null;
-                          
-                          return (
-                            <TouchableOpacity
-                              key={idx}
-                              onPress={() => {
-                                playSound('click');
-                                if (lbl === activePinpoint.name) {
-                                  playSound('win');
-                                  const newAnswers: Record<string, string> = { ...partsAnswers, [activePinpoint.id]: lbl };
-                                  setPartsAnswers(newAnswers);
-                                  setPartsDropdownActiveId(null);
-                                  
-                                  const cCount = Object.keys(newAnswers).filter(
-                                    id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]
-                                  ).length;
-                                  if (cCount === totalPinpoints) {
-                                    setIsPlayerSubmitted(true);
-                                    setPlayerScore(`${cCount}/${totalPinpoints}`);
-                                    playSound('win');
-                                    setShowPartsSuccessUpload(true);
-                                  }
-                                } else {
-                                  playSound('error');
-                                  setPartsWrongAlert(true);
-                                }
-                              }}
-                              style={{
-                                backgroundColor: '#eff6ff',
-                                paddingVertical: 12,
-                                paddingHorizontal: 18,
-                                borderRadius: 16,
-                                borderWidth: 1.5,
-                                borderColor: '#bfdbfe',
-                                borderBottomWidth: 4,
-                                borderBottomColor: '#3b82f6',
-                                minWidth: '45%'
-                              }}
-                              activeOpacity={0.7}
-                            >
-                              <Text style={{ fontSize: 15, fontWeight: '800', color: '#1e40af', textAlign: 'center' }}>
-                                {lbl}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        });
-                      })()}
-                    </View>
-                  </View>
-                </View>
-              </Modal>
-
-            </ImageBackground>
-          );
-        })()}
-      </Modal>
-
-      {/* ── TRUE / FALSE QUIZ PLAYER MODAL (LIGHT BRIGHT PREMIUM UI) ── */}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      {/* ── MCQS INTERACTIVE QUIZ STUDENT PLAYER MODAL ── */}
-      {activeMcqPlayer && (
-        <Modal
-          visible={activeMcqPlayer !== null}
-          animationType="slide"
-          transparent={false}
-          onRequestClose={() => setActiveMcqPlayer(null)}
-        >
-          <View style={{ flex: 1, backgroundColor: '#F0F9FF' }}>
-            <LinearGradient
-              colors={['#E0F2FE', '#F0F9FF', '#F0FDFA']}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-
-            <SafeAreaView style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
-              <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <TouchableOpacity
-                    style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' }}
-                    onPress={() => setActiveMcqPlayer(null)}
-                  >
-                    <MaterialIcons name="close" size={20} color="#0F172A" />
-                  </TouchableOpacity>
-                  <View>
-                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>{activeMcqPlayer.title}</Text>
-                    <Text style={{ fontSize: 12, color: '#64748B' }}>MCQ AI Interactive Quiz</Text>
-                  </View>
-                </View>
-                <View style={{ paddingVertical: 4, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#E0F2FE' }}>
-                  <Text style={{ fontSize: 13, fontWeight: '900', color: '#0369A1' }}>Score: {Object.keys(mcqUserAnswers).length} Answered</Text>
-                </View>
-              </View>
-            </SafeAreaView>
-
-            <ScrollView contentContainerStyle={{ padding: 24, alignItems: 'center' }}>
-              <View style={{ width: '100%', maxWidth: 620, backgroundColor: '#ffffff', borderRadius: 28, padding: 24, borderWidth: 1.6, borderColor: '#CBD5E1', gap: 18 }}>
-                {activeMcqPlayer.mcqs && activeMcqPlayer.mcqs.length > 0 ? (
-                  <>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#0EA5E9' }}>Question {mcqPlayerIndex + 1} of {activeMcqPlayer.mcqs.length}</Text>
-                    </View>
-
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', lineHeight: 26 }}>
-                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.question}
-                    </Text>
-
-                    <View style={{ gap: 10 }}>
-                      {activeMcqPlayer.mcqs[mcqPlayerIndex]?.options.map((opt: string, idx: number) => {
-                        const isSelected = mcqUserAnswers[mcqPlayerIndex] === idx;
-                        const isCorrect = activeMcqPlayer.mcqs[mcqPlayerIndex].correctAnswer === idx;
-                        let bg = '#F8FAFC';
-                        let border = '#CBD5E1';
-                        if (isSelected) {
-                          bg = isCorrect ? '#ECFDF5' : '#FFF1F2';
-                          border = isCorrect ? '#10B981' : '#F43F5E';
-                        }
-
-                        return (
-                          <TouchableOpacity
-                            key={idx}
-                            style={{
-                              padding: 16,
-                              borderRadius: 16,
-                              backgroundColor: bg,
-                              borderWidth: 1.5,
-                              borderColor: border,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between'
-                            }}
-                            onPress={() => {
-                              setMcqUserAnswers(prev => ({ ...prev, [mcqPlayerIndex]: idx }));
-                              playSound('click');
-                            }}
-                          >
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', flex: 1 }}>{opt}</Text>
-                            {isSelected && (
-                              <MaterialIcons name={isCorrect ? "check-circle" : "cancel"} size={22} color={isCorrect ? "#10B981" : "#F43F5E"} />
-                            )}
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-                      <TouchableOpacity
-                        disabled={mcqPlayerIndex === 0}
-                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: mcqPlayerIndex === 0 ? '#F1F5F9' : '#0EA5E9' }}
-                        onPress={() => setMcqPlayerIndex(prev => Math.max(0, prev - 1))}
-                      >
-                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>← Prev</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 14, backgroundColor: '#10B981' }}
-                        onPress={() => {
-                          if (mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1) {
-                            setMcqPlayerIndex(prev => prev + 1);
-                          } else {
-                            setShowMcqSuccessUpload(true);
-                          }
-                        }}
-                      >
-                        <Text style={{ color: '#ffffff', fontWeight: '900' }}>
-                          {mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1 ? 'Next →' : 'Finish Quiz ✓'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                ) : (
-                  <View style={{ alignItems: 'center', padding: 24, gap: 12 }}>
-                    <MaterialIcons name="quiz" size={48} color="#0EA5E9" />
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>Quiz Ready!</Text>
-                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center' }}>
-                      10 Questions generated for {activeMcqPlayer.title}.
-                    </Text>
-                    <TouchableOpacity
-                      style={{ paddingVertical: 12, paddingHorizontal: 24, borderRadius: 16, backgroundColor: '#0EA5E9' }}
-                      onPress={() => setActiveMcqPlayer(null)}
-                    >
-                      <Text style={{ color: '#ffffff', fontWeight: '900' }}>Close Player</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </Modal>
       )}
+
+
+      {/* â”€â”€ TRUE / FALSE QUIZ PLAYER MODAL (LIGHT BRIGHT PREMIUM UI) â”€â”€ */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       <PremiumDateTimePicker
         visible={isDatePickerVisible}
@@ -12465,7 +13038,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   );
 };
 
-// ── HIGH-QUALITY RESPONSIVE VECTOR DIAGRAMS RENDERER ──
+// â”€â”€ HIGH-QUALITY RESPONSIVE VECTOR DIAGRAMS RENDERER â”€â”€
 interface DiagramRendererProps {
   name: string;
   onImageAspectMeasured?: (aspect: number) => void;
@@ -13497,7 +14070,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sheetScroll: {
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingTop: 4,
   },
   sheetTitleBlock: {
     marginBottom: 20,
@@ -13823,10 +14397,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formContainer: {
-    gap: 18,
-    paddingBottom: 40,
-    paddingHorizontal: 16,
-    paddingTop: 18,
+    gap: 14,
+    paddingBottom: 24,
+    paddingHorizontal: 0,
+    paddingTop: 2,
   },
   formCard: {
     backgroundColor: '#ffffff',
@@ -14057,7 +14631,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-  /* ═══ Neural Circuit AI Button ═══ */
+  /* â•â•â• Neural Circuit AI Button â•â•â• */
   aiGenButton: {
     borderRadius: 18,
     overflow: 'hidden',
@@ -14114,7 +14688,7 @@ const styles = StyleSheet.create({
     width: 1, height: 26,
     backgroundColor: 'rgba(255,255,255,0.20)',
   },
-  /* Circuit nodes — white hot glows */
+  /* Circuit nodes â€” white hot glows */
   circuitNode1: {
     position: 'absolute',
     top: 13, right: 58,
@@ -14239,7 +14813,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 5,
     elevation: 4,
   },
-  /* ── Legacy stubs ── */
+  /* â”€â”€ Legacy stubs â”€â”€ */
   aiGenGoldBorder: { borderRadius: 20, overflow: 'hidden' },
   aiGenBottomGlow: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 1 },
   aiGenShimmerBand: { position: 'absolute', top: 0, bottom: 0, left: '55%', width: 60, backgroundColor: 'rgba(255,255,255,0.04)' },
@@ -14511,7 +15085,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     opacity: 0.12,
   },
-  /* ═══ Multi-step Blanks Setup Navigation & Views ═══ */
+  /* â•â•â• Multi-step Blanks Setup Navigation & Views â•â•â• */
   blanksStepHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -14521,10 +15095,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   blanksStepTitle: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   blanksStepNavRow: {
     flexDirection: 'row',
