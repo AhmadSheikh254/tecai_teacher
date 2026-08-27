@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   Image, 
   Animated,
-  useWindowDimensions
+  useWindowDimensions,
+  Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Defs, LinearGradient, Stop } from 'react-native-svg';
@@ -27,6 +28,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedSection, setSelectedSection] = useState('A');
   const [selectedSubject, setSelectedSubject] = useState('English');
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(6);
+  const [calDate, setCalDate] = useState(new Date(2026, 7, 1)); // Starts in August 2026
 
   // Live badge pulse animation
   const livePulse = useRef(new Animated.Value(1)).current;
@@ -111,8 +113,8 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // ===== PREMIUM SVG Attendance Donut Chart =====
   const renderAttendanceChart = () => {
-    const size = 130;
-    const strokeWidth = 13;
+    const size = 104;
+    const strokeWidth = 10;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const presentOffset = circumference - (circumference * 94) / 100;
@@ -128,12 +130,12 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.premiumCardHeader}>
           <View style={styles.premiumCardTitleRow}>
             <View style={styles.premiumCardIconBox}>
-              <MaterialIcons name="how-to-reg" size={16} color="#0052cc" />
+              <MaterialIcons name="how-to-reg" size={14} color="#0052cc" />
             </View>
             <Text style={styles.premiumCardTitle}>Student Attendance</Text>
           </View>
           <View style={styles.todayPill}>
-            <MaterialIcons name="today" size={12} color="#0052cc" style={{ marginRight: 3 }} />
+            <MaterialIcons name="today" size={11} color="#0052cc" style={{ marginRight: 3 }} />
             <Text style={styles.todayPillText}>Today</Text>
           </View>
         </View>
@@ -198,45 +200,116 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     );
   };
 
-  // ===== PREMIUM Teacher's Calendar =====
+  // Event lookup helper for Real Working Teacher's Calendar
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const getCalendarEventForDay = (year: number, monthIdx: number, d: number) => {
+    const dt = new Date(year, monthIdx, d);
+    const dayOfWeek = dt.getDay(); // 0 = Sunday
+
+    if (dayOfWeek === 0) {
+      return { title: 'Sunday Holiday 🌴', details: 'School Closed • Have a great weekend!', color: '#EF4444', icon: 'weekend', bg: '#FEF2F2' };
+    }
+    if (monthIdx === 7 && d === 14) {
+      return { title: 'Independence Day 🇵🇰', details: 'National Holiday • Flag Hoisting Ceremony (08:00 AM)', color: '#10B981', icon: 'flag', bg: '#ECFDF5' };
+    }
+    if (d === 6) {
+      return { title: 'Grade-II English & Staff Meeting', details: '08:00 AM: English Lecture • 01:30 PM: Departmental Meeting', color: '#0284C7', icon: 'import-contacts', bg: '#F0F9FF' };
+    }
+    if (d === 7) {
+      return { title: 'Grade-II English Quiz', details: '09:15 AM: Vocabulary Quiz • 11:30 AM: Paper Checking', color: '#0052cc', icon: 'stars', bg: '#EEF2FF' };
+    }
+    if (d === 12) {
+      return { title: 'School Assembly & Prep', details: '10:00 AM: Student Assembly & Rehearsal', color: '#D97706', icon: 'event', bg: '#FEF3C7' };
+    }
+    if (d === 18) {
+      return { title: 'Mid-Term Exam Invigilation', details: '08:30 AM: Hall B Invigilation Duty (English Paper)', color: '#7C3AED', icon: 'assignment-turned-in', bg: '#F3E8FF' };
+    }
+    if (d === 25) {
+      return { title: 'Parent Teacher Meeting', details: '10:00 AM - 01:00 PM: PTM for Grade-II Sections', color: '#DB2777', icon: 'groups', bg: '#FCE7F3' };
+    }
+    return {
+      title: `Regular Classes (${monthNames[monthIdx]} ${d})`,
+      details: '08:00 AM - 01:30 PM: Grade-II Lectures & Activity Sessions',
+      color: '#0284C7',
+      icon: 'class',
+      bg: '#F0F9FF',
+    };
+  };
+
+  // ===== REAL WORKING Teacher's Calendar =====
   const renderCalendar = () => {
+    const calYear = calDate.getFullYear();
+    const calMonthIndex = calDate.getMonth();
+    const currentMonthLabel = `${monthNames[calMonthIndex]} ${calYear}`;
+
     const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    const totalDays = 31;
-    const startOffset = 6;
+    const totalDays = new Date(calYear, calMonthIndex + 1, 0).getDate();
+    const startOffset = new Date(calYear, calMonthIndex, 1).getDay();
+
+    const activeEvt = getCalendarEventForDay(calYear, calMonthIndex, selectedCalendarDay);
+
+    const handlePrevMonth = () => {
+      setCalDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+      setSelectedCalendarDay(1);
+    };
+
+    const handleNextMonth = () => {
+      setCalDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+      setSelectedCalendarDay(1);
+    };
 
     const daysGrid: React.ReactNode[] = [];
     for (let i = 0; i < startOffset; i++) {
-      daysGrid.push(<View key={`e-${i}`} style={styles.calDay} />);
+      daysGrid.push(<View key={`e-${i}`} style={styles.calDayCellWrapper} />);
     }
     for (let d = 1; d <= totalDays; d++) {
       const isSel = selectedCalendarDay === d;
-      const isToday = d === 7; // mark tomorrow as "today" visually
+      const isToday = calMonthIndex === 7 && d === 7;
+
       daysGrid.push(
-        <TouchableOpacity
-          key={`d-${d}`}
-          style={[styles.calDay, isSel && styles.calDaySelected, isToday && !isSel && styles.calDayToday]}
-          onPress={() => setSelectedCalendarDay(d)}
-          activeOpacity={0.75}
-        >
-          <Text style={[styles.calDayText, isSel && styles.calDayTextSel, isToday && !isSel && styles.calDayTextToday]}>
-            {d}
-          </Text>
-        </TouchableOpacity>
+        <View key={`d-${d}`} style={styles.calDayCellWrapper}>
+          <TouchableOpacity
+            style={[
+              styles.calDay,
+              isToday && !isSel && styles.calDayToday,
+              isSel && styles.calDaySelected,
+            ]}
+            onPress={() => setSelectedCalendarDay(d)}
+            activeOpacity={0.75}
+          >
+            <Text style={[
+              styles.calDayText,
+              isToday && !isSel && styles.calDayTextToday,
+              isSel && styles.calDayTextSel,
+            ]}>
+              {d}
+            </Text>
+          </TouchableOpacity>
+        </View>
       );
     }
 
     return (
       <View style={styles.premiumCard}>
-        {/* Header */}
+        {/* Header with Month Nav Controls */}
         <View style={styles.premiumCardHeader}>
           <View style={styles.premiumCardTitleRow}>
             <View style={styles.premiumCardIconBox}>
-              <MaterialIcons name="calendar-month" size={16} color="#0052cc" />
+              <MaterialIcons name="calendar-month" size={14} color="#0052cc" />
             </View>
             <Text style={styles.premiumCardTitle}>Teacher's Calendar</Text>
           </View>
-          <View style={styles.monthPill}>
-            <Text style={styles.monthPillText}>August 2026</Text>
+
+          {/* Real Interactive Month Switcher Pill */}
+          <View style={styles.monthPillRow}>
+            <TouchableOpacity onPress={handlePrevMonth} activeOpacity={0.7} style={styles.monthNavBtn}>
+              <MaterialIcons name="chevron-left" size={16} color="#ffffff" />
+            </TouchableOpacity>
+            <Text style={styles.monthPillText}>{currentMonthLabel}</Text>
+            <TouchableOpacity onPress={handleNextMonth} activeOpacity={0.7} style={styles.monthNavBtn}>
+              <MaterialIcons name="chevron-right" size={16} color="#ffffff" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -244,7 +317,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.calWeekRow}>
           {daysOfWeek.map((d, i) => (
             <View key={i} style={styles.calWeekCell}>
-              <Text style={[styles.calWeekText, (i === 0 || i === 6) && { color: '#ef4444' }]}>{d}</Text>
+              <Text style={[styles.calWeekText, (i === 0 || i === 6) && { color: '#EF4444' }]}>{d}</Text>
             </View>
           ))}
         </View>
@@ -253,15 +326,23 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.calGrid}>{daysGrid}</View>
 
         {/* Event strip */}
-        <View style={styles.calEventStrip}>
-          <MaterialIcons name="event-note" size={14} color="#0052cc" style={{ marginRight: 6 }} />
-          <View>
-            <Text style={styles.calEventDate}>August {selectedCalendarDay}, 2026</Text>
-            <Text style={styles.calEventMsg}>
-              {selectedCalendarDay === 6 ? 'No timetable scheduled yet.' : 'No events available for this day.'}
-            </Text>
+        <TouchableOpacity
+          style={[styles.calEventStrip, { backgroundColor: activeEvt.bg, borderColor: activeEvt.color + '33' }]}
+          activeOpacity={0.85}
+          onPress={() => Alert.alert(`${monthNames[calMonthIndex]} ${selectedCalendarDay}, ${calYear}`, `${activeEvt.title}\n\n${activeEvt.details}`)}
+        >
+          <View style={[styles.calEventIconOrb, { backgroundColor: activeEvt.color + '1F' }]}>
+            <MaterialIcons name={activeEvt.icon as any} size={14} color={activeEvt.color} />
           </View>
-        </View>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.calEventDate, { color: activeEvt.color }]}>{monthNames[calMonthIndex]} {selectedCalendarDay}, {calYear}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '800', color: activeEvt.color, opacity: 0.8 }}>Tap to view</Text>
+            </View>
+            <Text style={styles.calEventTitle} numberOfLines={1}>{activeEvt.title}</Text>
+            <Text style={styles.calEventMsg} numberOfLines={1}>{activeEvt.details}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -463,7 +544,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </View>
               </View>
 
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 8 }}>
                 {notices.map((notice) => {
                   const categoryIcon = notice.category === 'Events' ? 'event' : notice.category === 'Exams' ? 'assignment' : 'groups';
                   return (
@@ -1445,14 +1526,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  filterChipPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 82, 204, 0.07)',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
   filterChipText: {
     fontSize: 11,
     fontWeight: '700',
@@ -1462,67 +1535,81 @@ const styles = StyleSheet.create({
   // ===== PREMIUM CARD SHELL =====
   premiumCard: {
     backgroundColor: '#fff',
-    borderRadius: 22,
-    padding: 16,
+    borderRadius: 16,
+    padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.07)',
-    shadowColor: '#1040CC',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    // Blue accent bottom border
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0,82,204,0.15)',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
+    // Sharp blue accent bottom border
+    borderBottomWidth: 2,
+    borderBottomColor: '#CBD5E1',
   },
   premiumCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   premiumCardTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   premiumCardIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     backgroundColor: 'rgba(0,82,204,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   premiumCardTitle: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: '800',
     color: '#0d1b3e',
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   todayPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,82,204,0.07)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.1)',
+    borderColor: 'rgba(0,82,204,0.12)',
   },
   todayPillText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#0052cc',
   },
   monthPill: {
     backgroundColor: '#0052cc',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 14,
+  },
+  monthPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0052cc',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 14,
+    gap: 4,
+  },
+  monthNavBtn: {
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   monthPillText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 0.2,
@@ -1532,19 +1619,18 @@ const styles = StyleSheet.create({
   donutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   donutWrapper: {
     position: 'relative',
-    width: 130,
-    height: 130,
+    width: 104,
+    height: 104,
     alignItems: 'center',
     justifyContent: 'center',
-    // Soft blue glow behind donut
     shadowColor: '#0052cc',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
   donutCenter: {
     position: 'absolute',
@@ -1552,66 +1638,67 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   donutPct: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '900',
     color: '#0d1b3e',
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
   donutLabel: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '700',
     color: '#64748b',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   // Legend tiles
   legendStack: {
     flex: 1,
-    gap: 10,
+    gap: 6,
   },
   legendTile: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#f8faff',
-    borderRadius: 14,
-    padding: 10,
+    gap: 8,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.06)',
+    borderColor: '#E2E8F0',
   },
   legendTileIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   legendTileTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   legendTileTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#0d1b3e',
   },
   legendTilePct: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
   },
   legendBarTrack: {
-    height: 4,
+    height: 3.5,
     backgroundColor: 'rgba(0,82,204,0.07)',
-    borderRadius: 3,
+    borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   legendBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   legendTileCount: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: '#64748b',
     fontWeight: '500',
   },
@@ -1619,18 +1706,19 @@ const styles = StyleSheet.create({
   // ===== CALENDAR =====
   calWeekRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingBottom: 8,
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,82,204,0.07)',
   },
   calWeekCell: {
-    width: 34,
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   calWeekText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: '#94a3b8',
     letterSpacing: 0.3,
@@ -1638,144 +1726,156 @@ const styles = StyleSheet.create({
   calGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 2,
-    marginBottom: 12,
+    marginBottom: 4,
+  },
+  calDayCellWrapper: {
+    width: '14.2857%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 2,
   },
   calDay: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 30,
+    height: 28,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
   },
   calDaySelected: {
     backgroundColor: '#0052cc',
     shadowColor: '#0052cc',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   calDayToday: {
-    backgroundColor: 'rgba(0,82,204,0.08)',
+    backgroundColor: '#E0F2FE',
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.2)',
+    borderColor: '#0284C7',
   },
   calDayText: {
-    fontSize: 12.5,
+    fontSize: 11,
     fontWeight: '600',
     color: '#1e293b',
   },
   calDayTextSel: {
     color: '#fff',
-    fontWeight: '800',
+    fontWeight: '900',
   },
   calDayTextToday: {
-    color: '#0052cc',
+    color: '#0284C7',
     fontWeight: '800',
   },
   calEventStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,82,204,0.05)',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0,82,204,0.1)',
     marginTop: 2,
   },
+  calEventIconOrb: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   calEventDate: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#0052cc',
-    marginBottom: 2,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  calEventTitle: {
+    fontSize: 11.5,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginBottom: 1,
   },
   calEventMsg: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#475569',
     fontWeight: '500',
   },
 
   // ===== NOTICE BOARD =====
   noticeCard: {
-    backgroundColor: '#f8faff',
-    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.07)',
+    borderColor: '#E2E8F0',
     flexDirection: 'row',
-    // Soft shadow colored by script
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     elevation: 2,
   },
   noticeCardAccent: {
-    width: 4,
+    width: 3,
   },
   noticeCardBody: {
     flex: 1,
-    padding: 12,
-    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 2,
     position: 'relative',
-    overflow: 'hidden', // keeps the watermark inside the card
+    overflow: 'hidden',
   },
   noticeWatermark: {
     position: 'absolute',
     bottom: -15,
     right: -15,
-    opacity: 0.05,
+    opacity: 0.04,
   },
   noticeCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
-    zIndex: 2, // stays on top of watermark
+    marginBottom: 2,
+    zIndex: 2,
   },
   noticeTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   noticeIconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
   noticeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   noticeCategory: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   noticeDate: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: '#64748b',
     fontWeight: '600',
   },
   noticeTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#0d1b3e',
-    marginBottom: 2,
+    marginBottom: 1,
     letterSpacing: -0.2,
-    zIndex: 2, // stays on top of watermark
+    zIndex: 2,
   },
   noticeDetails: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     color: '#64748b',
-    lineHeight: 16,
+    lineHeight: 14,
     fontWeight: '500',
-    zIndex: 2, // stays on top of watermark
+    zIndex: 2,
   },
 
   // ===== ACADEMICS TAB FILTERS & STUDENT PROGRESS =====

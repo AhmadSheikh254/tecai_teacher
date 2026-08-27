@@ -129,29 +129,24 @@ const TabItem = React.memo(({
     }).start();
   }, [focused]);
 
-  // Scale and Opacity natively handled
-  const iconColor = focused ? '#fff' : INACTIVE;
-
   return (
     <Pressable
       onPress={onPress}
       style={styles.touchable}
-      android_ripple={{ color: 'rgba(10,110,255,0.07)', borderless: true, radius: 30 }}
+      android_ripple={{ color: 'rgba(0,71,204,0.08)', borderless: true, radius: 28 }}
     >
       <Animated.View
         style={[
-          styles.pill,
+          focused ? styles.pill : styles.inactiveOrb,
           { 
-            backgroundColor: focused ? '#0035CC' : 'transparent',
-            paddingHorizontal: focused ? 14 : 10,
-            transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] 
+            transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] 
           },
         ]}
       >
         <MaterialCommunityIcons
           name={(focused ? tab.iconActive : tab.icon) as any}
-          size={22}
-          color={iconColor}
+          size={focused ? 20 : 21}
+          color={focused ? '#FFFFFF' : '#475569'}
         />
 
         {focused && (
@@ -216,16 +211,16 @@ const styles = StyleSheet.create({
     alignItems:           'center',
     justifyContent:       'space-around',
     backgroundColor:      '#FFFFFF',
-    borderTopLeftRadius:  22,
-    borderTopRightRadius: 22,
-    // Top shadow
-    shadowColor:   '#1452CC',
-    shadowOffset:  { width: 0, height: -3 },
+    borderTopLeftRadius:  20,
+    borderTopRightRadius: 20,
+    borderTopWidth:       1,
+    borderTopColor:       '#E2E8F0',
+    // Ultra-sharp crisp shadow
+    shadowColor:   '#0F172A',
+    shadowOffset:  { width: 0, height: -2 },
     shadowOpacity: 0.06,
-    shadowRadius:  14,
-    elevation:     14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(10,110,255,0.08)',
+    shadowRadius:  6,
+    elevation:     8,
   },
 
   // Each tab's full touch zone
@@ -236,39 +231,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Self-contained pill — gradient background
+  // Inactive Tab Crisp Orb
+  inactiveOrb: {
+    width:          40,
+    height:         40,
+    borderRadius:   20,
+    backgroundColor: '#FFFFFF',
+    borderWidth:    1,
+    borderColor:    '#E2E8F0',
+    alignItems:     'center',
+    justifyContent: 'center',
+    shadowColor:    '#0F172A',
+    shadowOffset:   { width: 0, height: 2 },
+    shadowOpacity:  0.04,
+    shadowRadius:   3,
+    elevation:      2,
+  },
+
+  // Active Pill
   pill: {
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'center',
     height:         PILL_H,
+    paddingHorizontal: 14,
     borderRadius:   PILL_H / 2,
-    overflow:       'visible',
-    position:       'relative',
-    // Shadow beneath gradient pill
-    shadowColor:    '#0035CC',
-    shadowOffset:   { width: 0, height: 5 },
-    shadowOpacity:  0.28,
-    shadowRadius:   10,
-    elevation:      6,
-  },
-
-  // Subtle white highlight strip at top of pill for glass effect
-  pillHighlight: {
-    position:        'absolute',
-    top:             0,
-    left:            12,
-    right:           12,
-    height:          1,
-    borderRadius:    1,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: '#0047CC',
+    borderWidth:    1,
+    borderColor:    'rgba(255, 255, 255, 0.25)',
+    gap:            6,
+    shadowColor:    '#0047CC',
+    shadowOffset:   { width: 0, height: 3 },
+    shadowOpacity:  0.22,
+    shadowRadius:   6,
+    elevation:      4,
   },
 
   label: {
     fontSize:      13,
-    fontWeight:    '600',
+    fontWeight:    '800',
     color:         '#FFFFFF',
-    letterSpacing: 0.1,
-    overflow:      'hidden',
+    letterSpacing: 0.2,
   },
 });

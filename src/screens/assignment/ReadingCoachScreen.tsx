@@ -305,8 +305,546 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
     }
   };
 
+
+  // ── EARLY FULL-SCREEN RETURN: AI COACH LIVE PRACTICE ──
+  if (isCoachModalVisible && selectedPassage) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+            {selectedPassage && (() => {
+              const accent = getCategoryColor(selectedPassage.category);
+              return (
+                <>
+                  <LinearGradient
+                    colors={[accent, accent + 'BB']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.detailBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 36 }]}
+                  >
+                    <View style={styles.detailBandRow}>
+                      <View style={styles.detailBandLeft}>
+                        <View style={styles.typePillBand}>
+                          <Text style={[styles.typePillBandText, { color: accent }]}>LIVE AI COACH</Text>
+                        </View>
+                        <Text style={styles.detailBandTitle}>{selectedPassage.title}</Text>
+                        <Text style={styles.detailBandSub}>{selectedPassage.class}  •  Target: {selectedPassage.targetWpm} WPM</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.detailCloseBtn}
+                        onPress={() => setIsCoachModalVisible(false)}
+                      >
+                        <MaterialIcons name="close" size={18} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  </LinearGradient>
+
+                  <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+
+                    {/* Passage text to read */}
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailSectionLabel}>📖  Read Aloud into Microphone</Text>
+                      <Text style={styles.passageFullText}>
+                        "{selectedPassage.previewText} Continued practice improves vocal clarity, pace, and natural expression across all reading formats."
+                      </Text>
+                    </View>
+
+                    {/* Speech Feedback Box */}
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailSectionLabel}>🎙  Real-Time Voice Analysis</Text>
+                      <View style={styles.practiceProgressBox}>
+                        <View style={styles.progressTextRow}>
+                          <Text style={styles.progressLabel}>Fluency Accuracy</Text>
+                          <Text style={[styles.progressVal, { color: accent }]}>{isRecording ? '96%' : 'Ready'}</Text>
+                        </View>
+                        <View style={styles.progressBarTrack}>
+                          <View style={[styles.progressBarFill, { width: `${isRecording ? 88 : 0}%`, backgroundColor: accent }]} />
+                        </View>
+                      </View>
+
+                      <View style={styles.practiceStatsGrid}>
+                        <View style={styles.practiceStatBox}>
+                          <Text style={styles.practiceStatNum}>{isRecording ? '118' : '--'}</Text>
+                          <Text style={styles.practiceStatLabel}>WPM Speed</Text>
+                        </View>
+                        <View style={styles.practiceStatBox}>
+                          <Text style={[styles.practiceStatNum, { color: '#059669' }]}>{isRecording ? '98%' : '--'}</Text>
+                          <Text style={styles.practiceStatLabel}>Pronunciation</Text>
+                        </View>
+                        <View style={styles.practiceStatBox}>
+                          <Text style={[styles.practiceStatNum, { color: '#3B4FD8' }]}>{isRecording ? '92%' : '--'}</Text>
+                          <Text style={styles.practiceStatLabel}>Expression</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Record Mic Controls */}
+                    <View style={styles.micControlBox}>
+                      <TouchableOpacity
+                        style={[styles.micButton, isRecording && styles.micButtonRecording]}
+                        onPress={toggleRecording}
+                        activeOpacity={0.85}
+                      >
+                        <MaterialIcons name={isRecording ? "stop" : "mic"} size={28} color="#fff" />
+                      </TouchableOpacity>
+                      <Text style={styles.micStatusText}>
+                        {isRecording ? 'Listening... Read paragraph aloud' : 'Tap Mic to Start Reading Session'}
+                      </Text>
+                    </View>
+
+                    <View style={{ height: 20 }} />
+                  </ScrollView>
+                </>
+              );
+            })()}
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── EARLY FULL-SCREEN RETURN: CREATE READING PASSAGE ──
+  if (isCreateModalVisible) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+                <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, backgroundColor: "#ffffff" }}
+        >
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+
+            {/* Gradient Header: Reading Coach — New Assignment */}
+            <LinearGradient
+              colors={['#003d9b', '#0052cc']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 36 }]}
+            >
+              <View style={styles.createModalHeaderRow}>
+                <View style={styles.createModalHeaderLeft}>
+                  <View style={styles.createModalIconBox}>
+                    <MaterialIcons name="auto-stories" size={20} color="#ffffff" />
+                  </View>
+                  <View>
+                    <Text style={styles.createModalTitle}>Reading Coach — New Assignment</Text>
+                    <Text style={styles.createModalSubtitle}>Configure target class, section & paragraph type</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.createModalCloseBtn}
+                  onPress={() => setIsCreateModalVisible(false)}
+                >
+                  <MaterialIcons name="close" size={18} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+
+            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+
+              <View style={styles.formContainer}>
+
+                {/* Academic Target: Class & Section */}
+                <View style={styles.formCard}>
+                  <View style={styles.formCardHeaderRow}>
+                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#EEF2FF' }]}>
+                      <MaterialIcons name="school" size={16} color="#003d9b" />
+                    </View>
+                    <Text style={styles.formCardHeader}>Target Class & Section</Text>
+                  </View>
+
+                  {/* Dropdown Class */}
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Class</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.formSelectBox}
+                      onPress={() => setShowClassDropdown(!showClassDropdown)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.selectTextRow}>
+                        <MaterialIcons name="groups" size={16} color="#003d9b" style={{ marginRight: 8 }} />
+                        <Text style={styles.formSelectText}>{formClass}</Text>
+                      </View>
+                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
+                    </TouchableOpacity>
+
+                    {showClassDropdown && (
+                      <View style={styles.formDropdownOptions}>
+                        {classesList.map(c => (
+                          <TouchableOpacity
+                            key={c}
+                            style={[styles.formDropdownItem, formClass === c && styles.formDropdownItemActive]}
+                            onPress={() => {
+                              setFormClass(c);
+                              setShowClassDropdown(false);
+                            }}
+                          >
+                            <Text style={[styles.formDropdownItemText, formClass === c && styles.formDropdownItemTextActive]}>{c}</Text>
+                            {formClass === c && <MaterialIcons name="check" size={16} color="#003d9b" />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Dropdown Section */}
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Section</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.formSelectBox}
+                      onPress={() => setShowSectionDropdown(!showSectionDropdown)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.selectTextRow}>
+                        <MaterialIcons name="view-carousel" size={16} color="#003d9b" style={{ marginRight: 8 }} />
+                        <Text style={styles.formSelectText}>{formSection}</Text>
+                      </View>
+                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
+                    </TouchableOpacity>
+
+                    {showSectionDropdown && (
+                      <View style={styles.formDropdownOptions}>
+                        {sectionsList.map(sec => (
+                          <TouchableOpacity
+                            key={sec}
+                            style={[styles.formDropdownItem, formSection === sec && styles.formDropdownItemActive]}
+                            onPress={() => {
+                              setFormSection(sec);
+                              setShowSectionDropdown(false);
+                            }}
+                          >
+                            <Text style={[styles.formDropdownItemText, formSection === sec && styles.formDropdownItemTextActive]}>{sec}</Text>
+                            {formSection === sec && <MaterialIcons name="check" size={16} color="#003d9b" />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                {/* Timeline Setup Card: Start Date & Deadline */}
+                <View style={[styles.formCard, { borderLeftColor: '#B45309' }]}>
+                  <View style={styles.formCardHeaderRow}>
+                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#FFFBEB' }]}>
+                      <MaterialIcons name="event" size={16} color="#B45309" />
+                    </View>
+                    <Text style={[styles.formCardHeader, { color: '#B45309' }]}>Timeline Schedule</Text>
+                  </View>
+
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Start Date</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.formSelectBox}
+                      onPress={() => {
+                        setDatePickerTarget('start');
+                        setDatePickerValue(formStart);
+                        setDatePickerTitle('Select Start Date & Time');
+                        setIsDatePickerVisible(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.selectTextRow}>
+                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
+                        <Text style={styles.formSelectText}>{formStart}</Text>
+                      </View>
+                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Deadline</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.formSelectBox}
+                      onPress={() => {
+                        setDatePickerTarget('deadline');
+                        setDatePickerValue(formDeadline);
+                        setDatePickerTitle('Select Submission Deadline');
+                        setIsDatePickerVisible(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.selectTextRow}>
+                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
+                        <Text style={styles.formSelectText}>{formDeadline}</Text>
+                      </View>
+                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Story Image Upload Card */}
+                <View style={[styles.formCard, { borderLeftColor: '#0B8A7D' }]}>
+                  <View style={styles.formCardHeaderRow}>
+                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F0FDF4' }]}>
+                      <MaterialIcons name="image" size={16} color="#0B8A7D" />
+                    </View>
+                    <Text style={[styles.formCardHeader, { color: '#0B8A7D' }]}>Story Image</Text>
+                  </View>
+
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Cover Illustration</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <View style={styles.fileUploadBox}>
+                      <TouchableOpacity style={styles.chooseFileBtn} onPress={handlePickImage} activeOpacity={0.8}>
+                        <MaterialIcons name="cloud-upload" size={14} color="#0B8A7D" style={{ marginRight: 6 }} />
+                        <Text style={styles.chooseFileText}>Choose File</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.fileNameText} numberOfLines={1}>{formImageName}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Paragraph Type Selector & Generator Card */}
+                <View style={[styles.formCard, { borderLeftColor: '#3B4FD8' }]}>
+                  <View style={styles.formCardHeaderRow}>
+                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F5F3FF' }]}>
+                      <MaterialIcons name="article" size={16} color="#3B4FD8" />
+                    </View>
+                    <Text style={[styles.formCardHeader, { color: '#3B4FD8' }]}>Paragraph Setup</Text>
+                  </View>
+
+                  {/* Paragraph Type Dropdown */}
+                  <View style={styles.formField}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.formLabel}>Paragraph Type</Text>
+                      <Text style={styles.requiredStar}>*</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.formSelectBox}
+                      onPress={() => setShowParagraphTypeDropdown(!showParagraphTypeDropdown)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.selectTextRow}>
+                        <MaterialIcons name="tune" size={16} color="#3B4FD8" style={{ marginRight: 8 }} />
+                        <Text style={styles.formSelectText}>{formParagraphType}</Text>
+                      </View>
+                      <MaterialIcons name={showParagraphTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#3B4FD8" />
+                    </TouchableOpacity>
+
+                    {showParagraphTypeDropdown && (
+                      <View style={styles.formDropdownOptions}>
+                        {paragraphTypesList.map(type => (
+                          <TouchableOpacity
+                            key={type}
+                            style={[styles.formDropdownItem, formParagraphType === type && styles.formDropdownItemActive]}
+                            onPress={() => {
+                              setFormParagraphType(type);
+                              setShowParagraphTypeDropdown(false);
+                            }}
+                          >
+                            <Text style={[styles.formDropdownItemText, formParagraphType === type && styles.formDropdownItemTextActive]}>{type}</Text>
+                            {formParagraphType === type && <MaterialIcons name="check" size={16} color="#3B4FD8" />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Dynamic Fields based on Paragraph Type */}
+                  {formParagraphType === 'AI Generated Paragraph' ? (
+                    <View style={styles.formField}>
+                      <Text style={styles.formLabel}>AI Topic / Story Prompt</Text>
+                      <TextInput
+                        style={styles.formInput}
+                        placeholder="e.g. Space Exploration & Solar Flares"
+                        placeholderTextColor="#94A3B8"
+                        value={formAiTopic}
+                        onChangeText={setFormAiTopic}
+                      />
+                      <TouchableOpacity
+                        style={styles.aiGenerateBtn}
+                        onPress={handleGenerateAiPassage}
+                        activeOpacity={0.85}
+                      >
+                        <MaterialIcons name="auto-awesome" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                        <Text style={styles.aiGenerateBtnText}>✨ Generate Passage with AI</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.formField}>
+                      <Text style={styles.formLabel}>Passage Title</Text>
+                      <TextInput
+                        style={styles.formInput}
+                        placeholder="e.g. The Whispering Forest"
+                        placeholderTextColor="#94A3B8"
+                        value={formTitle}
+                        onChangeText={setFormTitle}
+                      />
+                    </View>
+                  )}
+
+                  {/* Paragraph Content Text Area */}
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>Paragraph Content</Text>
+                    <TextInput
+                      style={[styles.formInput, { height: 90, textAlignVertical: 'top', paddingTop: 10 }]}
+                      placeholder="Paragraph content text will appear here..."
+                      placeholderTextColor="#94A3B8"
+                      multiline={true}
+                      value={formOwnText}
+                      onChangeText={setFormOwnText}
+                    />
+                  </View>
+                </View>
+
+                {/* Bottom Action Bar: Generate / Publish + Cancel */}
+                <View style={styles.formActionsRow}>
+                  <TouchableOpacity
+                    style={styles.cancelBtn}
+                    onPress={() => setIsCreateModalVisible(false)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.cancelBtnText}>CANCEL</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.postButtonFlex}
+                    onPress={handleCreatePassage}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={['#008BA3', '#0066FF']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.postBtnGradient}
+                    >
+                      <MaterialIcons name="add" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                      <Text style={styles.postButtonText}>+ Generate Passage</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  // ── EARLY FULL-SCREEN RETURN: READING COACH RESULT ──
+  if (isResultModalVisible) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+
+            {/* Gradient Header Bar */}
+            <LinearGradient
+              colors={['#003d9b', '#0052cc']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 36 }]}
+            >
+              <View style={styles.createModalHeaderRow}>
+                <View style={styles.createModalHeaderLeft}>
+                  <View style={styles.createModalIconBox}>
+                    <MaterialIcons name="assessment" size={20} color="#ffffff" />
+                  </View>
+                  <View>
+                    <Text style={styles.createModalTitle}>Reading Coach Result</Text>
+                    <Text style={styles.createModalSubtitle}>
+                      {selectedPassage ? `Story: ${selectedPassage.title}` : 'Student Fluency Analytics'}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.createModalCloseBtn}
+                  onPress={() => setIsResultModalVisible(false)}
+                >
+                  <MaterialIcons name="close" size={18} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+
+            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+
+              {/* Export Toolbar Buttons */}
+              <View style={styles.exportToolbarRow}>
+                {['Copy', 'CSV', 'Excel', 'PDF', 'Print'].map(btn => (
+                  <TouchableOpacity
+                    key={btn}
+                    style={styles.exportBtnPill}
+                    onPress={() => Alert.alert('Export', `${btn} report generated!`)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.exportBtnPillText}>{btn}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Result Search Input */}
+              <View style={[styles.searchBar, { marginBottom: 14, height: 44 }]}>
+                <MaterialIcons name="search" size={18} color="#003d9b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search student name..."
+                  placeholderTextColor="#94A3B8"
+                  value={resultSearchQuery}
+                  onChangeText={setResultSearchQuery}
+                />
+              </View>
+
+              {/* Student Results Table / Card List */}
+              <View style={styles.resultListContainer}>
+                {MOCK_RESULTS.filter(r => !resultSearchQuery.trim() || r.studentName.toLowerCase().includes(resultSearchQuery.toLowerCase().trim())).map((row) => {
+                  const accNum = parseInt(row.accuracy.replace('%', ''), 10);
+                  const isHigh = accNum >= 75;
+                  const isMed = accNum >= 50 && accNum < 75;
+
+                  const accBg = isHigh ? '#DCFCE7' : isMed ? '#FEF3C7' : '#FEE2E2';
+                  const accText = isHigh ? '#15803D' : isMed ? '#B45309' : '#B91C1C';
+
+                  return (
+                    <View key={row.sNo} style={styles.resultCardRow}>
+                      <View style={styles.resultSNoBox}>
+                        <Text style={styles.resultSNoText}>#{row.sNo}</Text>
+                      </View>
+
+                      <View style={styles.resultMainInfo}>
+                        <Text style={styles.resultStudentName}>{row.studentName}</Text>
+                        <View style={styles.resultMetaRow}>
+                          <View style={styles.resultClassPill}>
+                            <Text style={styles.resultClassText}>{row.class}</Text>
+                          </View>
+                          <Text style={styles.resultStoryName} numberOfLines={1}>{selectedPassage?.title || row.storyName}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.resultStatsCol}>
+                        <View style={[styles.accuracyBadgePill, { backgroundColor: accBg }]}>
+                          <Text style={[styles.accuracyBadgeText, { color: accText }]}>{row.accuracy}</Text>
+                        </View>
+                        <Text style={styles.readingTimeText}>{row.readingTime}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 500 }]} edges={['top']}>
       {/* 1. HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -630,544 +1168,544 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
       </ScrollView>
 
       {/* 6. AI COACH LIVE PRACTICE MODAL */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isCoachModalVisible}
-        onRequestClose={() => setIsCoachModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.bottomSheet}>
-            {selectedPassage && (() => {
-              const accent = getCategoryColor(selectedPassage.category);
-              return (
-                <>
-                  <LinearGradient
-                    colors={[accent, accent + 'BB']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.detailBand}
-                  >
-                    <View style={styles.detailBandRow}>
-                      <View style={styles.detailBandLeft}>
-                        <View style={styles.typePillBand}>
-                          <Text style={[styles.typePillBandText, { color: accent }]}>LIVE AI COACH</Text>
-                        </View>
-                        <Text style={styles.detailBandTitle}>{selectedPassage.title}</Text>
-                        <Text style={styles.detailBandSub}>{selectedPassage.class}  •  Target: {selectedPassage.targetWpm} WPM</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.detailCloseBtn}
-                        onPress={() => setIsCoachModalVisible(false)}
-                      >
-                        <MaterialIcons name="close" size={18} color="#fff" />
-                      </TouchableOpacity>
-                    </View>
-                  </LinearGradient>
 
-                  <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
-                    {/* Passage text to read */}
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>📖  Read Aloud into Microphone</Text>
-                      <Text style={styles.passageFullText}>
-                        "{selectedPassage.previewText} Continued practice improves vocal clarity, pace, and natural expression across all reading formats."
-                      </Text>
-                    </View>
 
-                    {/* Speech Feedback Box */}
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>🎙  Real-Time Voice Analysis</Text>
-                      <View style={styles.practiceProgressBox}>
-                        <View style={styles.progressTextRow}>
-                          <Text style={styles.progressLabel}>Fluency Accuracy</Text>
-                          <Text style={[styles.progressVal, { color: accent }]}>{isRecording ? '96%' : 'Ready'}</Text>
-                        </View>
-                        <View style={styles.progressBarTrack}>
-                          <View style={[styles.progressBarFill, { width: `${isRecording ? 88 : 0}%`, backgroundColor: accent }]} />
-                        </View>
-                      </View>
 
-                      <View style={styles.practiceStatsGrid}>
-                        <View style={styles.practiceStatBox}>
-                          <Text style={styles.practiceStatNum}>{isRecording ? '118' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>WPM Speed</Text>
-                        </View>
-                        <View style={styles.practiceStatBox}>
-                          <Text style={[styles.practiceStatNum, { color: '#059669' }]}>{isRecording ? '98%' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>Pronunciation</Text>
-                        </View>
-                        <View style={styles.practiceStatBox}>
-                          <Text style={[styles.practiceStatNum, { color: '#3B4FD8' }]}>{isRecording ? '92%' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>Expression</Text>
-                        </View>
-                      </View>
-                    </View>
 
-                    {/* Record Mic Controls */}
-                    <View style={styles.micControlBox}>
-                      <TouchableOpacity
-                        style={[styles.micButton, isRecording && styles.micButtonRecording]}
-                        onPress={toggleRecording}
-                        activeOpacity={0.85}
-                      >
-                        <MaterialIcons name={isRecording ? "stop" : "mic"} size={28} color="#fff" />
-                      </TouchableOpacity>
-                      <Text style={styles.micStatusText}>
-                        {isRecording ? 'Listening... Read paragraph aloud' : 'Tap Mic to Start Reading Session'}
-                      </Text>
-                    </View>
 
-                    <View style={{ height: 20 }} />
-                  </ScrollView>
-                </>
-              );
-            })()}
-          </View>
-        </View>
-      </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* 7. CREATE READING PASSAGE MODAL (Reading Coach — New Assignment) */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isCreateModalVisible}
-        onRequestClose={() => setIsCreateModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.bottomSheet}>
 
-            {/* Gradient Header: Reading Coach — New Assignment */}
-            <LinearGradient
-              colors={['#003d9b', '#0052cc']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.createModalBand}
-            >
-              <View style={styles.createModalHeaderRow}>
-                <View style={styles.createModalHeaderLeft}>
-                  <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="auto-stories" size={20} color="#ffffff" />
-                  </View>
-                  <View>
-                    <Text style={styles.createModalTitle}>Reading Coach — New Assignment</Text>
-                    <Text style={styles.createModalSubtitle}>Configure target class, section & paragraph type</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={styles.createModalCloseBtn}
-                  onPress={() => setIsCreateModalVisible(false)}
-                >
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
 
-            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
-              <View style={styles.formContainer}>
 
-                {/* Academic Target: Class & Section */}
-                <View style={styles.formCard}>
-                  <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#EEF2FF' }]}>
-                      <MaterialIcons name="school" size={16} color="#003d9b" />
-                    </View>
-                    <Text style={styles.formCardHeader}>Target Class & Section</Text>
-                  </View>
 
-                  {/* Dropdown Class */}
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Class</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.formSelectBox}
-                      onPress={() => setShowClassDropdown(!showClassDropdown)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.selectTextRow}>
-                        <MaterialIcons name="groups" size={16} color="#003d9b" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formClass}</Text>
-                      </View>
-                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
-                    </TouchableOpacity>
 
-                    {showClassDropdown && (
-                      <View style={styles.formDropdownOptions}>
-                        {classesList.map(c => (
-                          <TouchableOpacity
-                            key={c}
-                            style={[styles.formDropdownItem, formClass === c && styles.formDropdownItemActive]}
-                            onPress={() => {
-                              setFormClass(c);
-                              setShowClassDropdown(false);
-                            }}
-                          >
-                            <Text style={[styles.formDropdownItemText, formClass === c && styles.formDropdownItemTextActive]}>{c}</Text>
-                            {formClass === c && <MaterialIcons name="check" size={16} color="#003d9b" />}
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
 
-                  {/* Dropdown Section */}
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Section</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.formSelectBox}
-                      onPress={() => setShowSectionDropdown(!showSectionDropdown)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.selectTextRow}>
-                        <MaterialIcons name="view-carousel" size={16} color="#003d9b" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formSection}</Text>
-                      </View>
-                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
-                    </TouchableOpacity>
 
-                    {showSectionDropdown && (
-                      <View style={styles.formDropdownOptions}>
-                        {sectionsList.map(sec => (
-                          <TouchableOpacity
-                            key={sec}
-                            style={[styles.formDropdownItem, formSection === sec && styles.formDropdownItemActive]}
-                            onPress={() => {
-                              setFormSection(sec);
-                              setShowSectionDropdown(false);
-                            }}
-                          >
-                            <Text style={[styles.formDropdownItemText, formSection === sec && styles.formDropdownItemTextActive]}>{sec}</Text>
-                            {formSection === sec && <MaterialIcons name="check" size={16} color="#003d9b" />}
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                </View>
 
-                {/* Timeline Setup Card: Start Date & Deadline */}
-                <View style={[styles.formCard, { borderLeftColor: '#B45309' }]}>
-                  <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#FFFBEB' }]}>
-                      <MaterialIcons name="event" size={16} color="#B45309" />
-                    </View>
-                    <Text style={[styles.formCardHeader, { color: '#B45309' }]}>Timeline Schedule</Text>
-                  </View>
 
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Start Date</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.formSelectBox}
-                      onPress={() => {
-                        setDatePickerTarget('start');
-                        setDatePickerValue(formStart);
-                        setDatePickerTitle('Select Start Date & Time');
-                        setIsDatePickerVisible(true);
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.selectTextRow}>
-                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formStart}</Text>
-                      </View>
-                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
-                    </TouchableOpacity>
-                  </View>
 
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Deadline</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.formSelectBox}
-                      onPress={() => {
-                        setDatePickerTarget('deadline');
-                        setDatePickerValue(formDeadline);
-                        setDatePickerTitle('Select Submission Deadline');
-                        setIsDatePickerVisible(true);
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.selectTextRow}>
-                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formDeadline}</Text>
-                      </View>
-                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
 
-                {/* Story Image Upload Card */}
-                <View style={[styles.formCard, { borderLeftColor: '#0B8A7D' }]}>
-                  <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F0FDF4' }]}>
-                      <MaterialIcons name="image" size={16} color="#0B8A7D" />
-                    </View>
-                    <Text style={[styles.formCardHeader, { color: '#0B8A7D' }]}>Story Image</Text>
-                  </View>
 
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Cover Illustration</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <View style={styles.fileUploadBox}>
-                      <TouchableOpacity style={styles.chooseFileBtn} onPress={handlePickImage} activeOpacity={0.8}>
-                        <MaterialIcons name="cloud-upload" size={14} color="#0B8A7D" style={{ marginRight: 6 }} />
-                        <Text style={styles.chooseFileText}>Choose File</Text>
-                      </TouchableOpacity>
-                      <Text style={styles.fileNameText} numberOfLines={1}>{formImageName}</Text>
-                    </View>
-                  </View>
-                </View>
 
-                {/* Paragraph Type Selector & Generator Card */}
-                <View style={[styles.formCard, { borderLeftColor: '#3B4FD8' }]}>
-                  <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F5F3FF' }]}>
-                      <MaterialIcons name="article" size={16} color="#3B4FD8" />
-                    </View>
-                    <Text style={[styles.formCardHeader, { color: '#3B4FD8' }]}>Paragraph Setup</Text>
-                  </View>
 
-                  {/* Paragraph Type Dropdown */}
-                  <View style={styles.formField}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Paragraph Type</Text>
-                      <Text style={styles.requiredStar}>*</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.formSelectBox}
-                      onPress={() => setShowParagraphTypeDropdown(!showParagraphTypeDropdown)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.selectTextRow}>
-                        <MaterialIcons name="tune" size={16} color="#3B4FD8" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formParagraphType}</Text>
-                      </View>
-                      <MaterialIcons name={showParagraphTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#3B4FD8" />
-                    </TouchableOpacity>
 
-                    {showParagraphTypeDropdown && (
-                      <View style={styles.formDropdownOptions}>
-                        {paragraphTypesList.map(type => (
-                          <TouchableOpacity
-                            key={type}
-                            style={[styles.formDropdownItem, formParagraphType === type && styles.formDropdownItemActive]}
-                            onPress={() => {
-                              setFormParagraphType(type);
-                              setShowParagraphTypeDropdown(false);
-                            }}
-                          >
-                            <Text style={[styles.formDropdownItemText, formParagraphType === type && styles.formDropdownItemTextActive]}>{type}</Text>
-                            {formParagraphType === type && <MaterialIcons name="check" size={16} color="#3B4FD8" />}
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
 
-                  {/* Dynamic Fields based on Paragraph Type */}
-                  {formParagraphType === 'AI Generated Paragraph' ? (
-                    <View style={styles.formField}>
-                      <Text style={styles.formLabel}>AI Topic / Story Prompt</Text>
-                      <TextInput
-                        style={styles.formInput}
-                        placeholder="e.g. Space Exploration & Solar Flares"
-                        placeholderTextColor="#94A3B8"
-                        value={formAiTopic}
-                        onChangeText={setFormAiTopic}
-                      />
-                      <TouchableOpacity
-                        style={styles.aiGenerateBtn}
-                        onPress={handleGenerateAiPassage}
-                        activeOpacity={0.85}
-                      >
-                        <MaterialIcons name="auto-awesome" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                        <Text style={styles.aiGenerateBtnText}>✨ Generate Passage with AI</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View style={styles.formField}>
-                      <Text style={styles.formLabel}>Passage Title</Text>
-                      <TextInput
-                        style={styles.formInput}
-                        placeholder="e.g. The Whispering Forest"
-                        placeholderTextColor="#94A3B8"
-                        value={formTitle}
-                        onChangeText={setFormTitle}
-                      />
-                    </View>
-                  )}
 
-                  {/* Paragraph Content Text Area */}
-                  <View style={styles.formField}>
-                    <Text style={styles.formLabel}>Paragraph Content</Text>
-                    <TextInput
-                      style={[styles.formInput, { height: 90, textAlignVertical: 'top', paddingTop: 10 }]}
-                      placeholder="Paragraph content text will appear here..."
-                      placeholderTextColor="#94A3B8"
-                      multiline={true}
-                      value={formOwnText}
-                      onChangeText={setFormOwnText}
-                    />
-                  </View>
-                </View>
 
-                {/* Bottom Action Bar: Generate / Publish + Cancel */}
-                <View style={styles.formActionsRow}>
-                  <TouchableOpacity
-                    style={styles.cancelBtn}
-                    onPress={() => setIsCreateModalVisible(false)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.cancelBtnText}>CANCEL</Text>
-                  </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.postButtonFlex}
-                    onPress={handleCreatePassage}
-                    activeOpacity={0.85}
-                  >
-                    <LinearGradient
-                      colors={['#008BA3', '#0066FF']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.postBtnGradient}
-                    >
-                      <MaterialIcons name="add" size={18} color="#ffffff" style={{ marginRight: 6 }} />
-                      <Text style={styles.postButtonText}>+ Generate Passage</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
 
-              </View>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* 8. READING COACH RESULT MODAL (Reading Coach Result Screen) */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isResultModalVisible}
-        onRequestClose={() => setIsResultModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.bottomSheet}>
 
-            {/* Gradient Header Bar */}
-            <LinearGradient
-              colors={['#003d9b', '#0052cc']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.createModalBand}
-            >
-              <View style={styles.createModalHeaderRow}>
-                <View style={styles.createModalHeaderLeft}>
-                  <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="assessment" size={20} color="#ffffff" />
-                  </View>
-                  <View>
-                    <Text style={styles.createModalTitle}>Reading Coach Result</Text>
-                    <Text style={styles.createModalSubtitle}>
-                      {selectedPassage ? `Story: ${selectedPassage.title}` : 'Student Fluency Analytics'}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={styles.createModalCloseBtn}
-                  onPress={() => setIsResultModalVisible(false)}
-                >
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
 
-            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
-              {/* Export Toolbar Buttons */}
-              <View style={styles.exportToolbarRow}>
-                {['Copy', 'CSV', 'Excel', 'PDF', 'Print'].map(btn => (
-                  <TouchableOpacity
-                    key={btn}
-                    style={styles.exportBtnPill}
-                    onPress={() => Alert.alert('Export', `${btn} report generated!`)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.exportBtnPillText}>{btn}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
 
-              {/* Result Search Input */}
-              <View style={[styles.searchBar, { marginBottom: 14, height: 44 }]}>
-                <MaterialIcons name="search" size={18} color="#003d9b" style={{ marginRight: 8 }} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search student name..."
-                  placeholderTextColor="#94A3B8"
-                  value={resultSearchQuery}
-                  onChangeText={setResultSearchQuery}
-                />
-              </View>
 
-              {/* Student Results Table / Card List */}
-              <View style={styles.resultListContainer}>
-                {MOCK_RESULTS.filter(r => !resultSearchQuery.trim() || r.studentName.toLowerCase().includes(resultSearchQuery.toLowerCase().trim())).map((row) => {
-                  const accNum = parseInt(row.accuracy.replace('%', ''), 10);
-                  const isHigh = accNum >= 75;
-                  const isMed = accNum >= 50 && accNum < 75;
 
-                  const accBg = isHigh ? '#DCFCE7' : isMed ? '#FEF3C7' : '#FEE2E2';
-                  const accText = isHigh ? '#15803D' : isMed ? '#B45309' : '#B91C1C';
 
-                  return (
-                    <View key={row.sNo} style={styles.resultCardRow}>
-                      <View style={styles.resultSNoBox}>
-                        <Text style={styles.resultSNoText}>#{row.sNo}</Text>
-                      </View>
 
-                      <View style={styles.resultMainInfo}>
-                        <Text style={styles.resultStudentName}>{row.studentName}</Text>
-                        <View style={styles.resultMetaRow}>
-                          <View style={styles.resultClassPill}>
-                            <Text style={styles.resultClassText}>{row.class}</Text>
-                          </View>
-                          <Text style={styles.resultStoryName} numberOfLines={1}>{selectedPassage?.title || row.storyName}</Text>
-                        </View>
-                      </View>
 
-                      <View style={styles.resultStatsCol}>
-                        <View style={[styles.accuracyBadgePill, { backgroundColor: accBg }]}>
-                          <Text style={[styles.accuracyBadgeText, { color: accText }]}>{row.accuracy}</Text>
-                        </View>
-                        <Text style={styles.readingTimeText}>{row.readingTime}</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
 
-              <View style={{ height: 20 }} />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       <PremiumDateTimePicker
         visible={isDatePickerVisible}
@@ -1496,7 +2034,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   cardTitleBand: {
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: -0.4,
@@ -1531,7 +2069,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   previewText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#475569',
     fontStyle: 'italic',
@@ -2174,7 +2712,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   speechTargetText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     color: '#334155',
   },
@@ -2240,12 +2778,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   compactDateStart: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '800',
     color: '#0F172A',
   },
   compactDateDeadline: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#E11D48',
   },
@@ -2268,7 +2806,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   btnDesktopPreviewText: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#ffffff',
   },
@@ -2283,7 +2821,7 @@ const styles = StyleSheet.create({
     borderColor: '#C7D2FE',
   },
   btnDesktopEditText: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#003d9b',
   },
@@ -2308,7 +2846,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   btnDesktopResultText: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#ffffff',
   },

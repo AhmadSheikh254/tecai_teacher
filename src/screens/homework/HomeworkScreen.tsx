@@ -310,8 +310,341 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
     </Animated.View>
   );
 
+
+  // ── EARLY FULL-SCREEN RETURN: VIEW HOMEWORK DETAILS ──
+  if (viewModalVisible) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+            {/* Header */}
+            <View style={[styles.formHeader, { paddingTop: 36 }]}>
+              <Text style={styles.formHeaderTitle}>Homework Details</Text>
+              <TouchableOpacity onPress={() => setViewModalVisible(false)} style={styles.formCloseBtn}>
+                <MaterialIcons name="close" size={20} color="#0052cc" />
+              </TouchableOpacity>
+            </View>
+
+            {viewingHomework && (
+              <ScrollView contentContainerStyle={styles.formScrollContent}>
+                {/* Badges */}
+                <View style={styles.badgeRow}>
+                  <View style={styles.classBadge}>
+                    <Text style={styles.classBadgeText}>{viewingHomework.grade}</Text>
+                  </View>
+                  <View style={styles.sectionBadge}>
+                    <Text style={styles.sectionBadgeText}>Sec {viewingHomework.section}</Text>
+                  </View>
+                  <View style={styles.subjectBadge}>
+                    <Text style={styles.subjectBadgeText}>{viewingHomework.subject}</Text>
+                  </View>
+                </View>
+
+                {/* Title */}
+                <Text style={[styles.cardTitle, { fontSize: 16.5, marginTop: 8 }]}>{viewingHomework.title}</Text>
+
+                {/* Teacher & Date info */}
+                <View style={[styles.creatorRow, { marginTop: 8 }]}>
+                  <View style={styles.creatorInfo}>
+                    <MaterialIcons name="person" size={14} color="#64748b" />
+                    <Text style={styles.creatorText}>{viewingHomework.teacher} • {viewingHomework.createdAt}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, { 
+                    backgroundColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 179, 0, 0.1)', 
+                    borderColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 179, 0, 0.2)' 
+                  }]}>
+                    <Text style={[styles.statusText, { 
+                      color: viewingHomework.status === 'Graded' ? '#4CAF50' : '#FFB300' 
+                    }]}>{viewingHomework.status}</Text>
+                  </View>
+                </View>
+
+                {/* Full Instructions Note */}
+                <View style={{ marginVertical: 12 }}>
+                  <Text style={[styles.formLabel, { marginBottom: 6 }]}>Instructions / Notes</Text>
+                  <Text style={[styles.noteText, { fontSize: 13.5, color: '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
+                </View>
+
+                {/* Image */}
+                {viewingHomework.image ? (
+                  <View>
+                    <Text style={[styles.formLabel, { marginBottom: 8 }]}>Attached Photo</Text>
+                    <View style={[styles.imageWrapper, { height: 220 }]}>
+                      <Image 
+                        source={typeof viewingHomework.image === 'string' ? { uri: viewingHomework.image } : viewingHomework.image} 
+                        style={styles.homeworkImg} 
+                        resizeMode="cover"
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={[styles.placeholderImage, { height: 60 }]}>
+                    <Text style={styles.placeholderImageText}>No image attached</Text>
+                  </View>
+                )}
+
+                {/* Footer Buttons */}
+                <View style={[styles.formActionsRow, { marginTop: 16 }]}>
+                  <TouchableOpacity 
+                    style={[styles.formSubmitBtn, { flex: 1, height: 42 }]} 
+                    onPress={() => {
+                      setViewModalVisible(false);
+                      handleEditPress(viewingHomework);
+                    }}
+                  >
+                    <MaterialIcons name="edit" size={16} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.formSubmitText}>Edit Homework</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.formCancelBtn, { flex: 1, height: 42 }]} 
+                    onPress={() => setViewModalVisible(false)}
+                  >
+                    <Text style={styles.formCancelText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── EARLY FULL-SCREEN RETURN: CREATE/POST HOMEWORK ──
+  if (createModalVisible) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+            {/* Form Header */}
+            <View style={[styles.formHeader, { paddingTop: 36 }]}>
+              <Text style={styles.formHeaderTitle}>Daily Homework</Text>
+              <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.formCloseBtn}>
+                <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.formScrollContent} showsVerticalScrollIndicator={false}>
+              
+              {/* Class Dropdown */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Class <Text style={{ color: theme.colors.error }}>*</Text>
+                </Text>
+                <TouchableOpacity 
+                  style={styles.formDropdown}
+                  onPress={() => setActivePicker('class')}
+                >
+                  <Text style={[styles.formDropdownText, formClass === '' && styles.formPlaceholderText]}>
+                    {formClass || '--Select--'}
+                  </Text>
+                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Section Dropdown */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Section <Text style={{ color: theme.colors.error }}>*</Text>
+                </Text>
+                <TouchableOpacity 
+                  style={styles.formDropdown}
+                  onPress={() => setActivePicker('section')}
+                >
+                  <Text style={[styles.formDropdownText, formSection === '' && styles.formPlaceholderText]}>
+                    {formSection || 'Nothing selected'}
+                  </Text>
+                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Course/Subject Dropdown */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Course <Text style={{ color: theme.colors.error }}>*</Text>
+                </Text>
+                <TouchableOpacity 
+                  style={styles.formDropdown}
+                  onPress={() => setActivePicker('subject')}
+                >
+                  <Text style={[styles.formDropdownText, formSubject === '' && styles.formPlaceholderText]}>
+                    {formSubject || '--Select--'}
+                  </Text>
+                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Date Input Selector */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>
+                  Date <Text style={{ color: theme.colors.error }}>*</Text>
+                </Text>
+                <View style={styles.formInputWrapper}>
+                  <TextInput
+                    style={styles.formInputText}
+                    value={formDate}
+                    onChangeText={setFormDate}
+                    placeholder="mm/dd/yyyy"
+                    placeholderTextColor={theme.colors.outline}
+                  />
+                  <MaterialIcons name="calendar-today" size={18} color={theme.colors.onSurfaceVariant} />
+                </View>
+              </View>
+
+              {/* Attach Image (Book Page Photo....) File Select */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Attach Image (Book Page Photo....)</Text>
+                <View style={styles.filePickerWrapper}>
+                  <TouchableOpacity style={styles.filePickerBtn} onPress={handlePickMockImage} activeOpacity={0.8}>
+                    <Text style={styles.filePickerBtnText}>Choose File</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.filePickerText} numberOfLines={1}>
+                    {formImage ? 'BookPhoto_Attachment.jpg' : 'No file chosen'}
+                  </Text>
+                  {formImage && (
+                    <TouchableOpacity onPress={() => setFormImage(null)} style={{ marginLeft: 8 }}>
+                      <MaterialIcons name="cancel" size={18} color={theme.colors.error} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Optional: Homework Title field */}
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Homework Title (Optional)</Text>
+                <View style={styles.formInputWrapper}>
+                  <TextInput
+                    style={styles.formInputText}
+                    value={formTitle}
+                    onChangeText={setFormTitle}
+                    placeholder="e.g. Reading Practice"
+                    placeholderTextColor={theme.colors.outline}
+                  />
+                </View>
+              </View>
+
+              {/* Homework Note multiline textarea */}
+              <View style={styles.formGroup}>
+                <View style={styles.formNoteHeader}>
+                  <Text style={styles.formLabel}>
+                    Homework Note <Text style={{ color: theme.colors.error }}>*</Text>
+                  </Text>
+                  <Text style={styles.formCharCounter}>{formNote.length}/2000 characters</Text>
+                </View>
+                <TextInput
+                  style={styles.formTextArea}
+                  multiline={true}
+                  numberOfLines={5}
+                  value={formNote}
+                  onChangeText={formText => setFormNote(formText.substring(0, 2000))}
+                  placeholder="eg. Learn table 2-5. Complete page 34 in the workbook."
+                  placeholderTextColor={theme.colors.outline}
+                  textAlignVertical="top"
+                />
+              </View>
+            </ScrollView>
+
+            {/* Modal Bottom Actions Row */}
+            <View style={styles.formActionsRow}>
+              <TouchableOpacity 
+                style={[styles.formSubmitBtn, theme.shadows.level1]}
+                onPress={handleAddHomework}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="send" size={16} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.formSubmitText}>Post Homework</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.formCancelBtn}
+                onPress={() => setCreateModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.formCancelText}>CANCEL</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* BOTTOM OPTION PICKER MODAL (For Class, Section, and Course) */}
+        <Modal
+          visible={activePicker !== null}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setActivePicker(null)}
+        >
+          <TouchableOpacity 
+            style={styles.pickerBackdrop} 
+            activeOpacity={1} 
+            onPress={() => setActivePicker(null)}
+          >
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerTitle}>
+                Select {activePicker === 'class' ? 'Class' : activePicker === 'section' ? 'Section' : 'Course'}
+              </Text>
+              
+              {activePicker === 'class' && (
+                <View style={styles.pickerOptionsList}>
+                  {['GRADE-II', 'Grade-I', 'Grade-III'].map((c) => (
+                    <TouchableOpacity 
+                      key={c} 
+                      style={styles.pickerOptionItem}
+                      onPress={() => {
+                        setFormClass(c);
+                        setActivePicker(null);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>{c}</Text>
+                      {formClass === c && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {activePicker === 'section' && (
+                <View style={styles.pickerOptionsList}>
+                  {['A', 'B', 'C'].map((s) => (
+                    <TouchableOpacity 
+                      key={s} 
+                      style={styles.pickerOptionItem}
+                      onPress={() => {
+                        setFormSection(s);
+                        setActivePicker(null);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>Section {s}</Text>
+                      {formSection === s && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {activePicker === 'subject' && (
+                <View style={styles.pickerOptionsList}>
+                  {['English', 'Mathematics', 'Science', 'Social Studies'].map((sub) => (
+                    <TouchableOpacity 
+                      key={sub} 
+                      style={styles.pickerOptionItem}
+                      onPress={() => {
+                        setFormSubject(sub);
+                        setActivePicker(null);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>{sub}</Text>
+                      {formSubject === sub && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 500 }]} edges={['top']}>
       {/* ── High-Fidelity Ambient Background Glow Particles ── */}
       <View style={styles.bgGlow1} pointerEvents="none" />
       <View style={styles.bgGlow2} pointerEvents="none" />
@@ -703,338 +1036,338 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
       </Modal>
 
       {/* HOMEWORK VIEW DETAILS MODAL */}
-      <Modal
-        visible={viewModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setViewModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.formContainer}>
-            {/* Header */}
-            <View style={styles.formHeader}>
-              <Text style={styles.formHeaderTitle}>Homework Details</Text>
-              <TouchableOpacity onPress={() => setViewModalVisible(false)} style={styles.formCloseBtn}>
-                <MaterialIcons name="close" size={20} color="#0052cc" />
-              </TouchableOpacity>
-            </View>
 
-            {viewingHomework && (
-              <ScrollView contentContainerStyle={styles.formScrollContent}>
-                {/* Badges */}
-                <View style={styles.badgeRow}>
-                  <View style={styles.classBadge}>
-                    <Text style={styles.classBadgeText}>{viewingHomework.grade}</Text>
-                  </View>
-                  <View style={styles.sectionBadge}>
-                    <Text style={styles.sectionBadgeText}>Sec {viewingHomework.section}</Text>
-                  </View>
-                  <View style={styles.subjectBadge}>
-                    <Text style={styles.subjectBadgeText}>{viewingHomework.subject}</Text>
-                  </View>
-                </View>
 
-                {/* Title */}
-                <Text style={[styles.cardTitle, { fontSize: 16.5, marginTop: 8 }]}>{viewingHomework.title}</Text>
 
-                {/* Teacher & Date info */}
-                <View style={[styles.creatorRow, { marginTop: 8 }]}>
-                  <View style={styles.creatorInfo}>
-                    <MaterialIcons name="person" size={14} color="#64748b" />
-                    <Text style={styles.creatorText}>{viewingHomework.teacher} • {viewingHomework.createdAt}</Text>
-                  </View>
-                  <View style={[styles.statusBadge, { 
-                    backgroundColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 179, 0, 0.1)', 
-                    borderColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 179, 0, 0.2)' 
-                  }]}>
-                    <Text style={[styles.statusText, { 
-                      color: viewingHomework.status === 'Graded' ? '#4CAF50' : '#FFB300' 
-                    }]}>{viewingHomework.status}</Text>
-                  </View>
-                </View>
 
-                {/* Full Instructions Note */}
-                <View style={{ marginVertical: 12 }}>
-                  <Text style={[styles.formLabel, { marginBottom: 6 }]}>Instructions / Notes</Text>
-                  <Text style={[styles.noteText, { fontSize: 13.5, color: '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
-                </View>
 
-                {/* Image */}
-                {viewingHomework.image ? (
-                  <View>
-                    <Text style={[styles.formLabel, { marginBottom: 8 }]}>Attached Photo</Text>
-                    <View style={[styles.imageWrapper, { height: 220 }]}>
-                      <Image 
-                        source={typeof viewingHomework.image === 'string' ? { uri: viewingHomework.image } : viewingHomework.image} 
-                        style={styles.homeworkImg} 
-                        resizeMode="cover"
-                      />
-                    </View>
-                  </View>
-                ) : (
-                  <View style={[styles.placeholderImage, { height: 60 }]}>
-                    <Text style={styles.placeholderImageText}>No image attached</Text>
-                  </View>
-                )}
 
-                {/* Footer Buttons */}
-                <View style={[styles.formActionsRow, { marginTop: 16 }]}>
-                  <TouchableOpacity 
-                    style={[styles.formSubmitBtn, { flex: 1, height: 42 }]} 
-                    onPress={() => {
-                      setViewModalVisible(false);
-                      handleEditPress(viewingHomework);
-                    }}
-                  >
-                    <MaterialIcons name="edit" size={16} color="#fff" style={{ marginRight: 6 }} />
-                    <Text style={styles.formSubmitText}>Edit Homework</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.formCancelBtn, { flex: 1, height: 42 }]} 
-                    onPress={() => setViewModalVisible(false)}
-                  >
-                    <Text style={styles.formCancelText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* CREATE HOMEWORK SLIDE-UP MODAL */}
-      <Modal
-        visible={createModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setCreateModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.formContainer}>
-            {/* Form Header */}
-            <View style={styles.formHeader}>
-              <Text style={styles.formHeaderTitle}>Daily Homework</Text>
-              <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.formCloseBtn}>
-                <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
-              </TouchableOpacity>
-            </View>
 
-            <ScrollView contentContainerStyle={styles.formScrollContent} showsVerticalScrollIndicator={false}>
-              
-              {/* Class Dropdown */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Class <Text style={{ color: theme.colors.error }}>*</Text>
-                </Text>
-                <TouchableOpacity 
-                  style={styles.formDropdown}
-                  onPress={() => setActivePicker('class')}
-                >
-                  <Text style={[styles.formDropdownText, formClass === '' && styles.formPlaceholderText]}>
-                    {formClass || '--Select--'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
-                </TouchableOpacity>
-              </View>
 
-              {/* Section Dropdown */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Section <Text style={{ color: theme.colors.error }}>*</Text>
-                </Text>
-                <TouchableOpacity 
-                  style={styles.formDropdown}
-                  onPress={() => setActivePicker('section')}
-                >
-                  <Text style={[styles.formDropdownText, formSection === '' && styles.formPlaceholderText]}>
-                    {formSection || 'Nothing selected'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
-                </TouchableOpacity>
-              </View>
 
-              {/* Course/Subject Dropdown */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Course <Text style={{ color: theme.colors.error }}>*</Text>
-                </Text>
-                <TouchableOpacity 
-                  style={styles.formDropdown}
-                  onPress={() => setActivePicker('subject')}
-                >
-                  <Text style={[styles.formDropdownText, formSubject === '' && styles.formPlaceholderText]}>
-                    {formSubject || '--Select--'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
-                </TouchableOpacity>
-              </View>
 
-              {/* Date Input Selector */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Date <Text style={{ color: theme.colors.error }}>*</Text>
-                </Text>
-                <View style={styles.formInputWrapper}>
-                  <TextInput
-                    style={styles.formInputText}
-                    value={formDate}
-                    onChangeText={setFormDate}
-                    placeholder="mm/dd/yyyy"
-                    placeholderTextColor={theme.colors.outline}
-                  />
-                  <MaterialIcons name="calendar-today" size={18} color={theme.colors.onSurfaceVariant} />
-                </View>
-              </View>
 
-              {/* Attach Image (Book Page Photo....) File Select */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Attach Image (Book Page Photo....)</Text>
-                <View style={styles.filePickerWrapper}>
-                  <TouchableOpacity style={styles.filePickerBtn} onPress={handlePickMockImage} activeOpacity={0.8}>
-                    <Text style={styles.filePickerBtnText}>Choose File</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.filePickerText} numberOfLines={1}>
-                    {formImage ? 'BookPhoto_Attachment.jpg' : 'No file chosen'}
-                  </Text>
-                  {formImage && (
-                    <TouchableOpacity onPress={() => setFormImage(null)} style={{ marginLeft: 8 }}>
-                      <MaterialIcons name="cancel" size={18} color={theme.colors.error} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
 
-              {/* Optional: Homework Title field */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Homework Title (Optional)</Text>
-                <View style={styles.formInputWrapper}>
-                  <TextInput
-                    style={styles.formInputText}
-                    value={formTitle}
-                    onChangeText={setFormTitle}
-                    placeholder="e.g. Reading Practice"
-                    placeholderTextColor={theme.colors.outline}
-                  />
-                </View>
-              </View>
 
-              {/* Homework Note multiline textarea */}
-              <View style={styles.formGroup}>
-                <View style={styles.formNoteHeader}>
-                  <Text style={styles.formLabel}>
-                    Homework Note <Text style={{ color: theme.colors.error }}>*</Text>
-                  </Text>
-                  <Text style={styles.formCharCounter}>{formNote.length}/2000 characters</Text>
-                </View>
-                <TextInput
-                  style={styles.formTextArea}
-                  multiline={true}
-                  numberOfLines={5}
-                  value={formNote}
-                  onChangeText={formText => setFormNote(formText.substring(0, 2000))}
-                  placeholder="eg. Learn table 2-5. Complete page 34 in the workbook."
-                  placeholderTextColor={theme.colors.outline}
-                  textAlignVertical="top"
-                />
-              </View>
-            </ScrollView>
 
-            {/* Modal Bottom Actions Row */}
-            <View style={styles.formActionsRow}>
-              <TouchableOpacity 
-                style={[styles.formSubmitBtn, theme.shadows.level1]}
-                onPress={handleAddHomework}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons name="send" size={16} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.formSubmitText}>Post Homework</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.formCancelBtn}
-                onPress={() => setCreateModalVisible(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.formCancelText}>CANCEL</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
 
-        {/* BOTTOM OPTION PICKER MODAL (For Class, Section, and Course) */}
-        <Modal
-          visible={activePicker !== null}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setActivePicker(null)}
-        >
-          <TouchableOpacity 
-            style={styles.pickerBackdrop} 
-            activeOpacity={1} 
-            onPress={() => setActivePicker(null)}
-          >
-            <View style={styles.pickerContainer}>
-              <Text style={styles.pickerTitle}>
-                Select {activePicker === 'class' ? 'Class' : activePicker === 'section' ? 'Section' : 'Course'}
-              </Text>
-              
-              {activePicker === 'class' && (
-                <View style={styles.pickerOptionsList}>
-                  {['GRADE-II', 'Grade-I', 'Grade-III'].map((c) => (
-                    <TouchableOpacity 
-                      key={c} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormClass(c);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>{c}</Text>
-                      {formClass === c && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
 
-              {activePicker === 'section' && (
-                <View style={styles.pickerOptionsList}>
-                  {['A', 'B', 'C'].map((s) => (
-                    <TouchableOpacity 
-                      key={s} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormSection(s);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>Section {s}</Text>
-                      {formSection === s && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
 
-              {activePicker === 'subject' && (
-                <View style={styles.pickerOptionsList}>
-                  {['English', 'Mathematics', 'Science', 'Social Studies'].map((sub) => (
-                    <TouchableOpacity 
-                      key={sub} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormSubject(sub);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>{sub}</Text>
-                      {formSubject === sub && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      </Modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </SafeAreaView>
   );
 };

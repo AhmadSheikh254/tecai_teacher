@@ -1755,8 +1755,8 @@ const styles = StyleSheet.create({
   aiNeuralNetwork: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: 28,
+    right: -28,
     bottom: 0,
     zIndex: 1,
   },
@@ -1787,7 +1787,7 @@ const styles = StyleSheet.create({
   },
   aiCyberHeadWatermark: {
     position: 'absolute',
-    right: 60,
+    right: 32,
     bottom: -2,
     width: 175,
     height: 175,
