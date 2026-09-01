@@ -161,33 +161,35 @@ const TabItem = React.memo(({
 
 // ─── Premium Tab Bar Container ────────────────────────────────────────────────
 const PremiumTabBar = React.memo(({ state, navigation }: BottomTabBarProps) => (
-  <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
-    {TABS.map((tab, i) => {
-      const focused = state.index === i;
-      return (
-        <TabItem
-          key={tab.name}
-          tab={tab}
-          focused={focused}
-          onPress={() => {
-            const event = navigation.emit({
-              type:              'tabPress',
-              target:            state.routes[i].key,
-              canPreventDefault: true,
-            });
-            if (tab.name === 'More') {
-              navigation.navigate('More', { screen: 'MoreHub' });
-            } else if (tab.name === 'Assignment') {
-              navigation.navigate('Assignment', { screen: 'AssignmentHub' });
-            } else {
-              if (!focused && !event.defaultPrevented) {
-                navigation.navigate(tab.name);
+  <View style={{ backgroundColor: '#FFFFFF', width: '100%', alignItems: 'center' }}>
+    <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
+      {TABS.map((tab, i) => {
+        const focused = state.index === i;
+        return (
+          <TabItem
+            key={tab.name}
+            tab={tab}
+            focused={focused}
+            onPress={() => {
+              const event = navigation.emit({
+                type:              'tabPress',
+                target:            state.routes[i].key,
+                canPreventDefault: true,
+              });
+              if (tab.name === 'More') {
+                navigation.navigate('More', { screen: 'MoreHub' });
+              } else if (tab.name === 'Assignment') {
+                navigation.navigate('Assignment', { screen: 'AssignmentHub' });
+              } else {
+                if (!focused && !event.defaultPrevented) {
+                  navigation.navigate(tab.name);
+                }
               }
-            }
-          }}
-        />
-      );
-    })}
+            }}
+          />
+        );
+      })}
+    </View>
   </View>
 ));
 
@@ -215,6 +217,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderTopWidth:       1,
     borderTopColor:       '#E2E8F0',
+    alignSelf:            'center',
+    width:                '100%',
+    maxWidth:             600,
     // Ultra-sharp crisp shadow
     shadowColor:   '#0F172A',
     shadowOffset:  { width: 0, height: -2 },

@@ -348,7 +348,8 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: '#f0f4ff', width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* Premium Top App Bar */}
       <View style={styles.appBar}>
         <View style={styles.appBarLeft}>
@@ -942,7 +943,8 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         )}
       </ScrollView>
     </SafeAreaView>
-  );
+  </View>
+);
 };
 
 const styles = StyleSheet.create({

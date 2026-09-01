@@ -105,7 +105,8 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: '#f8fafc', width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* Ambient background glows for 3D depth */}
       <View style={styles.bgGlow1} pointerEvents="none" />
       <View style={styles.bgGlow2} pointerEvents="none" />
@@ -1135,7 +1136,8 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
+  </View>
+);
 };
 
 const styles = StyleSheet.create({

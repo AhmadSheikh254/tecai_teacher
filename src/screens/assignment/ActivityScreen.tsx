@@ -1696,7 +1696,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   if (isDetailVisible && selectedAssignment) {
     const accent = getAccentColor(selectedAssignment.type);
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 600 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
         <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
                             {/* Colored Header Band */}
                   <LinearGradient
@@ -1716,7 +1716,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         </View>
                         <Text style={styles.detailBandTitle} numberOfLines={2}>{selectedAssignment.title}</Text>
                         <Text style={styles.detailBandSub}>
-                          {selectedAssignment.class}  â€¢  {selectedAssignment.course}
+                          {selectedAssignment.class}  •  {selectedAssignment.course}
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -1731,13 +1731,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       <Text style={styles.refBandText}>Reference #{selectedAssignment.sNo}</Text>
                     </View>
                   </LinearGradient>
-
-                  {/* Body */}
                   <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-
-                    {/* Chapter & Topic */}
+                    {/* Chapter & Topic */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>ðŸ“š  Content</Text>
+                      <Text style={styles.detailSectionLabel}>{"\uD83D\uDCD6  Content"}</Text>
                       <View style={styles.detailRow}>
                         <View style={[styles.detailIconBox, { backgroundColor: accent + '15' }]}>
                           <MaterialIcons name="folder-open" size={16} color={accent} />
@@ -1761,7 +1758,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Teacher & Format */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>ðŸ§‘â€ðŸ«  Assignment Info</Text>
+                      <Text style={styles.detailSectionLabel}>{"\uD83E\uDDD1\u200D\uD83C\uDFEB  Assignment Info"}</Text>
                       <View style={styles.detailRow}>
                         <View style={[styles.detailIconBox, { backgroundColor: accent + '15' }]}>
                           <MaterialIcons name="person" size={16} color={accent} />
@@ -1787,7 +1784,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                     {/* Timeline */}
                     <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>ðŸ“…  Timeline</Text>
+                      <Text style={styles.detailSectionLabel}>{"\uD83D\uDCC5  Timeline"}</Text>
                       <View style={styles.timelineStrip}>
                         <View style={styles.timelineSide}>
                           <View style={[styles.timelineDot, { backgroundColor: accent }]} />
@@ -2026,7 +2023,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   {(() => {
                     const total = crosswordGridData.cellCoords.length;
                     const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
-                    return solved === total ? 'âœ“ Done!' : `${total - solved} left`;
+                    return solved === total ? '✓ Done!' : `${total - solved} left`;
                   })()}
                 </Text>
               </View>
@@ -2084,9 +2081,9 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={{ position: 'absolute', top: '40%', left: '20%', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(37,99,235,0.03)' }} />
 
               {/* Star decorations */}
-              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>â­</Text>
-              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>âœ¨</Text>
-              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>ðŸŒŸ</Text>
+              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>⭐</Text>
+              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>✨</Text>
+              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>🌟</Text>
 
               {/* Logo Box */}
               <View style={{
@@ -2099,7 +2096,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 shadowOpacity: 0.08, shadowRadius: 15, elevation: 4,
                 marginBottom: 20
               }}>
-                <Text style={{ fontSize: 48 }}>ðŸ”¤</Text>
+                <Text style={{ fontSize: 48 }}>🔤</Text>
               </View>
 
               <Text style={{
@@ -2116,7 +2113,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 textAlign: 'center', marginBottom: 28,
                 paddingHorizontal: 36, lineHeight: 18
               }}>
-                Solve the clues and fill the puzzle grid! ðŸŽ¯
+                Solve the clues and fill the puzzle grid! 🎯
               </Text>
 
               {/* 3D Play Button */}
@@ -2183,7 +2180,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 const total = crosswordGridData.cellCoords.length;
                 const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
                 const isWon = total > 0 && solved === total;
-                let clueText = 'Tap a cell to read its clue! ðŸ‘†';
+                let clueText = 'Tap a cell to read its clue! 👆';
                 if (activeCell) {
                   const cell = crosswordGridData.grid[activeCell.row]?.[activeCell.col];
                   if (cell) {
@@ -2210,14 +2207,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         backgroundColor: 'rgba(255,255,255,0.7)',
                         alignItems: 'center', justifyContent: 'center'
                       }}>
-                        <Text style={{ fontSize: 22 }}>{isWon ? 'ðŸ†' : 'ðŸ’¡'}</Text>
+                        <Text style={{ fontSize: 22 }}>{isWon ? '🏆' : '💡'}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 13, color: '#0284c7', fontWeight: '900', marginBottom: 2 }}>
                           {isWon ? 'PUZZLE COMPLETE!' : 'CLUE'}
                         </Text>
                         <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e293b', lineHeight: 20 }} numberOfLines={2}>
-                          {isWon ? 'ðŸŽ‰ Amazing! You solved the crossword!' : clueText}
+                          {isWon ? '🎉 Amazing! You solved the crossword!' : clueText}
                         </Text>
                       </View>
                     </LinearGradient>
@@ -2482,7 +2479,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   >
                     <MaterialIcons name="public" size={18} color="#334155" />
                     <Text style={{ color: '#334155', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>
-                      {crosswordLanguage === 'EN' ? 'Ø§Ø±Ø¯Ùˆ Ú©ÛŒ Ø¨ÙˆØ±Úˆ' : 'English Keyboard'}
+                      {crosswordLanguage === 'EN' ? 'اردو کی بورڈ' : 'English Keyboard'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -2502,7 +2499,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1, backgroundColor: '#ffffff' }}
         >
-          <View style={{ flex: 1, backgroundColor: '#ffffff', maxWidth: 600, width: '100%', alignSelf: 'center' }}>
+          <View style={{ flex: 1, backgroundColor: '#ffffff', maxWidth: 640, width: '100%', alignSelf: 'center' }}>
 
             {/* Premium Background Design (Glow & Mesh) */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -2556,11 +2553,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
                   <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="add-task" size={20} color="#ffffff" />
+                    <MaterialIcons name="add-task" size={16} color="#ffffff" />
                   </View>
-                  <View>
-                    <Text style={styles.createModalTitle}>Create Assignment</Text>
-                    <Text style={styles.createModalSubtitle}>Assign new task to students</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>Create Assignment</Text>
+                    <Text style={styles.createModalSubtitle} numberOfLines={1}>Assign new task to students</Text>
                   </View>
                 </View>
                 <TouchableOpacity 
@@ -2573,7 +2570,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     clearFormFields();
                   }}
                 >
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
+                  <MaterialIcons name="close" size={15} color="#ffffff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -4710,7 +4707,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                         <View style={{ flex: 1, marginRight: 10 }}>
                                           <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A' }}>{item.title}</Text>
                                           <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                                            ðŸ“„ {item.docName} â€¢ {item.slosCount} SLOs
+                                            📄 {item.docName} • {item.slosCount} SLOs
                                           </Text>
                                         </View>
                                         <View style={{
@@ -4722,7 +4719,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                           borderColor: item.status === 'Published' ? '#A7F3D0' : '#FDE68A'
                                         }}>
                                           <Text style={{ fontSize: 11, fontWeight: '900', color: item.status === 'Published' ? '#047857' : '#B45309' }}>
-                                            â€¢ {item.status}
+                                            • {item.status}
                                           </Text>
                                         </View>
                                       </View>
@@ -4738,7 +4735,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                           <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{item.course}</Text>
                                         </View>
                                         <Text style={{ fontSize: 12, color: '#64748B', marginLeft: 8 }}>
-                                          {item.qsCount} Qs â€¢ Completion: {item.completionText}
+                                          {item.qsCount} Qs • Completion: {item.completionText}
                                         </Text>
                                       </View>
 
@@ -5113,7 +5110,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               </TouchableOpacity>
 
                               <TouchableOpacity style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#10B981' }]} onPress={handleCreateAssignment}>
-                                <Text style={styles.stepFooterTextNext}>âœ“ Save Assessment</Text>
+                                <Text style={styles.stepFooterTextNext}>✓ Save Assessment</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -7000,42 +6997,42 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   }}>
                   {/* Category Pill */}
                   <View style={{
-                    paddingVertical: 6,
-                    paddingHorizontal: 14,
-                    borderRadius: 20,
+                    paddingVertical: 4,
+                    paddingHorizontal: 10,
+                    borderRadius: 14,
                     backgroundColor: '#ECFDF5',
-                    borderWidth: 1.5,
+                    borderWidth: 1.2,
                     borderColor: '#A7F3D0'
                   }}>
-                    <Text style={{ color: '#047857', fontSize: 13, fontWeight: '900' }}>
+                    <Text style={{ color: '#047857', fontSize: 11, fontWeight: '900' }}>
                       Topic: {activeTfPlayer.topic || 'General'}
                     </Text>
                   </View>
 
                   {/* Golden Trophy Icon */}
                   <View style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
                     backgroundColor: '#FEF9C3',
-                    borderWidth: 3,
+                    borderWidth: 2,
                     borderColor: '#FDE047',
                     alignItems: 'center',
                     justifyContent: 'center',
                     shadowColor: '#EAB308',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 10,
-                    elevation: 6
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 4
                   }}>
-                    <MaterialIcons name="emoji-events" size={46} color="#CA8A04" />
+                    <MaterialIcons name="emoji-events" size={34} color="#CA8A04" />
                   </View>
-                  <View style={{ alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 28, letterSpacing: 0.5 }}>
+                  <View style={{ alignItems: 'center', gap: 4 }}>
+                    <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 20, letterSpacing: 0.5 }}>
                       Quiz Completed!
                     </Text>
-                    <Text style={{ color: '#475569', fontSize: 16, fontWeight: '700' }}>
-                      Your Final Score: <Text style={{ color: '#059669', fontWeight: '900', fontSize: 20 }}>
+                    <Text style={{ color: '#475569', fontSize: 13, fontWeight: '700' }}>
+                      Your Final Score: <Text style={{ color: '#059669', fontWeight: '900', fontSize: 16 }}>
                         {Math.min(tfScore, (activeTfPlayer.tfQuestions || []).length)} / {(activeTfPlayer.tfQuestions || []).length}
                       </Text>
                     </Text>
@@ -7044,14 +7041,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   <TouchableOpacity
                     style={{
                       width: '100%',
-                      maxWidth: 260,
-                      borderRadius: 20,
+                      maxWidth: 220,
+                      borderRadius: 14,
                       overflow: 'hidden',
                       shadowColor: '#10B981',
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 10,
-                      elevation: 6
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 5
                     }}
                     onPress={() => {
                       playSound('win');
@@ -7064,17 +7061,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={{
-                        paddingVertical: 16,
+                        paddingVertical: 11,
                         alignItems: 'center',
                         flexDirection: 'row',
                         justifyContent: 'center',
-                        gap: 10,
-                        borderBottomWidth: 4,
+                        gap: 8,
+                        borderBottomWidth: 3,
                         borderBottomColor: '#047857'
                       }}
                     >
-                      <MaterialIcons name="send" size={20} color="#ffffff" />
-                      <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 17, letterSpacing: 0.5 }}>
+                      <MaterialIcons name="send" size={16} color="#ffffff" />
+                      <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>
                         Submit Score
                       </Text>
                     </LinearGradient>
@@ -7214,7 +7211,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         }}
                       >
                         <Text style={{ color: '#ffffff', fontWeight: '900' }}>
-                          {mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1 ? 'Next â†’' : 'Finish Quiz âœ“'}
+                          {mcqPlayerIndex < activeMcqPlayer.mcqs.length - 1 ? 'Next â†’' : 'Finish Quiz ✓'}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -7240,7 +7237,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     );
   }
   return (
-    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 600 }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 640 }]} edges={['top']}>
       {/* 1. MOBILE HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -7344,12 +7341,12 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               const isSelected = selectedType === type;
               const chipAccent = getAccentColor(type);
               const chipIcon =
-                type === 'blanks' ? 'âœ' :
-                type === 'match' ? 'â‡„' :
-                type === 'crosswords' ? 'âŠž' :
-                type === 'parts' ? 'â—ˆ' :
-                type === 'truefalse' ? 'âœ“' :
-                type === 'cluegames' ? 'ðŸ”' : 'âœ¦';
+                type === 'blanks' ? '✍' :
+                type === 'match' ? '⇄' :
+                type === 'crosswords' ? '⊞' :
+                type === 'parts' ? '◈' :
+                type === 'truefalse' ? '✓' :
+                type === 'cluegames' ? '🔍' : '✦';
               const chipLabel = type === 'All' ? 'All' : getTypeLabel(type);
               return (
                 <TouchableOpacity
@@ -7517,7 +7514,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         </View>
                       </View>
 
-                      {/* Extra info row: class â€¢ subject */}
+                      {/* Extra info row: class • subject */}
                       <View style={{
                         marginTop: 14,
                         paddingTop: 12,
@@ -7529,7 +7526,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       }}>
                         <MaterialIcons name="school" size={13} color="#059669" />
                         <Text style={{ fontSize: 12, fontWeight: '700', color: '#047857' }}>
-                          {item.class}  â€¢  {item.course}  â€¢  {item.topic}
+                          {item.class}  •  {item.course}  •  {item.topic}
                         </Text>
                         <View style={{ flex: 1 }} />
                         <Text style={{ fontSize: 11, fontWeight: '800', color: '#0EA5E9' }}>Tap to open â†’</Text>
@@ -7559,7 +7556,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <Text style={styles.cardTitleBand} numberOfLines={1}>{item.title}</Text>
                         <View style={styles.subtitleRow}>
                           <MaterialIcons name="school" size={11} color="rgba(255,255,255,0.75)" style={{ marginRight: 4 }} />
-                          <Text style={styles.cardSubtitleBand}>{item.class}  â€¢  {item.course}</Text>
+                          <Text style={styles.cardSubtitleBand}>{item.class}  •  {item.course}</Text>
                         </View>
                       </View>
                       <View style={styles.bandRight}>
@@ -10975,7 +10972,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   {(() => {
                     const total = crosswordGridData.cellCoords.length;
                     const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
-                    return solved === total ? 'âœ“ Done!' : `${total - solved} left`;
+                    return solved === total ? '✓ Done!' : `${total - solved} left`;
                   })()}
                 </Text>
               </View>
@@ -11033,9 +11030,9 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={{ position: 'absolute', top: '40%', left: '20%', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(37,99,235,0.03)' }} />
 
               {/* Star decorations */}
-              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>â­</Text>
-              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>âœ¨</Text>
-              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>ðŸŒŸ</Text>
+              <Text style={{ position: 'absolute', top: '14%', left: '10%', fontSize: 32, opacity: 0.4 }}>⭐</Text>
+              <Text style={{ position: 'absolute', top: '18%', right: '12%', fontSize: 24, opacity: 0.3 }}>✨</Text>
+              <Text style={{ position: 'absolute', bottom: '22%', right: '15%', fontSize: 28, opacity: 0.3 }}>🌟</Text>
 
               {/* Logo Box */}
               <View style={{
@@ -11048,7 +11045,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 shadowOpacity: 0.08, shadowRadius: 15, elevation: 4,
                 marginBottom: 20
               }}>
-                <Text style={{ fontSize: 48 }}>ðŸ”¤</Text>
+                <Text style={{ fontSize: 48 }}>🔤</Text>
               </View>
 
               <Text style={{
@@ -11065,7 +11062,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 textAlign: 'center', marginBottom: 28,
                 paddingHorizontal: 36, lineHeight: 18
               }}>
-                Solve the clues and fill the puzzle grid! ðŸŽ¯
+                Solve the clues and fill the puzzle grid! 🎯
               </Text>
 
               {/* 3D Play Button */}
@@ -11132,7 +11129,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 const total = crosswordGridData.cellCoords.length;
                 const solved = crosswordGridData.cellCoords.filter(c => crosswordAnswers[`${c.row},${c.col}`] === c.char).length;
                 const isWon = total > 0 && solved === total;
-                let clueText = 'Tap a cell to read its clue! ðŸ‘†';
+                let clueText = 'Tap a cell to read its clue! 👆';
                 if (activeCell) {
                   const cell = crosswordGridData.grid[activeCell.row]?.[activeCell.col];
                   if (cell) {
@@ -11159,14 +11156,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         backgroundColor: 'rgba(255,255,255,0.7)',
                         alignItems: 'center', justifyContent: 'center'
                       }}>
-                        <Text style={{ fontSize: 22 }}>{isWon ? 'ðŸ†' : 'ðŸ’¡'}</Text>
+                        <Text style={{ fontSize: 22 }}>{isWon ? '🏆' : '💡'}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 13, color: '#0284c7', fontWeight: '900', marginBottom: 2 }}>
                           {isWon ? 'PUZZLE COMPLETE!' : 'CLUE'}
                         </Text>
                         <Text style={{ fontSize: 15, fontWeight: '900', color: '#1e293b', lineHeight: 20 }} numberOfLines={2}>
-                          {isWon ? 'ðŸŽ‰ Amazing! You solved the crossword!' : clueText}
+                          {isWon ? '🎉 Amazing! You solved the crossword!' : clueText}
                         </Text>
                       </View>
                     </LinearGradient>
@@ -11431,7 +11428,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   >
                     <MaterialIcons name="public" size={18} color="#334155" />
                     <Text style={{ color: '#334155', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>
-                      {crosswordLanguage === 'EN' ? 'Ø§Ø±Ø¯Ùˆ Ú©ÛŒ Ø¨ÙˆØ±Úˆ' : 'English Keyboard'}
+                      {crosswordLanguage === 'EN' ? 'اردو کی بورڈ' : 'English Keyboard'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -14349,10 +14346,10 @@ const styles = StyleSheet.create({
   },
   // ===== FORM CREATION REDESIGNED =====
   createModalBand: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -14364,12 +14361,15 @@ const styles = StyleSheet.create({
   createModalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+    marginRight: 10,
   },
   createModalIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -14377,21 +14377,21 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.15)',
   },
   createModalTitle: {
-    fontSize: 21,
+    fontSize: 14,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: -0.3,
   },
   createModalSubtitle: {
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
-    marginTop: 3,
+    marginTop: 1,
   },
   createModalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',

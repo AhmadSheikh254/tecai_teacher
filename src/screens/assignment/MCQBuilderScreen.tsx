@@ -207,7 +207,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           <Path d="M 40,335 Q 190,295 210,455 T 410,355" stroke="#A7F3D0" strokeWidth={1.2} fill="none" opacity={0.16} />
         </Svg>
       </View>
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 }} edges={['top']}>
 
         {/* ── Top Header ── */}
         <View style={S.header}>
@@ -482,7 +482,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       elevation: 5,
                     }}
                   >
-                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#ffffff', fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold' }}>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#ffffff' }}>
                       Analyze Document
                     </Text>
                     <MaterialIcons name="arrow-forward" size={18} color="#ffffff" />
@@ -916,19 +916,17 @@ const S = StyleSheet.create({
     fontSize: 15, 
     fontWeight: '900', 
     color: '#0F172A', 
-    letterSpacing: -0.3,
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold'
+    letterSpacing: -0.3
   },
   headerSub: { 
     fontSize: 9.5, 
     color: '#64748B', 
     fontWeight: '600', 
-    marginTop: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Medium' : 'sans-serif'
+    marginTop: 1
   },
   generatorBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 12, borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ffffff' },
   generatorDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10B981' },
-  generatorBadgeText: { fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.4, fontFamily: Platform.OS === 'ios' ? 'Avenir-Heavy' : 'sans-serif-medium' },
+  generatorBadgeText: { fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.4 },
 
   // Progress
   progressContainer: { 
@@ -963,8 +961,7 @@ const S = StyleSheet.create({
   },
   stepNum: { 
     fontSize: 11, 
-    fontWeight: '900',
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold'
+    fontWeight: '900'
   },
   stepLabel: { 
     fontSize: 9.5, 
@@ -973,7 +970,6 @@ const S = StyleSheet.create({
     maxWidth: 65, 
     marginTop: 2, 
     lineHeight: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Heavy' : 'sans-serif-medium',
     letterSpacing: 0.1
   },
   stepLabelActive: { color: '#4F46E5' },
@@ -1096,13 +1092,11 @@ const S = StyleSheet.create({
     fontSize: 11, 
     fontWeight: '700', 
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Heavy' : 'sans-serif-medium',
   },
   filterTabTextActive: { 
     fontSize: 11, 
     fontWeight: '900', 
     color: '#ffffff',
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold',
   },
   assessRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   assessIconBox: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
@@ -1136,9 +1130,9 @@ const S = StyleSheet.create({
     elevation: 2 
   },
   qBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
-  qBadgeText: { fontSize: 11, fontWeight: '900', color: '#fff', fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold' },
+  qBadgeText: { fontSize: 11, fontWeight: '900', color: '#fff' },
   bloomBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1 },
-  bloomText: { fontSize: 9.5, fontWeight: '900', letterSpacing: 0.4, fontFamily: Platform.OS === 'ios' ? 'Avenir-Heavy' : 'sans-serif-medium' },
+  bloomText: { fontSize: 9.5, fontWeight: '900', letterSpacing: 0.4 },
   deleteBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FECDD3' },
   mcqQuestionInput: { 
     borderWidth: 1, 
@@ -1152,7 +1146,6 @@ const S = StyleSheet.create({
     marginBottom: 10, 
     minHeight: 44, 
     lineHeight: 18,
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Heavy' : 'sans-serif-medium',
     ...Platform.select({ web: { outlineStyle: 'none' } as any }) 
   },
   optionRow: { 
@@ -1177,8 +1170,7 @@ const S = StyleSheet.create({
     fontSize: 12, 
     fontWeight: '700', 
     color: '#334155', 
-    padding: 0, 
-    fontFamily: Platform.OS === 'ios' ? 'Avenir-Medium' : 'sans-serif',
+    padding: 0,
     ...Platform.select({ web: { outlineStyle: 'none' } as any }) 
   },
 
@@ -1201,8 +1193,8 @@ const S = StyleSheet.create({
   loaderOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', alignItems: 'center', justifyContent: 'center', zIndex: 99 },
   loaderCard: { backgroundColor: '#ffffff', borderRadius: 20, padding: 22, alignItems: 'center', gap: 12, width: '80%', maxWidth: 300, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 8 },
   loaderIconCircle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  loaderTitle: { fontSize: 16, fontWeight: '900', color: '#0F172A', textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Avenir-Black' : 'sans-serif-bold' },
-  loaderSub: { fontSize: 11.5, color: '#64748B', fontWeight: '600', textAlign: 'center', lineHeight: 16, fontFamily: Platform.OS === 'ios' ? 'Avenir-Medium' : 'sans-serif' },
+  loaderTitle: { fontSize: 16, fontWeight: '900', color: '#0F172A', textAlign: 'center' },
+  loaderSub: { fontSize: 11.5, color: '#64748B', fontWeight: '600', textAlign: 'center', lineHeight: 16 },
 
   // Navigation
   navRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },

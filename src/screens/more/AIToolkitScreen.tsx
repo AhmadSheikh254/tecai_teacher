@@ -787,7 +787,8 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC', width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       
       {/* ── APP HEADER ── */}
       <View style={styles.appBar}>
@@ -1306,7 +1307,8 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
       </Modal>
 
     </SafeAreaView>
-  );
+  </View>
+);
 };
 
 const styles = StyleSheet.create({

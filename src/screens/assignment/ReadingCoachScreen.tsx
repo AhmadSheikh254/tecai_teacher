@@ -309,7 +309,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: AI COACH LIVE PRACTICE ──
   if (isCoachModalVisible && selectedPassage) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
                 <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
           <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
             {selectedPassage && (() => {
@@ -406,7 +406,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: CREATE READING PASSAGE ──
   if (isCreateModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
                 <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1, backgroundColor: "#ffffff" }}
@@ -418,23 +418,23 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               colors={['#003d9b', '#0052cc']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 36 }]}
+              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
             >
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
                   <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="auto-stories" size={20} color="#ffffff" />
+                    <MaterialIcons name="auto-stories" size={16} color="#ffffff" />
                   </View>
-                  <View>
-                    <Text style={styles.createModalTitle}>Reading Coach — New Assignment</Text>
-                    <Text style={styles.createModalSubtitle}>Configure target class, section & paragraph type</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>Reading Coach — New Assignment</Text>
+                    <Text style={styles.createModalSubtitle} numberOfLines={1}>Configure target class, section & paragraph type</Text>
                   </View>
                 </View>
                 <TouchableOpacity
                   style={styles.createModalCloseBtn}
                   onPress={() => setIsCreateModalVisible(false)}
                 >
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
+                  <MaterialIcons name="close" size={15} color="#ffffff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -738,7 +738,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: READING COACH RESULT ──
   if (isResultModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
                 <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
           <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
 
@@ -747,16 +747,16 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               colors={['#003d9b', '#0052cc']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 36 }]}
+              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
             >
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
                   <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="assessment" size={20} color="#ffffff" />
+                    <MaterialIcons name="assessment" size={16} color="#ffffff" />
                   </View>
-                  <View>
-                    <Text style={styles.createModalTitle}>Reading Coach Result</Text>
-                    <Text style={styles.createModalSubtitle}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>Reading Coach Result</Text>
+                    <Text style={styles.createModalSubtitle} numberOfLines={1}>
                       {selectedPassage ? `Story: ${selectedPassage.title}` : 'Student Fluency Analytics'}
                     </Text>
                   </View>
@@ -765,7 +765,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   style={styles.createModalCloseBtn}
                   onPress={() => setIsResultModalVisible(false)}
                 >
-                  <MaterialIcons name="close" size={18} color="#ffffff" />
+                  <MaterialIcons name="close" size={15} color="#ffffff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -844,7 +844,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 500 }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 640 }]} edges={['top']}>
       {/* 1. HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -2367,10 +2367,10 @@ const styles = StyleSheet.create({
   },
   // CREATE FORM MODAL
   createModalBand: {
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     overflow: 'hidden',
   },
   createModalHeaderRow: {
@@ -2381,32 +2381,35 @@ const styles = StyleSheet.create({
   createModalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+    marginRight: 10,
   },
   createModalIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   createModalTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: -0.4,
   },
   createModalSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.75)',
-    marginTop: 2,
+    marginTop: 1,
   },
   createModalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',

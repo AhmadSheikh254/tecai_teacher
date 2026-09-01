@@ -16,6 +16,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
 
 interface HomeworkScreenProps {
   navigation: any;
@@ -53,6 +55,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
   // Bottom picker sheet toggle
   const [activePicker, setActivePicker] = useState<'class' | 'section' | 'subject' | null>(null);
+  const [showClassDropdown, setShowClassDropdown] = useState(false);
+  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
   // Pulse animation for Skeleton loaders
   const [pulseAnim] = useState(new Animated.Value(0.3));
@@ -421,14 +427,31 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
           style={{ flex: 1 }}
         >
           <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-            {/* Form Header */}
-            <View style={[styles.formHeader, { paddingTop: 36 }]}>
-              <Text style={styles.formHeaderTitle}>Daily Homework</Text>
-              <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.formCloseBtn}>
-                <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
-              </TouchableOpacity>
-            </View>
+            {/* Gradient Header Bar */}
+            <LinearGradient
+              colors={['#003d9b', '#0052cc']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
+            >
+              <View style={styles.createModalHeaderRow}>
+                <View style={styles.createModalHeaderLeft}>
+                  <View style={styles.createModalIconBox}>
+                    <MaterialIcons name="menu-book" size={16} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>Daily Homework — New Assignment</Text>
+                    <Text style={styles.createModalSubtitle} numberOfLines={1}>Configure target class, section, course & assignment details</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.createModalCloseBtn}
+                  onPress={() => setCreateModalVisible(false)}
+                >
+                  <MaterialIcons name="close" size={15} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
 
             <ScrollView contentContainerStyle={styles.formScrollContent} showsVerticalScrollIndicator={false}>
               
@@ -439,13 +462,45 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </Text>
                 <TouchableOpacity 
                   style={styles.formDropdown}
-                  onPress={() => setActivePicker('class')}
+                  onPress={() => {
+                    setShowClassDropdown(!showClassDropdown);
+                    setShowSectionDropdown(false);
+                    setShowSubjectDropdown(false);
+                  }}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.formDropdownText, formClass === '' && styles.formPlaceholderText]}>
-                    {formClass || '--Select--'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={[styles.formIconBadge, { backgroundColor: '#EEF2FF' }]}>
+                      <MaterialIcons name="school" size={16} color="#2563EB" />
+                    </View>
+                    <Text style={[styles.formDropdownText, !formClass && styles.formPlaceholderText]}>
+                      {formClass || '--Select--'}
+                    </Text>
+                  </View>
+                  <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#2563EB" />
                 </TouchableOpacity>
+
+                {showClassDropdown && (
+                  <View style={styles.formDropdownOptions}>
+                    {['GRADE-II', 'Grade-I', 'Grade-III'].map(c => {
+                      const isSelected = formClass === c;
+                      return (
+                        <TouchableOpacity 
+                          key={c} 
+                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          onPress={() => {
+                            setFormClass(c);
+                            setShowClassDropdown(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{c}</Text>
+                          {isSelected && <MaterialIcons name="check" size={16} color="#2563EB" />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
 
               {/* Section Dropdown */}
@@ -455,13 +510,45 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </Text>
                 <TouchableOpacity 
                   style={styles.formDropdown}
-                  onPress={() => setActivePicker('section')}
+                  onPress={() => {
+                    setShowSectionDropdown(!showSectionDropdown);
+                    setShowClassDropdown(false);
+                    setShowSubjectDropdown(false);
+                  }}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.formDropdownText, formSection === '' && styles.formPlaceholderText]}>
-                    {formSection || 'Nothing selected'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={[styles.formIconBadge, { backgroundColor: '#F0FDF4' }]}>
+                      <MaterialIcons name="layers" size={16} color="#059669" />
+                    </View>
+                    <Text style={[styles.formDropdownText, !formSection && styles.formPlaceholderText]}>
+                      {formSection ? `Section ${formSection}` : 'Nothing selected'}
+                    </Text>
+                  </View>
+                  <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#059669" />
                 </TouchableOpacity>
+
+                {showSectionDropdown && (
+                  <View style={styles.formDropdownOptions}>
+                    {['A', 'B', 'C'].map(s => {
+                      const isSelected = formSection === s;
+                      return (
+                        <TouchableOpacity 
+                          key={s} 
+                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          onPress={() => {
+                            setFormSection(s);
+                            setShowSectionDropdown(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>Section {s}</Text>
+                          {isSelected && <MaterialIcons name="check" size={16} color="#059669" />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
 
               {/* Course/Subject Dropdown */}
@@ -471,13 +558,45 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </Text>
                 <TouchableOpacity 
                   style={styles.formDropdown}
-                  onPress={() => setActivePicker('subject')}
+                  onPress={() => {
+                    setShowSubjectDropdown(!showSubjectDropdown);
+                    setShowClassDropdown(false);
+                    setShowSectionDropdown(false);
+                  }}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.formDropdownText, formSubject === '' && styles.formPlaceholderText]}>
-                    {formSubject || '--Select--'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={20} color={theme.colors.onSurfaceVariant} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={[styles.formIconBadge, { backgroundColor: '#FAF5FF' }]}>
+                      <MaterialIcons name="import-contacts" size={16} color="#7C3AED" />
+                    </View>
+                    <Text style={[styles.formDropdownText, !formSubject && styles.formPlaceholderText]}>
+                      {formSubject || '--Select--'}
+                    </Text>
+                  </View>
+                  <MaterialIcons name={showSubjectDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#7C3AED" />
                 </TouchableOpacity>
+
+                {showSubjectDropdown && (
+                  <View style={styles.formDropdownOptions}>
+                    {['English', 'Mathematics', 'Science', 'Social Studies'].map(sub => {
+                      const isSelected = formSubject === sub;
+                      return (
+                        <TouchableOpacity 
+                          key={sub} 
+                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          onPress={() => {
+                            setFormSubject(sub);
+                            setShowSubjectDropdown(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sub}</Text>
+                          {isSelected && <MaterialIcons name="check" size={16} color="#7C3AED" />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
 
               {/* Date Input Selector */}
@@ -485,16 +604,19 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 <Text style={styles.formLabel}>
                   Date <Text style={{ color: theme.colors.error }}>*</Text>
                 </Text>
-                <View style={styles.formInputWrapper}>
-                  <TextInput
-                    style={styles.formInputText}
-                    value={formDate}
-                    onChangeText={setFormDate}
-                    placeholder="mm/dd/yyyy"
-                    placeholderTextColor={theme.colors.outline}
-                  />
-                  <MaterialIcons name="calendar-today" size={18} color={theme.colors.onSurfaceVariant} />
-                </View>
+                <TouchableOpacity 
+                  style={styles.formInputWrapper}
+                  onPress={() => setIsDatePickerVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.formIconBadge, { backgroundColor: '#FEF3C7' }]}>
+                    <MaterialIcons name="calendar-today" size={15} color="#D97706" />
+                  </View>
+                  <Text style={[styles.formInputText, !formDate && { color: theme.colors.outline, fontWeight: '400' }, { textAlignVertical: 'center', paddingTop: Platform.OS === 'ios' ? 12 : 10 }]}>
+                    {formDate || 'mm/dd/yyyy'}
+                  </Text>
+                  <MaterialIcons name="event" size={18} color="#D97706" style={{ marginLeft: 'auto' }} />
+                </TouchableOpacity>
               </View>
 
               {/* Attach Image (Book Page Photo....) File Select */}
@@ -502,6 +624,9 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 <Text style={styles.formLabel}>Attach Image (Book Page Photo....)</Text>
                 <View style={styles.filePickerWrapper}>
                   <TouchableOpacity style={styles.filePickerBtn} onPress={handlePickMockImage} activeOpacity={0.8}>
+                    <View style={[styles.formIconBadge, { backgroundColor: '#FFE4E6', width: 22, height: 22, borderRadius: 6, marginRight: 6 }]}>
+                      <MaterialIcons name="image" size={13} color="#E11D48" />
+                    </View>
                     <Text style={styles.filePickerBtnText}>Choose File</Text>
                   </TouchableOpacity>
                   <Text style={styles.filePickerText} numberOfLines={1}>
@@ -519,6 +644,9 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Homework Title (Optional)</Text>
                 <View style={styles.formInputWrapper}>
+                  <View style={[styles.formIconBadge, { backgroundColor: '#E0F2FE' }]}>
+                    <MaterialIcons name="subtitles" size={15} color="#0284C7" />
+                  </View>
                   <TextInput
                     style={styles.formInputText}
                     value={formTitle}
@@ -548,104 +676,50 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   textAlignVertical="top"
                 />
               </View>
+
+              {/* Modal Actions Row placed INSIDE ScrollView so it scrolls naturally at bottom without sticking */}
+              <View style={[styles.formActionsRow, { marginTop: 20, marginBottom: 24 }]}>
+                <TouchableOpacity 
+                  style={styles.formSubmitBtn}
+                  onPress={handleAddHomework}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={['#0047CC', '#0052cc']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.formSubmitGrad}
+                  >
+                    <MaterialIcons name="send" size={15} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.formSubmitText}>Post Homework</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.formCancelBtn}
+                  onPress={() => setCreateModalVisible(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.formCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+
             </ScrollView>
-
-            {/* Modal Bottom Actions Row */}
-            <View style={styles.formActionsRow}>
-              <TouchableOpacity 
-                style={[styles.formSubmitBtn, theme.shadows.level1]}
-                onPress={handleAddHomework}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons name="send" size={16} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.formSubmitText}>Post Homework</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.formCancelBtn}
-                onPress={() => setCreateModalVisible(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.formCancelText}>CANCEL</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </View>
-
-        {/* BOTTOM OPTION PICKER MODAL (For Class, Section, and Course) */}
-        <Modal
-          visible={activePicker !== null}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setActivePicker(null)}
-        >
-          <TouchableOpacity 
-            style={styles.pickerBackdrop} 
-            activeOpacity={1} 
-            onPress={() => setActivePicker(null)}
-          >
-            <View style={styles.pickerContainer}>
-              <Text style={styles.pickerTitle}>
-                Select {activePicker === 'class' ? 'Class' : activePicker === 'section' ? 'Section' : 'Course'}
-              </Text>
-              
-              {activePicker === 'class' && (
-                <View style={styles.pickerOptionsList}>
-                  {['GRADE-II', 'Grade-I', 'Grade-III'].map((c) => (
-                    <TouchableOpacity 
-                      key={c} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormClass(c);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>{c}</Text>
-                      {formClass === c && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {activePicker === 'section' && (
-                <View style={styles.pickerOptionsList}>
-                  {['A', 'B', 'C'].map((s) => (
-                    <TouchableOpacity 
-                      key={s} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormSection(s);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>Section {s}</Text>
-                      {formSection === s && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {activePicker === 'subject' && (
-                <View style={styles.pickerOptionsList}>
-                  {['English', 'Mathematics', 'Science', 'Social Studies'].map((sub) => (
-                    <TouchableOpacity 
-                      key={sub} 
-                      style={styles.pickerOptionItem}
-                      onPress={() => {
-                        setFormSubject(sub);
-                        setActivePicker(null);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>{sub}</Text>
-                      {formSubject === sub && <MaterialIcons name="check" size={20} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        </Modal>
         </KeyboardAvoidingView>
+
+        {/* Working Calendar Date Picker Modal for Homework (Date Only) */}
+        <PremiumDateTimePicker
+          visible={isDatePickerVisible}
+          onClose={() => setIsDatePickerVisible(false)}
+          value={formDate || '13 May 2026'}
+          title="Select Assignment Date"
+          showTime={false}
+          onSelect={(newDate) => {
+            setFormDate(newDate);
+            setIsDatePickerVisible(false);
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -2194,6 +2268,14 @@ const styles = StyleSheet.create({
   formGroup: {
     gap: 6,
   },
+  formIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
   formLabel: {
     fontSize: 12,
     fontWeight: '800',
@@ -2227,6 +2309,40 @@ const styles = StyleSheet.create({
   },
   formPlaceholderText: {
     color: '#64748b',
+  },
+  formDropdownOptions: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 82, 204, 0.12)',
+    overflow: 'hidden',
+    marginTop: 6,
+    shadowColor: '#003d9b',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  formDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  formDropdownItemActive: {
+    backgroundColor: '#EFF6FF',
+  },
+  formDropdownItemText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  formDropdownItemTextActive: {
+    color: '#0052cc',
+    fontWeight: '800',
   },
   formInputWrapper: {
     flexDirection: 'row',
@@ -2300,25 +2416,84 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
   },
-  formCancelBtn: {
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.25)',
+  // CREATE FORM MODAL HEADER
+  createModalBand: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    overflow: 'hidden',
+  },
+  createModalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  createModalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+    marginRight: 10,
+  },
+  createModalIconBox: {
+    width: 30,
+    height: 30,
     borderRadius: 8,
-    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
     justifyContent: 'center',
   },
+  createModalTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -0.4,
+  },
+  createModalSubtitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 1,
+  },
+  createModalCloseBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  formCancelBtn: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    paddingHorizontal: 18,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   formCancelText: {
-    color: '#ef4444',
+    color: '#64748B',
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   formSubmitBtn: {
-    backgroundColor: '#0C3090',
-    borderRadius: 8,
-    paddingHorizontal: 18,
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#0047CC',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  formSubmitGrad: {
+    paddingHorizontal: 20,
+    height: 38,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2332,41 +2507,60 @@ const styles = StyleSheet.create({
   // Picker backdrop list
   pickerBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   pickerContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
+    width: '85%',
+    maxWidth: 380,
+    backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 20,
+    shadowColor: '#003d9b',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
     elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 82, 204, 0.08)',
   },
   pickerTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#0d1b3e',
-    marginBottom: 12,
+    marginBottom: 14,
     borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(0, 82, 204, 0.05)',
-    paddingBottom: 8,
+    borderBottomColor: 'rgba(0, 82, 204, 0.08)',
+    paddingBottom: 10,
+    letterSpacing: -0.2,
   },
   pickerOptionsList: {
-    gap: 4,
+    gap: 6,
   },
   pickerOptionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 82, 204, 0.04)',
+  },
+  pickerOptionItemActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: 'rgba(0, 82, 204, 0.25)',
   },
   pickerOptionText: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#334155',
+  },
+  pickerOptionTextActive: {
+    color: '#0052cc',
+    fontWeight: '800',
   },
   
   // Interactive Calendar Date Picker

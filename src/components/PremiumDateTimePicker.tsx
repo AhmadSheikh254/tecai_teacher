@@ -19,6 +19,7 @@ interface PremiumDateTimePickerProps {
   value: string;
   onSelect: (newValue: string) => void;
   title?: string;
+  showTime?: boolean;
 }
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -30,14 +31,17 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
   onClose,
   value,
   onSelect,
-  title = 'Select Date & Time'
+  title,
+  showTime = true
 }) => {
+  const displayTitle = title || (showTime ? 'Select Date & Time' : 'Select Date');
+
   // Parse initial value
   const parseInitial = () => {
     try {
       const parts = value.split(',');
       const dateParts = parts[0].trim().split(' '); // ["13", "May", "2026"]
-      const timeParts = parts[1].trim().split(' '); // ["09:00", "AM"]
+      const timeParts = parts[1] ? parts[1].trim().split(' ') : ["09:00", "AM"];
       const [hh, mm] = timeParts[0].split(':');
       
       const day = parseInt(dateParts[0], 10) || 13;
@@ -49,8 +53,8 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
         day,
         month: monthIdx,
         year,
-        hour: hh,
-        minute: mm,
+        hour: hh || '09',
+        minute: mm || '00',
         ampm: timeParts[1] || 'AM'
       };
     } catch (e) {
@@ -112,7 +116,9 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
   const handleSave = () => {
     const formattedDay = selectedDay < 10 ? `0${selectedDay}` : `${selectedDay}`;
     const formattedMonth = MONTHS_SHORT[currentMonth];
-    const result = `${formattedDay} ${formattedMonth} ${currentYear}, ${selectedHour}:${selectedMinute} ${selectedAmPm}`;
+    const result = showTime 
+      ? `${formattedDay} ${formattedMonth} ${currentYear}, ${selectedHour}:${selectedMinute} ${selectedAmPm}`
+      : `${formattedDay} ${formattedMonth} ${currentYear}`;
     onSelect(result);
     onClose();
   };
@@ -184,7 +190,7 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
               <View style={styles.headerIconBox}>
                 <MaterialIcons name="event-note" size={20} color="#0052cc" />
               </View>
-              <Text style={styles.headerTitle}>{title}</Text>
+              <Text style={styles.headerTitle}>{displayTitle}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
               <MaterialIcons name="close" size={20} color="#737685" />
@@ -218,66 +224,68 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
               </View>
             </View>
 
-            {/* 2. TIME SELECTOR */}
-            <View style={styles.sectionCard}>
-              <View style={styles.timeSectionHeader}>
-                <MaterialIcons name="schedule" size={16} color="#B45309" style={{ marginRight: 6 }} />
-                <Text style={styles.timeSectionTitle}>Select Time</Text>
-              </View>
+            {/* 2. TIME SELECTOR (Only if showTime is true) */}
+            {showTime && (
+              <View style={styles.sectionCard}>
+                <View style={styles.timeSectionHeader}>
+                  <MaterialIcons name="schedule" size={16} color="#B45309" style={{ marginRight: 6 }} />
+                  <Text style={styles.timeSectionTitle}>Select Time</Text>
+                </View>
 
-              <View style={styles.timeSelectionRow}>
-                {/* Hour */}
-                <View style={styles.pickerCol}>
-                  <Text style={styles.pickerLabel}>Hour</Text>
-                  <View style={styles.segmentList}>
-                    {hoursList.map(h => (
+                <View style={styles.timeSelectionRow}>
+                  {/* Hour */}
+                  <View style={styles.pickerCol}>
+                    <Text style={styles.pickerLabel}>Hour</Text>
+                    <View style={styles.segmentList}>
+                      {hoursList.map(h => (
+                        <TouchableOpacity
+                          key={h}
+                          style={[styles.segmentBtn, selectedHour === h && styles.segmentBtnActive]}
+                          onPress={() => setSelectedHour(h)}
+                        >
+                          <Text style={[styles.segmentText, selectedHour === h && styles.segmentTextActive]}>{h}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Minute */}
+                  <View style={styles.pickerCol}>
+                    <Text style={styles.pickerLabel}>Min</Text>
+                    <View style={styles.segmentList}>
+                      {minutesList.map(m => (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.segmentBtn, selectedMinute === m && styles.segmentBtnActive]}
+                          onPress={() => setSelectedMinute(m)}
+                        >
+                          <Text style={[styles.segmentText, selectedMinute === m && styles.segmentTextActive]}>{m}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* AM/PM */}
+                  <View style={[styles.pickerCol, { flex: 0.8 }]}>
+                    <Text style={styles.pickerLabel}>Period</Text>
+                    <View style={styles.ampmContainer}>
                       <TouchableOpacity
-                        key={h}
-                        style={[styles.segmentBtn, selectedHour === h && styles.segmentBtnActive]}
-                        onPress={() => setSelectedHour(h)}
+                        style={[styles.ampmBtn, selectedAmPm === 'AM' && styles.ampmBtnActive]}
+                        onPress={() => setSelectedAmPm('AM')}
                       >
-                        <Text style={[styles.segmentText, selectedHour === h && styles.segmentTextActive]}>{h}</Text>
+                        <Text style={[styles.ampmText, selectedAmPm === 'AM' && styles.ampmTextActive]}>AM</Text>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Minute */}
-                <View style={styles.pickerCol}>
-                  <Text style={styles.pickerLabel}>Min</Text>
-                  <View style={styles.segmentList}>
-                    {minutesList.map(m => (
                       <TouchableOpacity
-                        key={m}
-                        style={[styles.segmentBtn, selectedMinute === m && styles.segmentBtnActive]}
-                        onPress={() => setSelectedMinute(m)}
+                        style={[styles.ampmBtn, selectedAmPm === 'PM' && styles.ampmBtnActive]}
+                        onPress={() => setSelectedAmPm('PM')}
                       >
-                        <Text style={[styles.segmentText, selectedMinute === m && styles.segmentTextActive]}>{m}</Text>
+                        <Text style={[styles.ampmText, selectedAmPm === 'PM' && styles.ampmTextActive]}>PM</Text>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* AM/PM */}
-                <View style={[styles.pickerCol, { flex: 0.8 }]}>
-                  <Text style={styles.pickerLabel}>Period</Text>
-                  <View style={styles.ampmContainer}>
-                    <TouchableOpacity
-                      style={[styles.ampmBtn, selectedAmPm === 'AM' && styles.ampmBtnActive]}
-                      onPress={() => setSelectedAmPm('AM')}
-                    >
-                      <Text style={[styles.ampmText, selectedAmPm === 'AM' && styles.ampmTextActive]}>AM</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.ampmBtn, selectedAmPm === 'PM' && styles.ampmBtnActive]}
-                      onPress={() => setSelectedAmPm('PM')}
-                    >
-                      <Text style={[styles.ampmText, selectedAmPm === 'PM' && styles.ampmTextActive]}>PM</Text>
-                    </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
+            )}
 
             {/* Save Actions */}
             <View style={styles.actionRow}>
@@ -324,36 +332,36 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     width: '100%',
-    maxWidth: 330,
+    maxWidth: 310,
     backgroundColor: '#ffffff',
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
-    maxHeight: '90%',
+    maxHeight: '85%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   headerIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 7,
     backgroundColor: 'rgba(0, 82, 204, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: '900',
     color: '#0F172A',
   },
@@ -361,39 +369,39 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   scrollContent: {
-    padding: 12,
-    gap: 12,
+    padding: 10,
+    gap: 8,
   },
   sectionCard: {
     backgroundColor: '#ffffff',
     borderWidth: 1.2,
-    borderColor: '#F1F5F9', // sleeker, cleaner border
-    borderRadius: 20,
-    padding: 12,
+    borderColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 10,
     shadowColor: '#1e293b',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.03,
-    shadowRadius: 12,
+    shadowRadius: 10,
     elevation: 2,
   },
   monthSelectorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   arrowBtn: {
-    padding: 6,
+    padding: 4,
     backgroundColor: '#ffffff',
-    borderRadius: 20,
+    borderRadius: 16,
     shadowColor: '#1e293b',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   monthYearText: {
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: '900',
     color: '#0F172A',
     letterSpacing: -0.2,
@@ -401,15 +409,15 @@ const styles = StyleSheet.create({
   weekDaysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 6,
     backgroundColor: '#F8FAFC',
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   weekDayText: {
     width: '14.28%',
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: '#64748B',
   },
@@ -419,38 +427,38 @@ const styles = StyleSheet.create({
   },
   calendarDayCell: {
     width: '14.28%',
-    height: 42,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 1,
   },
   calendarDayCellEmpty: {
     width: '14.28%',
-    height: 42,
+    height: 32,
   },
   calendarDayCellActive: {
-    borderRadius: 21,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   selectedDayGradient: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#0052cc',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 3,
   },
   calendarDayText: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#334155',
   },
   calendarDayTextActive: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '900',
     color: '#ffffff',
   },
@@ -552,28 +560,28 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 6,
+    gap: 8,
+    marginTop: 4,
   },
   cancelBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 14,
+    height: 38,
+    borderRadius: 11,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#475569',
   },
   saveBtn: {
     flex: 1.4,
-    borderRadius: 14,
+    borderRadius: 11,
     overflow: 'hidden',
-    height: 48,
+    height: 38,
   },
   saveBtnGrad: {
     flex: 1,
@@ -583,7 +591,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
   },
 });
