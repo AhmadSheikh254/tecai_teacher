@@ -446,15 +446,6 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
 
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
-        {/* ── FEATURE PILLS ── */}
-        <View style={styles.pillRow}>
-          {['✦ Word Bank Auto-gen', '⚡ Print-Ready PDF', '📝 Multiple Question Types'].map((t, i) => (
-            <View key={i} style={styles.featurePill}>
-              <Text style={styles.featurePillText}>{t}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* ── FORM CARD ── */}
         <View style={styles.card}>
 
@@ -863,15 +854,15 @@ const styles = StyleSheet.create({
     borderColor: '#06B6D4',
   },
   fileIconOrb: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   fileAttachmentText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#94A3B8',
     flex: 1,

@@ -210,15 +210,6 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
       <LinearGradient colors={['#FFAB91', '#D24726', '#A83014']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Feature Pills */}
-        <View style={styles.pillRow}>
-          {['📉 Slide Deck Creator', '📝 Customizable Formats', '⬇️ PowerPoint (PPTX)', '📋 Content Condense'].map((t, i) => (
-            <View key={i} style={styles.pill}>
-              <Text style={styles.pillText}>{t}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* INPUT CARD */}
         <View style={styles.card}>
           {/* Topic / Content */}
@@ -512,29 +503,37 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 9.5, color: 'rgba(255,255,255,0.88)', fontWeight: '600', marginTop: 1 },
   headerGlow: { height: 2 },
 
-  scroll: { padding: 12, paddingBottom: 60 },
-
-  pillRow: { flexDirection: 'row', gap: 5, marginBottom: 10, flexWrap: 'wrap' },
-  pill: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 8, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#FFCCBC',
-  },
-  pillText: { fontSize: 9.5, fontWeight: '800', color: '#A83014' },
+  scroll: { padding: 16, paddingBottom: 48 },
 
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12,
-    borderWidth: 1, borderColor: '#FFCCBC',
-    shadowColor: '#D24726', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05, shadowRadius: 10, elevation: 3, marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#FFCCBC',
+    shadowColor: '#D24726',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 14,
   },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5, marginTop: 2 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
   fieldDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#D24726', marginRight: 6 },
-  fieldLabel: { fontSize: 9.5, fontWeight: '900', color: '#5C1605', textTransform: 'uppercase', letterSpacing: 0.8 },
+  fieldLabel: { fontSize: 10.5, fontWeight: '900', color: '#334155', textTransform: 'uppercase', letterSpacing: 0.6 },
 
   textArea: {
-    backgroundColor: '#FAF9F8', borderWidth: 1, borderColor: '#FFD7CC',
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8,
-    fontSize: 12, color: '#2A0800', fontWeight: '600', height: 60, marginBottom: 10,
+    backgroundColor: '#FAF9F8',
+    borderWidth: 1,
+    borderColor: '#FFD7CC',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
+    color: '#2A0800',
+    fontWeight: '600',
+    height: 60,
+    marginBottom: 10,
   },
 
   dropdownSelector: {
@@ -546,7 +545,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFD7CC',
     borderRadius: 10,
     paddingHorizontal: 10,
-    height: 36,
+    height: 38,
     marginBottom: 10,
   },
   dropdownText: {
@@ -561,7 +560,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFD7CC',
     borderRadius: 10,
     paddingHorizontal: 10,
-    height: 36,
+    height: 38,
     fontSize: 12,
     fontWeight: '700',
     color: '#2A0800',
@@ -569,12 +568,19 @@ const styles = StyleSheet.create({
   },
 
   fileBox: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FAF9F8',
-    borderWidth: 1, borderStyle: 'dashed', borderColor: '#FFCCBC',
-    borderRadius: 10, paddingHorizontal: 10, height: 36, marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF9F8',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#FFCCBC',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    marginBottom: 12,
   },
   fileBoxActive: { backgroundColor: '#FDF2EE', borderStyle: 'solid', borderColor: '#D24726' },
-  fileOrb: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  fileOrb: { width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   fileText: { fontSize: 11.5, fontWeight: '600', color: '#A83014', flex: 1 },
   fileTextActive: { color: '#D24726', fontWeight: '700' },
 
@@ -603,11 +609,16 @@ const styles = StyleSheet.create({
   },
 
   generatingState: {
-    flexDirection: 'row', backgroundColor: '#FDF2EE', borderRadius: 16, height: 56,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#D24726',
+    flexDirection: 'row',
+    backgroundColor: '#FDF2EE',
+    borderRadius: 12,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#D24726',
   },
-  generatingStateText: { fontSize: 14.5, fontWeight: '800', color: '#D24726' },
+  generatingStateText: { fontSize: 12.5, fontWeight: '800', color: '#D24726' },
 
   loaderCard: {
     backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16,

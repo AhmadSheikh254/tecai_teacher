@@ -86,23 +86,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             {/* Form Card Container */}
             <View style={styles.card}>
               <View style={styles.titleContainer}>
-                <Text style={styles.welcomeTitle}>Welcome back</Text>
-                <Text style={styles.welcomeSubtitle}>Please enter your details to sign in.</Text>
+                <Text style={styles.welcomeTitle}>Sign In</Text>
               </View>
 
-              {/* Email Input */}
+              {/* Identification ID Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email/Employee ID</Text>
+                <Text style={styles.label}>Identification ID</Text>
                 <View style={styles.inputWrapper}>
                   <MaterialIcons name="person" size={18} color="#0284C7" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email or ID"
+                    placeholder="Enter your Identification ID"
                     placeholderTextColor="#94A3B8"
                     value={identifier}
                     onChangeText={setIdentifier}
                     autoCapitalize="none"
-                    keyboardType="email-address"
                   />
                 </View>
               </View>
@@ -148,10 +146,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     {rememberMe && <MaterialIcons name="check" size={10} color="#ffffff" />}
                   </View>
                   <Text style={styles.rememberMeText}>Remember me</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                 </TouchableOpacity>
               </View>
 

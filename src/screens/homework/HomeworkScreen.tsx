@@ -43,6 +43,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   const [editingHomeworkId, setEditingHomeworkId] = useState<string | null>(null);
   const [viewingHomework, setViewingHomework] = useState<any | null>(null);
   const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>({ '1': true });
+
+  const toggleBookmark = (id: string) => {
+    setBookmarkedIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Form Fields State matching desktop screenshot defaults exactly
   const [formClass, setFormClass] = useState(''); // Default: '--Select--'
@@ -305,7 +310,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
   const renderSkeletonCard = (index: number) => (
     <Animated.View key={`skeleton-${index}`} style={[styles.card, { opacity: pulseAnim }, theme.shadows.level1]}>
-      <View style={styles.cardHeader}>
+      <View style={styles.cardHeaderRow}>
         <View style={styles.skeletonDateBadge} />
         <View style={{ flex: 1, gap: 6 }}>
           <View style={styles.skeletonLineShort} />
@@ -323,7 +328,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   if (viewModalVisible) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
-                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+        <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
           <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
             {/* Header */}
             <View style={[styles.formHeader, { paddingTop: 36 }]}>
@@ -349,28 +354,42 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </View>
 
                 {/* Title */}
-                <Text style={[styles.cardTitle, { fontSize: 16.5, marginTop: 8 }]}>{viewingHomework.title}</Text>
+                <Text style={[styles.cardTitle, { fontSize: 18, marginTop: 8 }]}>{viewingHomework.title}</Text>
 
                 {/* Teacher & Date info */}
-                <View style={[styles.creatorRow, { marginTop: 8 }]}>
-                  <View style={styles.creatorInfo}>
-                    <MaterialIcons name="person" size={14} color="#64748b" />
-                    <Text style={styles.creatorText}>{viewingHomework.teacher} • {viewingHomework.createdAt}</Text>
+                <View style={styles.creatorMetaRow}>
+                  <View style={styles.creatorLeftInfo}>
+                    <MaterialIcons name="person" size={15} color="#0066FF" />
+                    <Text style={styles.creatorTeacherName}>{viewingHomework.teacher}</Text>
+                    <Text style={styles.metaDot}>•</Text>
+                    <MaterialIcons name="calendar-today" size={13} color="#64748B" />
+                    <Text style={styles.creatorMetaDate}>{viewingHomework.createdAt}</Text>
                   </View>
-                  <View style={[styles.statusBadge, { 
-                    backgroundColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 179, 0, 0.1)', 
-                    borderColor: viewingHomework.status === 'Graded' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 179, 0, 0.2)' 
+                  <View style={[styles.statusPill, { 
+                    backgroundColor: viewingHomework.status === 'Graded' ? '#D1FAE5' : '#FEF3C7'
                   }]}>
-                    <Text style={[styles.statusText, { 
-                      color: viewingHomework.status === 'Graded' ? '#4CAF50' : '#FFB300' 
-                    }]}>{viewingHomework.status}</Text>
+                    <MaterialIcons 
+                      name={viewingHomework.status === 'Graded' ? "check-circle" : "access-time"} 
+                      size={13} 
+                      color={viewingHomework.status === 'Graded' ? "#059669" : "#D97706"} 
+                    />
+                    <Text style={[styles.statusPillText, { 
+                      color: viewingHomework.status === 'Graded' ? '#059669' : '#D97706' 
+                    }]}>{viewingHomework.status.toUpperCase()}</Text>
                   </View>
                 </View>
 
                 {/* Full Instructions Note */}
-                <View style={{ marginVertical: 12 }}>
+                <View style={{ marginVertical: 14 }}>
                   <Text style={[styles.formLabel, { marginBottom: 6 }]}>Instructions / Notes</Text>
-                  <Text style={[styles.noteText, { fontSize: 13.5, color: '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
+                  <View style={styles.noteBox}>
+                    <View style={styles.noteTopRow}>
+                      <View style={styles.noteIconCircle}>
+                        <MaterialIcons name="description" size={15} color="#2563EB" />
+                      </View>
+                      <Text style={[styles.noteText, { fontSize: 13.5, color: '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
+                    </View>
+                  </View>
                 </View>
 
                 {/* Image */}
@@ -385,11 +404,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                       />
                     </View>
                   </View>
-                ) : (
-                  <View style={[styles.placeholderImage, { height: 60 }]}>
-                    <Text style={styles.placeholderImageText}>No image attached</Text>
-                  </View>
-                )}
+                ) : null}
 
                 {/* Footer Buttons */}
                 <View style={[styles.formActionsRow, { marginTop: 16 }]}>
@@ -432,36 +447,44 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               colors={['#003d9b', '#0052cc']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
+              style={styles.createModalBand}
             >
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
                   <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="menu-book" size={16} color="#ffffff" />
+                    <MaterialIcons name={editingHomeworkId ? "edit" : "menu-book"} size={18} color="#ffffff" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.createModalTitle} numberOfLines={1}>Daily Homework — New Assignment</Text>
-                    <Text style={styles.createModalSubtitle} numberOfLines={1}>Configure target class, section, course & assignment details</Text>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>
+                      {editingHomeworkId ? 'Edit Homework Assignment' : 'Post Daily Homework'}
+                    </Text>
+                    <Text style={styles.createModalSubtitle} numberOfLines={1}>
+                      {editingHomeworkId ? 'Update details for this homework assignment' : 'Fill details for students and parents'}
+                    </Text>
                   </View>
                 </View>
                 <TouchableOpacity
                   style={styles.createModalCloseBtn}
                   onPress={() => setCreateModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MaterialIcons name="close" size={15} color="#ffffff" />
+                  <MaterialIcons name="close" size={18} color="#ffffff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
 
-            <ScrollView contentContainerStyle={styles.formScrollContent} showsVerticalScrollIndicator={false}>
-              
-              {/* Class Dropdown */}
+            <ScrollView 
+              contentContainerStyle={styles.formScrollContent} 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Target Class Dropdown */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Class <Text style={{ color: theme.colors.error }}>*</Text>
+                  Target Class <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={styles.formDropdown}
+                  style={[styles.formDropdown, showClassDropdown && styles.formDropdownOpen]}
                   onPress={() => {
                     setShowClassDropdown(!showClassDropdown);
                     setShowSectionDropdown(false);
@@ -471,13 +494,13 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                     <View style={[styles.formIconBadge, { backgroundColor: '#EEF2FF' }]}>
-                      <MaterialIcons name="school" size={16} color="#2563EB" />
+                      <MaterialIcons name="school" size={18} color="#2563EB" />
                     </View>
                     <Text style={[styles.formDropdownText, !formClass && styles.formPlaceholderText]}>
-                      {formClass || '--Select--'}
+                      {formClass || 'Choose Class (e.g. GRADE-II)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#2563EB" />
+                  <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
                 </TouchableOpacity>
 
                 {showClassDropdown && (
@@ -495,7 +518,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                           activeOpacity={0.7}
                         >
                           <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{c}</Text>
-                          {isSelected && <MaterialIcons name="check" size={16} color="#2563EB" />}
+                          {isSelected && <MaterialIcons name="check-circle" size={18} color="#2563EB" />}
                         </TouchableOpacity>
                       );
                     })}
@@ -503,13 +526,22 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 )}
               </View>
 
-              {/* Section Dropdown */}
+              {/* Section Multi-Select Dropdown */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
-                  Section <Text style={{ color: theme.colors.error }}>*</Text>
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.formLabel}>
+                    Section(s) <Text style={{ color: '#EF4444' }}>*</Text>
+                  </Text>
+                  {formSection ? (
+                    <View style={styles.selectedBadge}>
+                      <Text style={styles.selectedBadgeText}>
+                        {formSection.split(',').filter(Boolean).length} Selected
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
                 <TouchableOpacity 
-                  style={styles.formDropdown}
+                  style={[styles.formDropdown, showSectionDropdown && styles.formDropdownOpen]}
                   onPress={() => {
                     setShowSectionDropdown(!showSectionDropdown);
                     setShowClassDropdown(false);
@@ -519,34 +551,72 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                     <View style={[styles.formIconBadge, { backgroundColor: '#F0FDF4' }]}>
-                      <MaterialIcons name="layers" size={16} color="#059669" />
+                      <MaterialIcons name="layers" size={18} color="#059669" />
                     </View>
-                    <Text style={[styles.formDropdownText, !formSection && styles.formPlaceholderText]}>
-                      {formSection ? `Section ${formSection}` : 'Nothing selected'}
+                    <Text style={[styles.formDropdownText, !formSection && styles.formPlaceholderText]} numberOfLines={1}>
+                      {formSection ? (formSection.split(',').map(s => s.trim()).length === 3 ? 'All Sections (A, B, C)' : `Section ${formSection}`) : 'Select Section(s)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#059669" />
+                  <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
                 </TouchableOpacity>
 
                 {showSectionDropdown && (
                   <View style={styles.formDropdownOptions}>
+                    {/* Select All Option */}
+                    <TouchableOpacity
+                      style={[
+                        styles.formDropdownItem,
+                        { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                      ]}
+                      onPress={() => {
+                        const sections = ['A', 'B', 'C'];
+                        const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
+                        if (currentList.length === sections.length) {
+                          setFormSection('');
+                        } else {
+                          setFormSection(sections.join(', '));
+                        }
+                      }}
+                    >
+                      <Text style={[styles.formDropdownItemText, { fontWeight: '800', color: '#059669' }]}>
+                        {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === 3 ? '✕ Deselect All' : '✦ Select All Sections'}
+                      </Text>
+                    </TouchableOpacity>
+
                     {['A', 'B', 'C'].map(s => {
-                      const isSelected = formSection === s;
+                      const currentList = formSection ? formSection.split(',').map(item => item.trim()).filter(Boolean) : [];
+                      const isSelected = currentList.includes(s);
                       return (
                         <TouchableOpacity 
                           key={s} 
                           style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
                           onPress={() => {
-                            setFormSection(s);
-                            setShowSectionDropdown(false);
+                            let updated: string[];
+                            if (isSelected) {
+                              updated = currentList.filter(item => item !== s);
+                            } else {
+                              updated = [...currentList, s];
+                            }
+                            setFormSection(updated.join(', '));
                           }}
                           activeOpacity={0.7}
                         >
                           <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>Section {s}</Text>
-                          {isSelected && <MaterialIcons name="check" size={16} color="#059669" />}
+                          <MaterialIcons 
+                            name={isSelected ? "check-box" : "check-box-outline-blank"} 
+                            size={20} 
+                            color={isSelected ? "#059669" : "#94A3B8"} 
+                          />
                         </TouchableOpacity>
                       );
                     })}
+
+                    <TouchableOpacity
+                      style={styles.doneSelectingBtn}
+                      onPress={() => setShowSectionDropdown(false)}
+                    >
+                      <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -554,10 +624,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               {/* Course/Subject Dropdown */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Course <Text style={{ color: theme.colors.error }}>*</Text>
+                  Subject <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={styles.formDropdown}
+                  style={[styles.formDropdown, showSubjectDropdown && styles.formDropdownOpen]}
                   onPress={() => {
                     setShowSubjectDropdown(!showSubjectDropdown);
                     setShowClassDropdown(false);
@@ -567,13 +637,13 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                     <View style={[styles.formIconBadge, { backgroundColor: '#FAF5FF' }]}>
-                      <MaterialIcons name="import-contacts" size={16} color="#7C3AED" />
+                      <MaterialIcons name="menu-book" size={18} color="#7C3AED" />
                     </View>
                     <Text style={[styles.formDropdownText, !formSubject && styles.formPlaceholderText]}>
-                      {formSubject || '--Select--'}
+                      {formSubject || 'Choose Subject (e.g. English)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showSubjectDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#7C3AED" />
+                  <MaterialIcons name={showSubjectDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
                 </TouchableOpacity>
 
                 {showSubjectDropdown && (
@@ -591,7 +661,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                           activeOpacity={0.7}
                         >
                           <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sub}</Text>
-                          {isSelected && <MaterialIcons name="check" size={16} color="#7C3AED" />}
+                          {isSelected && <MaterialIcons name="check-circle" size={18} color="#7C3AED" />}
                         </TouchableOpacity>
                       );
                     })}
@@ -599,10 +669,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 )}
               </View>
 
-              {/* Date Input Selector */}
+              {/* Assignment Date Selector */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
-                  Date <Text style={{ color: theme.colors.error }}>*</Text>
+                  Assignment Date <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
                   style={styles.formInputWrapper}
@@ -610,60 +680,95 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   activeOpacity={0.8}
                 >
                   <View style={[styles.formIconBadge, { backgroundColor: '#FEF3C7' }]}>
-                    <MaterialIcons name="calendar-today" size={15} color="#D97706" />
+                    <MaterialIcons name="event" size={18} color="#D97706" />
                   </View>
-                  <Text style={[styles.formInputText, !formDate && { color: theme.colors.outline, fontWeight: '400' }, { textAlignVertical: 'center', paddingTop: Platform.OS === 'ios' ? 12 : 10 }]}>
-                    {formDate || 'mm/dd/yyyy'}
+                  <Text style={[styles.formDateDisplay, !formDate && styles.formPlaceholderText]}>
+                    {formDate || 'Tap to select date (e.g. 06/08/2026)'}
                   </Text>
-                  <MaterialIcons name="event" size={18} color="#D97706" style={{ marginLeft: 'auto' }} />
+                  <View style={styles.calendarBadge}>
+                    <MaterialIcons name="calendar-today" size={16} color="#D97706" />
+                  </View>
                 </TouchableOpacity>
               </View>
 
-              {/* Attach Image (Book Page Photo....) File Select */}
+              {/* Attach Image (Book Page Photo / Worksheet) */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Attach Image (Book Page Photo....)</Text>
-                <View style={styles.filePickerWrapper}>
-                  <TouchableOpacity style={styles.filePickerBtn} onPress={handlePickMockImage} activeOpacity={0.8}>
-                    <View style={[styles.formIconBadge, { backgroundColor: '#FFE4E6', width: 22, height: 22, borderRadius: 6, marginRight: 6 }]}>
-                      <MaterialIcons name="image" size={13} color="#E11D48" />
+                <Text style={styles.formLabel}>Attach Photo / Page (Optional)</Text>
+                {formImage ? (
+                  <View style={styles.imageAttachedCard}>
+                    <View style={styles.imageAttachedLeft}>
+                      <Image source={{ uri: formImage }} style={styles.imageThumbnail} />
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <View style={styles.attachedStatusRow}>
+                          <MaterialIcons name="check-circle" size={14} color="#10B981" />
+                          <Text style={styles.attachedStatusText}>Photo Attached</Text>
+                        </View>
+                        <Text style={styles.attachedFileName} numberOfLines={1}>
+                          BookPage_Attachment.jpg
+                        </Text>
+                      </View>
                     </View>
-                    <Text style={styles.filePickerBtnText}>Choose File</Text>
+                    <View style={styles.imageActionsRow}>
+                      <TouchableOpacity 
+                        style={styles.imageChangeBtn} 
+                        onPress={handlePickMockImage}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons name="edit" size={14} color="#2563EB" />
+                        <Text style={styles.imageChangeText}>Change</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.imageRemoveBtn} 
+                        onPress={() => setFormImage(null)}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons name="delete-outline" size={15} color="#EF4444" />
+                        <Text style={styles.imageRemoveText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.uploadPhotoCard} 
+                    onPress={handlePickMockImage}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.formIconBadge, { backgroundColor: '#FFE4E6', width: 36, height: 36, borderRadius: 10 }]}>
+                      <MaterialIcons name="add-a-photo" size={18} color="#E11D48" />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 6 }}>
+                      <Text style={styles.uploadPhotoTitle}>Tap to attach photo (Book page, Diary, etc.)</Text>
+                      <Text style={styles.uploadPhotoSubtitle}>Optional • Camera or Gallery</Text>
+                    </View>
+                    <MaterialIcons name="cloud-upload" size={20} color="#E11D48" />
                   </TouchableOpacity>
-                  <Text style={styles.filePickerText} numberOfLines={1}>
-                    {formImage ? 'BookPhoto_Attachment.jpg' : 'No file chosen'}
-                  </Text>
-                  {formImage && (
-                    <TouchableOpacity onPress={() => setFormImage(null)} style={{ marginLeft: 8 }}>
-                      <MaterialIcons name="cancel" size={18} color={theme.colors.error} />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                )}
               </View>
 
-              {/* Optional: Homework Title field */}
+              {/* Homework Title (Optional) */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Homework Title (Optional)</Text>
                 <View style={styles.formInputWrapper}>
                   <View style={[styles.formIconBadge, { backgroundColor: '#E0F2FE' }]}>
-                    <MaterialIcons name="subtitles" size={15} color="#0284C7" />
+                    <MaterialIcons name="subtitles" size={18} color="#0284C7" />
                   </View>
                   <TextInput
                     style={styles.formInputText}
                     value={formTitle}
                     onChangeText={setFormTitle}
-                    placeholder="e.g. Reading Practice"
-                    placeholderTextColor={theme.colors.outline}
+                    placeholder="e.g. Chapter 4 Multiplication Practice"
+                    placeholderTextColor="#94A3B8"
                   />
                 </View>
               </View>
 
-              {/* Homework Note multiline textarea */}
+              {/* Homework Instructions / Notes */}
               <View style={styles.formGroup}>
                 <View style={styles.formNoteHeader}>
                   <Text style={styles.formLabel}>
-                    Homework Note <Text style={{ color: theme.colors.error }}>*</Text>
+                    Homework Instructions / Notes <Text style={{ color: '#EF4444' }}>*</Text>
                   </Text>
-                  <Text style={styles.formCharCounter}>{formNote.length}/2000 characters</Text>
+                  <Text style={styles.formCharCounter}>{formNote.length}/2000</Text>
                 </View>
                 <TextInput
                   style={styles.formTextArea}
@@ -671,14 +776,14 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   numberOfLines={5}
                   value={formNote}
                   onChangeText={formText => setFormNote(formText.substring(0, 2000))}
-                  placeholder="eg. Learn table 2-5. Complete page 34 in the workbook."
-                  placeholderTextColor={theme.colors.outline}
+                  placeholder="Write clear homework instructions for students...&#10;e.g. Read pages 20-25 and solve exercise questions 1 to 5 in workbook."
+                  placeholderTextColor="#94A3B8"
                   textAlignVertical="top"
                 />
               </View>
 
-              {/* Modal Actions Row placed INSIDE ScrollView so it scrolls naturally at bottom without sticking */}
-              <View style={[styles.formActionsRow, { marginTop: 20, marginBottom: 24 }]}>
+              {/* Action Buttons */}
+              <View style={styles.formActionsRow}>
                 <TouchableOpacity 
                   style={styles.formSubmitBtn}
                   onPress={handleAddHomework}
@@ -690,8 +795,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                     end={{ x: 1, y: 0 }}
                     style={styles.formSubmitGrad}
                   >
-                    <MaterialIcons name="send" size={15} color="#fff" style={{ marginRight: 6 }} />
-                    <Text style={styles.formSubmitText}>Post Homework</Text>
+                    <MaterialIcons name={editingHomeworkId ? "save" : "send"} size={17} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.formSubmitText}>
+                      {editingHomeworkId ? 'Save Changes' : 'Post Homework'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
 
@@ -726,11 +833,6 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
   return (
     <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 500 }]} edges={['top']}>
-      {/* ── High-Fidelity Ambient Background Glow Particles ── */}
-      <View style={styles.bgGlow1} pointerEvents="none" />
-      <View style={styles.bgGlow2} pointerEvents="none" />
-      <View style={styles.bgGlow3} pointerEvents="none" />
-
       {/* Premium AppBar */}
       <View style={styles.appBar}>
         <View style={styles.appBarLeft}>
@@ -780,7 +882,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
       >
-        {/* Unified Premium Control Center Deck */}
+        {/* Solid White High-Contrast Control Center Deck */}
         <View style={styles.controlDeck}>
           {/* Segmented Date Filter Bar */}
           <View style={styles.filterBar}>
@@ -796,44 +898,48 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   onPress={() => handleFilterChange(filter)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[
-                    styles.filterBarOptionText,
-                    isSelected ? styles.filterBarOptionTextActive : null
-                  ]}>
-                    {filter === 'Custom Date' && customSelectedDate 
-                      ? `${customSelectedDate.split('-')[0]} Aug` 
-                      : filter}
-                  </Text>
+                  <View style={styles.filterBarOptionInner}>
+                    {filter === 'Custom Date' ? (
+                      <MaterialIcons 
+                        name="calendar-month" 
+                        size={20} 
+                        color={isSelected ? '#0047CC' : '#475569'} 
+                      />
+                    ) : (
+                      <Text style={[
+                        styles.filterBarOptionText,
+                        isSelected ? styles.filterBarOptionTextActive : null
+                      ]}>
+                        {filter}
+                      </Text>
+                    )}
+                  </View>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          {/* Search Bar (contrasted light-grey background inside card) */}
+          {/* High-Contrast Search Bar */}
           <View style={styles.searchWrapper}>
-            <MaterialIcons name="search" size={20} color="#0052cc" style={styles.searchIcon} />
+            <MaterialIcons name="search" size={22} color="#0047CC" style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search note, class, subject..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor="#94A3B8"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            {searchQuery !== '' ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="close" size={18} color="#64748b" />
+            {searchQuery !== '' && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <MaterialIcons name="close" size={20} color="#64748B" />
               </TouchableOpacity>
-            ) : (
-              <View style={styles.searchShortcutBadge}>
-                <Text style={styles.searchShortcutText}>⌘K</Text>
-              </View>
             )}
           </View>
 
           {/* Action Buttons */}
           <View style={styles.topActionsRow}>
             <TouchableOpacity style={[styles.topActionBtn, styles.exportBtn]} activeOpacity={0.8}>
-              <MaterialIcons name="file-download" size={18} color="#0052cc" />
+              <MaterialIcons name="file-download" size={19} color="#0047CC" />
               <Text style={styles.exportBtnText}>Export</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -841,7 +947,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               activeOpacity={0.8}
               onPress={() => setCreateModalVisible(true)}
             >
-              <MaterialIcons name="add" size={18} color="#fff" />
+              <MaterialIcons name="add" size={20} color="#FFFFFF" />
               <Text style={styles.createBtnText}>Post Homework</Text>
             </TouchableOpacity>
           </View>
@@ -889,83 +995,129 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
               return (
                 <View key={homework.id} style={styles.cardContainer}>
-                  {/* Visual 3D stacked paper layers underneath */}
-                  <View style={styles.cardUnderlay} />
-
-                  {/* Active Diary Sheet Page */}
-                  <View style={[styles.card, { shadowColor: subjectColor }]}>
-
-
-                    {/* Faint blue ruled lines across the notebook page */}
-                    <View style={styles.notebookRuleLinesContainer} pointerEvents="none">
-                      {Array.from({ length: 12 }).map((_, lineIdx) => (
-                        <View key={lineIdx} style={styles.notebookRuleLine} />
-                      ))}
-                    </View>
-
+                  {/* Clean White Diary Sheet Page */}
+                  <View style={styles.card}>
                     {/* Premium Notebook Spiral Bind along the left edge */}
-                    <View style={styles.spiralBinder}>
-                      {Array.from({ length: 8 }).map((_, rIdx) => (
+                    <View style={styles.spiralBinder} pointerEvents="none">
+                      {Array.from({ length: 9 }).map((_, rIdx) => (
                         <View key={rIdx} style={styles.spiralRingContainer}>
                           {/* C-shaped metallic coil looping over the edge */}
                           <View style={styles.spiralLoop} />
-                          {/* Punched rectangular hole on the page */}
+                          {/* Punched round hole on the page */}
                           <View style={styles.spiralHole} />
                         </View>
                       ))}
                     </View>
 
-                    <View style={styles.cardHeader}>
-                      {/* Date Badge */}
-                      <View style={styles.dateBadge}>
-                        <Text style={styles.dateDayText}>{homework.day}</Text>
-                        <Text style={styles.dateMonthText}>{homework.month}</Text>
+                    {/* Top Row: Date Box + Badges & Title & Bookmark */}
+                    <View style={styles.cardHeaderRow}>
+                      {/* Date Badge Box */}
+                      <View style={styles.dateBadgeBox}>
+                        <Text style={styles.dateDayText}>{homework.day || '06'}</Text>
+                        <Text style={styles.dateMonthText}>{homework.month || 'AUG'}</Text>
+                        <Text style={styles.dateDayNameText}>
+                          {homework.day === '06' ? 'WEDNESDAY' : homework.day === '05' ? 'TUESDAY' : homework.day === '04' ? 'MONDAY' : 'WEEKDAY'}
+                        </Text>
                       </View>
 
-                      {/* Metadata */}
-                      <View style={styles.metaColumn}>
-                        <View style={styles.badgeRow}>
-                          <View style={styles.classBadge}>
-                            <Text style={styles.classBadgeText}>{homework.grade}</Text>
+                      {/* Header Right Content: Badges Row + Bookmark + Title */}
+                      <View style={styles.headerRightCol}>
+                        <View style={styles.badgeAndBookmarkRow}>
+                          <View style={styles.badgeRow}>
+                            <View style={styles.classBadge}>
+                              <Text style={styles.classBadgeText}>{homework.grade}</Text>
+                            </View>
+                            <View style={styles.sectionBadge}>
+                              <Text style={styles.sectionBadgeText}>Sec {homework.section}</Text>
+                            </View>
+                            <View style={[styles.subjectBadge, {
+                              backgroundColor: homework.subject === 'English' ? '#F3E8FF' : homework.subject === 'Mathematics' ? '#EDE9FE' : homework.subject === 'Science' ? '#E0F2FE' : '#FEF3C7'
+                            }]}>
+                              <Text style={[styles.subjectBadgeText, {
+                                color: homework.subject === 'English' ? '#7E22CE' : homework.subject === 'Mathematics' ? '#6D28D9' : homework.subject === 'Science' ? '#0369A1' : '#D97706'
+                              }]}>{homework.subject}</Text>
+                            </View>
                           </View>
-                          <View style={styles.sectionBadge}>
-                            <Text style={styles.sectionBadgeText}>Sec {homework.section}</Text>
-                          </View>
-                          <View style={styles.subjectBadge}>
-                            <Text style={styles.subjectBadgeText}>{homework.subject}</Text>
-                          </View>
+
+                          {/* Bookmark Button */}
+                          <TouchableOpacity 
+                            style={styles.bookmarkBtn} 
+                            onPress={() => toggleBookmark(homework.id)}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialIcons 
+                              name={bookmarkedIds[homework.id] ? "bookmark" : "bookmark-border"} 
+                              size={18} 
+                              color="#0066FF" 
+                            />
+                          </TouchableOpacity>
                         </View>
-                        <Text style={styles.cardTitle}>{homework.title}</Text>
+
+                        {/* Title */}
+                        <Text style={styles.cardTitle} numberOfLines={2}>
+                          {homework.title}
+                        </Text>
                       </View>
                     </View>
 
-                    {/* Status Block */}
-                    <View style={styles.creatorRow}>
-                      <View style={styles.creatorInfo}>
-                        <MaterialIcons name="person" size={14} color="#64748b" />
-                        <Text style={styles.creatorText}>{homework.teacher} • {homework.createdAt}</Text>
+                    {/* Metadata Row: Teacher • Date Time + Status Pill (Single Clean Row) */}
+                    <View style={styles.creatorMetaRow}>
+                      <View style={styles.creatorLeftInfo}>
+                        <MaterialIcons name="person" size={13} color="#0066FF" />
+                        <Text style={styles.creatorTeacherName} numberOfLines={1}>{homework.teacher}</Text>
+                        <Text style={styles.metaDot}>•</Text>
+                        <MaterialIcons name="calendar-today" size={12} color="#64748B" />
+                        <Text style={styles.creatorMetaDate} numberOfLines={1}>
+                          {homework.day || '6'} {homework.month ? (homework.month.charAt(0) + homework.month.slice(1).toLowerCase()) : 'Aug'}
+                        </Text>
+                        <MaterialIcons name="access-time" size={12} color="#64748B" />
+                        <Text style={styles.creatorMetaTime} numberOfLines={1}>09:30 AM</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border }]}>
-                        <Text style={[styles.statusText, { color: statusStyle.text }]}>{homework.status}</Text>
+
+                      {/* Status Pill */}
+                      <View style={[styles.statusPill, {
+                        backgroundColor: homework.status === 'Graded' ? '#D1FAE5' : '#FEF3C7'
+                      }]}>
+                        <MaterialIcons 
+                          name={homework.status === 'Graded' ? "check-circle" : "access-time"} 
+                          size={12} 
+                          color={homework.status === 'Graded' ? "#059669" : "#D97706"} 
+                        />
+                        <Text style={[styles.statusPillText, {
+                          color: homework.status === 'Graded' ? "#059669" : "#D97706"
+                        }]}>
+                          {homework.status.toUpperCase()}
+                        </Text>
                       </View>
                     </View>
 
-                    {/* Homework Note */}
-                    <View style={styles.noteContainer}>
-                      <Text style={styles.noteText}>{displayNote}</Text>
+                    {/* Note Box */}
+                    <View style={styles.noteBox}>
+                      <View style={styles.noteTopRow}>
+                        <View style={styles.noteIconCircle}>
+                          <MaterialIcons name="description" size={16} color="#2563EB" />
+                        </View>
+                        <Text 
+                          style={styles.noteText} 
+                          numberOfLines={isExpanded ? undefined : 3}
+                        >
+                          {homework.note}
+                        </Text>
+                      </View>
+
                       {shouldTruncate && (
-                        <TouchableOpacity onPress={() => toggleExpandNote(homework.id)} style={styles.readMoreBtn}>
+                        <TouchableOpacity onPress={() => toggleExpandNote(homework.id)} style={styles.readMoreBtn} activeOpacity={0.7}>
                           <Text style={styles.readMoreText}>{isExpanded ? 'Read Less' : 'Read More'}</Text>
                           <MaterialIcons 
-                            name={isExpanded ? 'expand-less' : 'expand-more'} 
-                            size={16} 
-                            color="#0052cc" 
+                            name={isExpanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} 
+                            size={18} 
+                            color="#0066FF" 
                           />
                         </TouchableOpacity>
                       )}
                     </View>
 
-                    {/* Image attachment wrapper */}
+                    {/* Image Attachment (Tap to Preview) */}
                     {homework.image ? (
                       <TouchableOpacity 
                         onPress={() => setPreviewImage(homework.image)} 
@@ -975,38 +1127,57 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                         <Image 
                           source={typeof homework.image === 'string' ? { uri: homework.image } : homework.image} 
                           style={styles.homeworkImg} 
+                          resizeMode="cover"
                         />
-                        <View style={styles.imageOverlay}>
-                          <MaterialIcons name="zoom-out-map" size={18} color="#fff" />
-                          <Text style={styles.imageOverlayText}>Tap to preview</Text>
+                        <View style={styles.tapToPreviewPill}>
+                          <MaterialIcons name="aspect-ratio" size={15} color="#FFFFFF" />
+                          <Text style={styles.tapToPreviewText}>Tap to preview</Text>
                         </View>
                       </TouchableOpacity>
-                    ) : (
-                      <View style={styles.placeholderImage}>
-                        <MaterialIcons name="image" size={32} color="#94a3b8" />
-                        <Text style={styles.placeholderImageText}>No Attachment Available</Text>
-                      </View>
-                    )}
+                    ) : null}
 
-                    {/* Actions */}
+                    {/* Action Buttons: View, Edit, Delete */}
                     <View style={styles.cardFooterActions}>
-                      <TouchableOpacity style={[styles.actionBtn, styles.viewBtn]} activeOpacity={0.7} onPress={() => handleViewPress(homework)}>
-                        <MaterialIcons name="visibility" size={18} color="#083ca6" />
-                        <Text style={styles.viewBtnText}>View</Text>
+                      <TouchableOpacity style={styles.actionBtnView} activeOpacity={0.75} onPress={() => handleViewPress(homework)}>
+                        <MaterialIcons name="visibility" size={18} color="#0066FF" />
+                        <Text style={styles.actionBtnViewText}>View</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} activeOpacity={0.7} onPress={() => handleEditPress(homework)}>
-                        <MaterialIcons name="edit" size={18} color="#334155" />
-                        <Text style={styles.editBtnText}>Edit</Text>
+                      <TouchableOpacity style={styles.actionBtnEdit} activeOpacity={0.75} onPress={() => handleEditPress(homework)}>
+                        <MaterialIcons name="edit" size={16} color="#334155" />
+                        <Text style={styles.actionBtnEditText}>Edit</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} activeOpacity={0.7} onPress={() => handleDeletePress(homework.id)}>
-                        <MaterialIcons name="delete" size={18} color="#dc2626" />
-                        <Text style={styles.deleteBtnText}>Delete</Text>
+                      <TouchableOpacity style={styles.actionBtnDelete} activeOpacity={0.75} onPress={() => handleDeletePress(homework.id)}>
+                        <MaterialIcons name="delete" size={18} color="#DC2626" />
+                        <Text style={styles.actionBtnDeleteText}>Delete</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
               );
             })}
+          </View>
+        )}
+
+        {/* Bottom Status Pill Badge */}
+        {filteredHomework.length > 0 && (
+          <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 28 }}>
+            <View style={{
+              backgroundColor: '#F8FAFC',
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 20,
+              shadowColor: '#0F172A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.04,
+              shadowRadius: 6,
+              elevation: 2,
+            }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+                All {filteredHomework.length} homework records loaded
+              </Text>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -1449,6 +1620,21 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
 
 
+      {/* Working Calendar Date Picker Modal for Filtering by Date */}
+      <PremiumDateTimePicker
+        visible={calendarModalVisible}
+        onClose={() => setCalendarModalVisible(false)}
+        value={customSelectedDate ? `${customSelectedDate.split('-')[0]} Aug 2026` : '04 Aug 2026'}
+        title="Filter by Date"
+        showTime={false}
+        onSelect={(newDate) => {
+          const day = newDate.split(' ')[0] || '04';
+          const formatted = `${day.padStart(2, '0')}-08-26`;
+          setCustomSelectedDate(formatted);
+          setSelectedFilter('Custom Date');
+          setCalendarModalVisible(false);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -1480,16 +1666,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(124, 58, 237, 0.04)',
     zIndex: 1,
   },
-  bgGlow3: {
-    position: 'absolute',
-    top: '40%',
-    left: '30%',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(245, 158, 11, 0.03)',
-    zIndex: 1,
-  },
   // ===== PREMIUM APP BAR =====
   appBar: {
     height: 64,
@@ -1497,9 +1673,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(0, 82, 204, 0.06)',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
     zIndex: 10,
   },
   appBarLeft: {
@@ -1508,12 +1684,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   appBarButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 82, 204, 0.04)',
+    backgroundColor: '#F1F5F9',
   },
   appBarIconBtn: {
     width: 38,
@@ -1521,9 +1697,9 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.08)',
+    borderColor: '#E2E8F0',
     marginLeft: 6,
   },
   logoRow: {
@@ -1532,11 +1708,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    backgroundColor: '#0052cc',
-    shadowColor: '#0052cc',
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#0047CC',
+    shadowColor: '#0047CC',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -1547,19 +1723,19 @@ const styles = StyleSheet.create({
   logoBadgeText: {
     color: '#fff',
     fontWeight: '900',
-    fontSize: 10.5,
+    fontSize: 11,
     letterSpacing: 0.5,
   },
   appBarTitle: {
-    fontSize: 14.5,
+    fontSize: 15,
     fontWeight: '800',
-    color: '#0d1b3e',
-    letterSpacing: -0.4,
-    lineHeight: 17,
+    color: '#0F172A',
+    letterSpacing: -0.3,
+    lineHeight: 18,
   },
   appBarSubtitle: {
-    fontSize: 9.5,
-    color: '#64748b',
+    fontSize: 10.5,
+    color: '#64748B',
     fontWeight: '700',
     letterSpacing: 0.1,
     marginTop: -1,
@@ -1587,64 +1763,76 @@ const styles = StyleSheet.create({
   avatarBorderRing: {
     padding: 2,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     marginLeft: 8,
   },
   profileAvatar: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(0, 82, 204, 0.08)',
+    backgroundColor: '#F1F5F9',
   },
   
-  // Unified Premium Control Center Deck
+  // Solid Clean White Control Center Deck (Easy to understand for old teachers & children)
   controlDeck: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     padding: 16,
-    borderWidth: 1.5, // Stronger structural border
-    borderColor: 'rgba(0, 82, 204, 0.08)',
-    // Extra heavy, deep shadow for 3D page elevation
-    shadowColor: '#0052cc',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 20,
-    elevation: 4,
-    marginBottom: 6,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    marginBottom: 10,
   },
   
-  // Segmented Date Filter Control Bar
+  // High-Contrast Segmented Date Filter Bar
   filterBar: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0',
-    borderRadius: 10,
-    padding: 3,
-    height: 36,
-    marginBottom: 10,
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 4,
+    height: 44,
+    marginBottom: 12,
   },
   filterBarOption: {
     flex: 1,
-    height: '100%',
+    height: 36,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+  },
+  filterBarOptionInner: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterBarOptionActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   filterBarOptionText: {
-    fontSize: 11,
-    fontWeight: '900',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#475569',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    lineHeight: 18,
   },
   filterBarOptionTextActive: {
-    color: '#0d1b3e',
+    color: '#0047CC',
     fontWeight: '900',
   },
 
@@ -1661,13 +1849,13 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: 10,
-    height: 36,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    marginBottom: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    height: 44,
+    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    marginBottom: 12,
   },
   searchIcon: {
     marginRight: 8,
@@ -1675,67 +1863,59 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: '100%',
-    color: '#0d1b3e',
-    fontSize: 12,
-    fontWeight: '900',
+    color: '#0F172A',
+    fontSize: 13.5,
+    fontWeight: '700',
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }),
   },
   searchShortcutBadge: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 6,
-    paddingVertical: 2.5,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
+    display: 'none',
   },
   searchShortcutText: {
-    fontSize: 8.5,
-    fontWeight: '900',
-    color: '#64748b',
-    letterSpacing: 0.2,
+    display: 'none',
   },
 
   // Actions row (Export & Create)
   topActionsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 4,
+    gap: 10,
   },
   topActionBtn: {
     flex: 1,
-    height: 36,
-    borderRadius: 10,
+    height: 44,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 6,
   },
   exportBtn: {
-    backgroundColor: '#fff',
-    borderWidth: 1.2,
-    borderColor: '#0052cc',
-    shadowColor: '#000',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#0047CC',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 1,
   },
   exportBtnText: {
-    color: '#0052cc',
-    fontSize: 12,
+    color: '#0047CC',
+    fontSize: 13.5,
     fontWeight: '900',
     letterSpacing: 0.2,
   },
   createBtn: {
-    backgroundColor: '#0C3090',
-    shadowColor: '#0C3090',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#0047CC',
+    shadowColor: '#0047CC',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
   },
   createBtnText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#FFFFFF',
+    fontSize: 13.5,
     fontWeight: '900',
     letterSpacing: 0.2,
   },
@@ -1749,63 +1929,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     zIndex: 10,
   },
-  cardUnderlay: {
-    position: 'absolute',
-    left: 4,
-    right: -4,
-    top: 4,
-    bottom: -4,
-    backgroundColor: '#D1FAE5', // Light emerald mint representing secondary stacked page
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    borderTopRightRadius: 28,
-    borderBottomRightRadius: 28,
-    borderWidth: 1.2,
-    borderColor: 'rgba(16, 185, 129, 0.18)',
-    zIndex: 1,
-  },
   card: {
-    backgroundColor: '#ECFDF5', // Super soft premium light emerald page background
-    borderTopLeftRadius: 8, // Book/spiral binder inner edge curves are tighter
-    borderBottomLeftRadius: 8,
-    borderTopRightRadius: 28, // Book outer edges are round and smooth
-    borderBottomRightRadius: 28,
-    padding: 16,
-    paddingLeft: 34, // Room for spiral coils
-    borderWidth: 1.2,
-    borderColor: 'rgba(16, 185, 129, 0.14)', // Soft emerald outline instead of generic border
-    shadowColor: '#10B981', // Emerald ambient glow shadow projection
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingTop: 15,
+    paddingBottom: 15,
+    paddingRight: 14,
+    paddingLeft: 34, // Sits tightly next to the compact spiral rings
+    borderWidth: 1,
+    borderColor: '#EDF2F7',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
     elevation: 3,
     position: 'relative',
     overflow: 'hidden',
     zIndex: 2,
   },
-  notebookMarginLine: {
-    position: 'absolute',
-    left: 48,
-    top: 0,
-    bottom: 0,
-    width: 1.2,
-    backgroundColor: 'rgba(244, 63, 94, 0.25)', // Pink notebook margin ruler line
-    zIndex: 3,
-  },
-  notebookRuleLinesContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'space-between',
-    paddingVertical: 20,
-    zIndex: 1,
-  },
-  notebookRuleLine: {
-    height: 1,
-    backgroundColor: 'rgba(0, 82, 204, 0.025)', // Faint notebook horizontal grid rule lines
-  },
+
+  // Spiral Binder on Left Edge (Slim & Compact)
   spiralBinder: {
     position: 'absolute',
     left: 0,
@@ -1818,254 +1961,324 @@ const styles = StyleSheet.create({
   },
   spiralRingContainer: {
     width: 22,
-    height: 14,
+    height: 12,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
   spiralHole: {
-    width: 4,
-    height: 10,
-    borderRadius: 1.5,
-    backgroundColor: '#94a3b8', // Saturated punch hole grey
+    width: 6,
+    height: 9,
+    borderRadius: 3,
+    backgroundColor: '#1E293B',
     marginRight: 4,
     borderWidth: 0.5,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderColor: '#0F172A',
   },
   spiralLoop: {
     position: 'absolute',
-    left: 0,
-    width: 17, // Larger loop width
-    height: 13, // Larger loop height
-    borderRadius: 6,
-    borderLeftWidth: 3.2, // Bolder coil stroke
-    borderTopWidth: 3.2, // Bolder coil stroke
-    borderBottomWidth: 3.2, // Bolder coil stroke
+    left: -2,
+    width: 15,
+    height: 10,
+    borderTopLeftRadius: 5,
+    borderBottomLeftRadius: 5,
+    borderLeftWidth: 2.8,
+    borderTopWidth: 2.8,
+    borderBottomWidth: 2.8,
     borderRightWidth: 0,
-    borderColor: '#1e293b', // Premium dark charcoal steel coil color
+    borderColor: '#94A3B8',
     backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  cardHeader: {
+
+  // Header Row
+  cardHeaderRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'flex-start',
   },
-  dateBadge: {
-    width: 44,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#f0f4ff',
+  dateBadgeBox: {
+    width: 58,
+    height: 64,
+    borderRadius: 15,
+    backgroundColor: '#F0F6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.08)',
+    marginRight: 10,
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   dateDayText: {
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#0052cc',
+    color: '#0066FF',
+    lineHeight: 25,
   },
   dateMonthText: {
-    fontSize: 8.5,
-    fontWeight: '900',
-    color: '#0052cc',
-    letterSpacing: 0.5,
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0066FF',
+    marginTop: 1,
+    letterSpacing: 0.2,
   },
-  metaColumn: {
+  dateDayNameText: {
+    fontSize: 6.5,
+    fontWeight: '700',
+    color: '#0066FF',
+    letterSpacing: 0.3,
+    marginTop: 0.5,
+  },
+  headerRightCol: {
     flex: 1,
-    gap: 4,
+  },
+  badgeAndBookmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 5,
+    alignItems: 'center',
   },
   classBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3.5,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 82, 204, 0.06)',
+    borderRadius: 7,
+    backgroundColor: '#E0EEFF',
   },
   classBadgeText: {
-    fontSize: 9.5,
+    fontSize: 10.5,
     fontWeight: '800',
-    color: '#0052cc',
+    color: '#0066FF',
   },
   sectionBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3.5,
-    borderRadius: 8,
-    backgroundColor: 'rgba(71, 85, 105, 0.06)',
+    borderRadius: 7,
+    backgroundColor: '#F1F5F9',
   },
   sectionBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '800',
+    fontSize: 10.5,
+    fontWeight: '700',
     color: '#475569',
   },
   subjectBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3.5,
-    borderRadius: 8,
-    backgroundColor: 'rgba(16, 185, 129, 0.06)',
+    borderRadius: 7,
+    backgroundColor: '#F3E8FF',
   },
   subjectBadgeText: {
-    fontSize: 9.5,
+    fontSize: 10.5,
     fontWeight: '800',
-    color: '#10B981',
+    color: '#7E22CE',
+  },
+  bookmarkBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F0F6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: '900',
-    color: '#0d1b3e',
-    lineHeight: 16,
-    marginTop: 2,
+    color: '#0F172A',
+    lineHeight: 21,
+    marginTop: 6,
   },
-  creatorRow: {
+
+  // Creator Meta Row (Single Non-Wrapping Row)
+  creatorMetaRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginTop: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 82, 204, 0.04)',
-    paddingBottom: 8,
+    gap: 6,
   },
-  creatorInfo: {
+  creatorLeftInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
     gap: 4,
   },
-  creatorText: {
-    fontSize: 10.2,
+  creatorTeacherName: {
+    fontSize: 11,
+    fontWeight: '700',
     color: '#475569',
-    fontWeight: '600',
   },
-  statusBadge: {
+  metaDot: {
+    fontSize: 10,
+    color: '#94A3B8',
+  },
+  creatorMetaDate: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  creatorMetaTime: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
     paddingHorizontal: 8,
     paddingVertical: 3.5,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 10,
   },
-  statusText: {
-    fontSize: 9,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+  statusPillText: {
+    fontSize: 9.5,
+    fontWeight: '900',
     letterSpacing: 0.2,
   },
-  noteContainer: {
-    marginVertical: 12,
+
+  // Note Box
+  noteBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    marginTop: 11,
+  },
+  noteTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  noteIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
   },
   noteText: {
-    fontSize: 12.5,
-    color: '#334155',
-    lineHeight: 17,
-    fontWeight: '600',
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 13.5, // Larger & more prominent
+    color: '#0F172A', // Deep crisp color for maximum readability
+    lineHeight: 20.5, // Comfortable reading line height
+    fontWeight: '500', // Clean medium weight (not overly bold)
+    letterSpacing: 0.1,
   },
   readMoreBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    marginTop: 6,
+    gap: 3,
+    marginTop: 8,
+    marginLeft: 38,
   },
   readMoreText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#0052cc',
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#0066FF',
+    letterSpacing: 0.1,
   },
+
+  // Image Wrapper & Floating Preview Pill
   imageWrapper: {
-    height: 190, // Increased image height for premium presentation
-    borderRadius: 16,
+    height: 180,
+    borderRadius: 18,
     overflow: 'hidden',
+    marginTop: 12,
     position: 'relative',
-    marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.05)',
+    borderColor: '#E2E8F0',
   },
   homeworkImg: {
     width: '100%',
     height: '100%',
   },
-  imageOverlay: {
+  tapToPreviewPill: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(15,23,42,0.6)',
-    paddingVertical: 6,
+    bottom: 12,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 6,
   },
-  imageOverlayText: {
-    color: '#fff',
-    fontSize: 11,
+  tapToPreviewText: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '700',
   },
-  placeholderImage: {
-    height: 72,
-    backgroundColor: '#f8fafc',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(0, 82, 204, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    marginBottom: 12,
-  },
-  placeholderImageText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748b',
-  },
+
+  // Action Buttons: View, Edit, Delete
   cardFooterActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
+    marginTop: 15,
   },
-  actionBtn: {
+  actionBtnView: {
     flex: 1,
-    height: 38, // Elevated height for easy clickability
-    borderRadius: 12, // Softer curves matching card corners
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: '#EBF4FF',
+    borderWidth: 1.2,
+    borderColor: '#BFDBFE',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    borderWidth: 1,
-    // Soft shadow elevation
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  viewBtn: {
-    backgroundColor: 'rgba(8, 60, 166, 0.06)', // Translucent premium sapphire blue
-    borderColor: 'rgba(8, 60, 166, 0.18)',
-  },
-  viewBtnText: {
-    color: '#083ca6',
-    fontSize: 12.5, // Larger and bolder text size
+  actionBtnViewText: {
+    color: '#0066FF',
+    fontSize: 13.5,
     fontWeight: '900',
-    letterSpacing: 0.3,
   },
-  editBtn: {
-    backgroundColor: 'rgba(51, 65, 85, 0.06)', // Translucent premium slate charcoal
-    borderColor: 'rgba(51, 65, 85, 0.18)',
+  actionBtnEdit: {
+    flex: 1,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
-  editBtnText: {
+  actionBtnEditText: {
     color: '#334155',
-    fontSize: 12.5,
+    fontSize: 13.5,
     fontWeight: '900',
-    letterSpacing: 0.3,
   },
-  deleteBtn: {
-    backgroundColor: 'rgba(220, 38, 38, 0.06)', // Translucent premium crimson red
-    borderColor: 'rgba(220, 38, 38, 0.18)',
+  actionBtnDelete: {
+    flex: 1,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.2,
+    borderColor: '#FECACA',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
-  deleteBtnText: {
-    color: '#dc2626',
-    fontSize: 12.5,
+  actionBtnDeleteText: {
+    color: '#DC2626',
+    fontSize: 13.5,
     fontWeight: '900',
-    letterSpacing: 0.3,
   },
 
   // Floating Action Button
@@ -2261,25 +2474,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   formScrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 16,
+    paddingBottom: 40,
   },
   formGroup: {
-    gap: 6,
+    gap: 7,
   },
   formIconBadge: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   formLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0d1b3e',
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: -0.2,
+  },
+  selectedBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  selectedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
   },
   formNoteHeader: {
     flexDirection: 'row',
@@ -2287,47 +2515,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   formCharCounter: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
   },
   formDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    height: 44,
+    height: 48,
     paddingHorizontal: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 82, 204, 0.06)',
+    borderColor: '#E2E8F0',
+  },
+  formDropdownOpen: {
+    borderColor: '#2563EB',
+    backgroundColor: '#FFFFFF',
   },
   formDropdownText: {
-    fontSize: 13,
-    color: '#0f172a',
+    fontSize: 13.5,
+    color: '#1E293B',
     fontWeight: '600',
   },
   formPlaceholderText: {
-    color: '#64748b',
+    color: '#94A3B8',
+    fontWeight: '500',
   },
   formDropdownOptions: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 82, 204, 0.12)',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
     marginTop: 6,
-    shadowColor: '#003d9b',
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowRadius: 10,
     elevation: 4,
   },
   formDropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
@@ -2336,93 +2569,180 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   formDropdownItemText: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '600',
     color: '#334155',
   },
   formDropdownItemTextActive: {
-    color: '#0052cc',
-    fontWeight: '800',
+    color: '#2563EB',
+    fontWeight: '700',
+  },
+  doneSelectingBtn: {
+    backgroundColor: '#059669',
+    margin: 8,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneSelectingText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
   formInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    height: 44,
+    height: 48,
     paddingHorizontal: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 82, 204, 0.06)',
+    borderColor: '#E2E8F0',
   },
   formInputText: {
     flex: 1,
     height: '100%',
-    color: '#0f172a',
-    fontSize: 13,
+    color: '#1E293B',
+    fontSize: 13.5,
     fontWeight: '600',
   },
-  formTextArea: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 82, 204, 0.06)',
-    padding: 12,
-    fontSize: 13,
-    color: '#0f172a',
+  formDateDisplay: {
+    flex: 1,
+    color: '#1E293B',
+    fontSize: 13.5,
     fontWeight: '600',
-    minHeight: 90,
   },
-  
-  // Custom File Picker layout (matching desktop design style)
-  filePickerWrapper: {
+  calendarBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadPhotoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    height: 44,
-    paddingHorizontal: 8,
+    padding: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 82, 204, 0.06)',
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
   },
-  filePickerBtn: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.12)',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 10,
-  },
-  filePickerBtnText: {
-    fontSize: 11,
+  uploadPhotoTitle: {
+    fontSize: 13,
     fontWeight: '700',
-    color: '#0052cc',
+    color: '#334155',
   },
-  filePickerText: {
-    flex: 1,
+  uploadPhotoSubtitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  imageAttachedCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    gap: 10,
+  },
+  imageAttachedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  imageThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
+  },
+  attachedStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  attachedStatusText: {
     fontSize: 12,
-    color: '#64748b',
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#059669',
   },
-
+  attachedFileName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  imageActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 8,
+  },
+  imageChangeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
+  },
+  imageChangeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  imageRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#FEF2F2',
+  },
+  imageRemoveText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+  formTextArea: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    fontSize: 13.5,
+    lineHeight: 20,
+    color: '#1E293B',
+    fontWeight: '500',
+    minHeight: 110,
+  },
+  
   formActionsRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
-    paddingHorizontal: 20,
-    marginTop: 12,
+    marginTop: 10,
+    marginBottom: 16,
   },
   formActionBtn: {
-    height: 40,
+    height: 48,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   // CREATE FORM MODAL HEADER
   createModalBand: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     overflow: 'hidden',
   },
   createModalHeaderRow: {
@@ -2433,75 +2753,78 @@ const styles = StyleSheet.create({
   createModalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     flex: 1,
     minWidth: 0,
     marginRight: 10,
   },
   createModalIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   createModalTitle: {
-    fontSize: 14,
-    fontWeight: '900',
+    fontSize: 15,
+    fontWeight: '800',
     color: '#ffffff',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   createModalSubtitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.75)',
-    marginTop: 1,
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
   createModalCloseBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   formCancelBtn: {
+    flex: 1,
+    height: 48,
     backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    paddingHorizontal: 18,
-    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   formCancelText: {
     color: '#64748B',
-    fontSize: 12.5,
+    fontSize: 14,
     fontWeight: '700',
   },
   formSubmitBtn: {
-    borderRadius: 10,
+    flex: 2,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
     shadowColor: '#0047CC',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   formSubmitGrad: {
-    paddingHorizontal: 20,
-    height: 38,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   formSubmitText: {
     color: '#fff',
-    fontSize: 12.5,
+    fontSize: 14,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
 
   // Picker backdrop list

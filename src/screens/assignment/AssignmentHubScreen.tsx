@@ -335,54 +335,34 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
                            : item.color === '#0D9488' ? ['#ffffff', '#F0FDFA', '#CCFBF1']
                            : ['#ffffff', '#F0F9FF', '#E0F2FE'];
 
-  const dynamicCardWidth = width >= 1024 ? '31.5%' : width >= 600 ? '48.5%' : '100%';
+  const dynamicCardWidth = '100%';
 
   return (
     <Animated.View style={[
       styles.moduleCard, 
       animatedShadowStyle, 
-      { shadowColor: item.color, borderColor: cardBorderColor, width: dynamicCardWidth }
+      { borderColor: cardBorderColor, width: dynamicCardWidth }
     ]}>
       <Pressable
         style={styles.cardTouchable}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-        
         accessible={true}
         accessibilityRole="button"
       >
-        {/* Dynamic Luminous Gradient Background */}
-        <LinearGradient
-          colors={cardGradientColors as any}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        {/* Solid Opaque Mask Surface Layer - Completely masks all page-level background decorations */}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF', borderRadius: 18, zIndex: 0 }]} pointerEvents="none" />
 
         {/* Left Accent Border strip */}
         <View style={[styles.cardLeftBorder, { backgroundColor: item.color }]} pointerEvents="none" />
-
-        {/* Subtle glass gloss top reflection */}
-        <View style={styles.cardTopShine} pointerEvents="none" />
-
-        {/* Ambient halo glow behind the icon plate */}
-        <View style={[styles.iconHaloGlow1, { backgroundColor: item.color }]} pointerEvents="none" />
-        <View style={[styles.iconHaloGlow2, { backgroundColor: item.color }]} pointerEvents="none" />
 
         {/* Dynamic Category Watermark Overlay with float animations */}
         <Animated.View style={[styles.watermarkWrapper, animatedWatermarkStyle]} pointerEvents="none">
           {renderCardWatermark()}
         </Animated.View>
 
-        {/* Diagonal light sheen sweep across the card */}
-        <View style={styles.cardLightStreak} pointerEvents="none" />
-
-        {/* Extremely subtle color wash glow in the bottom corner */}
-        <View style={[styles.cardCornerGlow, { backgroundColor: `${item.color}06` }]} pointerEvents="none" />
-
-        {/* Card Content Wrapper to offset left padding for accent border */}
+        {/* Card Content Wrapper */}
         <View style={styles.cardContentWrapper} pointerEvents="none">
           {/* Card Header Row */}
           <View style={styles.cardHeaderRow} pointerEvents="none">
@@ -390,20 +370,13 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
             <CategoryBadge label={item.badge} accentColor={item.color} />
           </View>
 
-          {/* Title & Description stack */}
+          {/* Title stack */}
           <View style={styles.cardMainContent} pointerEvents="none">
             <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.cardDesc} numberOfLines={2}>{item.desc}</Text>
           </View>
 
           {/* Card Footer Row */}
-          <View style={styles.cardFooter} pointerEvents="none">
-            {/* Status info pill */}
-            <View style={styles.statsPill} pointerEvents="none">
-              <View style={[styles.statsDot, { backgroundColor: item.color }]} pointerEvents="none" />
-              <Text style={styles.statsText}>{item.stats}</Text>
-            </View>
-            
+          <View style={[styles.cardFooter, { justifyContent: 'flex-end' }]} pointerEvents="none">
             <ActionButton accentColor={item.color} />
           </View>
         </View>
@@ -504,14 +477,12 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
       </View>
 
       <ScrollView 
-        style={{ flex: 1, width: '100%' }}
+        style={{ flex: 1, width: '100%', zIndex: 5, position: 'relative' }}
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
       >
         {/* Deep Luxury Header Banner */}
         <View style={styles.welcomeBanner}>
-          <View style={styles.cardTopShine} />
-          
           {/* Replicated Home Page Aurora System */}
           <View style={styles.auroraGlow1} />
           <View style={styles.auroraGlow2} />
@@ -524,7 +495,6 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
               <Text style={styles.portalTagText}>WORKSPACE PRO</Text>
             </View>
             <Text style={styles.dashboardTitle}>Assignment Hub</Text>
-            <Text style={styles.dashboardSubtitle}>Deploy & evaluate custom learning lessons</Text>
           </View>
           <View style={styles.pulseRadar}>
             <View style={styles.radarRing1} />
@@ -579,7 +549,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     backgroundColor: 'rgba(0, 82, 204, 0.04)',
-    zIndex: 1,
+    zIndex: 0,
   },
   bgGlow2: {
     position: 'absolute',
@@ -589,7 +559,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     backgroundColor: 'rgba(124, 58, 237, 0.04)',
-    zIndex: 1,
+    zIndex: 0,
   },
   bgGlow3: {
     position: 'absolute',
@@ -599,7 +569,7 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 125,
     backgroundColor: 'rgba(245, 158, 11, 0.03)',
-    zIndex: 1,
+    zIndex: 0,
   },
   // ===== PREMIUM APP BAR =====
   appBar: {
@@ -852,49 +822,45 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    flexDirection: 'column',
+    gap: 14,
     width: '100%',
   },
   moduleCard: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
-    minHeight: 104,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    minHeight: 140,
+    zIndex: 10,
   },
   cardTouchable: {
     flex: 1,
-    padding: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     justifyContent: 'space-between',
     position: 'relative',
-  },
-  cardTopShine: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1.2,
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
-    zIndex: 10,
+    backgroundColor: '#FFFFFF',
   },
   cardLeftBorder: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: 3.5,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    width: 4,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
     zIndex: 11,
   },
   cardContentWrapper: {
     flex: 1,
-    paddingLeft: 2,
+    paddingLeft: 0,
     justifyContent: 'space-between',
     zIndex: 2,
   },
@@ -909,8 +875,8 @@ const styles = StyleSheet.create({
   },
   watermarkWrapper: {
     position: 'absolute',
-    bottom: -10,
-    right: 32,
+    bottom: -2,
+    right: 56,
     zIndex: 1,
   },
   cardWatermarkSvg: {
@@ -952,21 +918,21 @@ const styles = StyleSheet.create({
   // ── ICON PLATE STYLING ──
   iconOuterWrapper: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconInnerGlow: {
     position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   iconGlassContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -989,32 +955,34 @@ const styles = StyleSheet.create({
   badgeCapsule: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 2.5,
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
     borderRadius: 14,
     borderWidth: 1,
   },
   badgeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginRight: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    marginRight: 4,
   },
   badgeText: {
-    fontSize: 8,
-    fontWeight: '900',
+    fontSize: 9.5,
+    fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   // ── MAIN CONTENT ──
   cardMainContent: {
     flex: 1,
-    marginTop: 6,
+    marginTop: 10,
+    marginBottom: 4,
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 12.5,
-    fontWeight: '900',
-    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
     letterSpacing: -0.2,
   },
   cardDesc: {
@@ -1027,11 +995,8 @@ const styles = StyleSheet.create({
   // ── FOOTER STYLING ──
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 82, 204, 0.04)',
-    paddingTop: 6,
     marginTop: 4,
   },
   statsPill: {
@@ -1057,17 +1022,17 @@ const styles = StyleSheet.create({
   },
   // ── ACTION BUTTON STYLING ──
   actionOrbitalTrack: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 1.2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionCircleInner: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',

@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+// @ts-ignore
+import ReactDOM from 'react-dom';
 import {
   StyleSheet,
   Text,
@@ -19,6 +21,46 @@ import Svg, { Rect, Circle, Line, G, Path } from 'react-native-svg';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
 
 const { width } = Dimensions.get('window');
+
+const ViewportModal: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; zIndex?: number }> = ({ visible, onClose, children, zIndex = 999999 }) => {
+  if (!visible) return null;
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && (ReactDOM as any)?.createPortal) {
+    return (ReactDOM as any).createPortal(
+      <View style={{
+        position: 'fixed' as any,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw' as any,
+        height: '100vh' as any,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+        zIndex: zIndex,
+      }}>
+        {children}
+      </View>,
+      document.body
+    );
+  }
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade" statusBarTranslucent={true} onRequestClose={onClose}>
+      <View style={{
+        flex: 1,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+      }}>
+        {children}
+      </View>
+    </Modal>
+  );
+};
 
 // Mock Student Reading Performance Results (matching official Desktop Reading Coach Result table)
 const MOCK_RESULTS = [
@@ -146,9 +188,15 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   const [formStart, setFormStart] = useState('13 Aug 2026, 09:00 AM');
   const [formDeadline, setFormDeadline] = useState('20 Aug 2026, 05:00 PM');
 
+  // Edit Schedule & Delete modal states
+  const [editingPassage, setEditingPassage] = useState<any>(null);
+  const [deletingPassage, setDeletingPassage] = useState<any>(null);
+  const [editStartDateTime, setEditStartDateTime] = useState('');
+  const [editDeadline, setEditDeadline] = useState('');
+
   // Date picker states
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [datePickerTarget, setDatePickerTarget] = useState<'start' | 'deadline' | null>(null);
+  const [datePickerTarget, setDatePickerTarget] = useState<'start' | 'deadline' | 'editStart' | 'editDeadline' | null>(null);
   const [datePickerValue, setDatePickerValue] = useState('');
   const [datePickerTitle, setDatePickerTitle] = useState('');
   const [formImageName, setFormImageName] = useState('No file chosen');
@@ -509,19 +557,65 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
                     {showSectionDropdown && (
                       <View style={styles.formDropdownOptions}>
-                        {sectionsList.map(sec => (
-                          <TouchableOpacity
-                            key={sec}
-                            style={[styles.formDropdownItem, formSection === sec && styles.formDropdownItemActive]}
-                            onPress={() => {
-                              setFormSection(sec);
-                              setShowSectionDropdown(false);
-                            }}
-                          >
-                            <Text style={[styles.formDropdownItemText, formSection === sec && styles.formDropdownItemTextActive]}>{sec}</Text>
-                            {formSection === sec && <MaterialIcons name="check" size={16} color="#003d9b" />}
-                          </TouchableOpacity>
-                        ))}
+                        {/* Select All Option */}
+                        <TouchableOpacity
+                          style={[
+                            styles.formDropdownItem,
+                            { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                          ]}
+                          onPress={() => {
+                            const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
+                            if (currentList.length === sectionsList.length) {
+                              setFormSection('');
+                            } else {
+                              setFormSection(sectionsList.join(', '));
+                            }
+                          }}
+                        >
+                          <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#003d9b' }]}>
+                            {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {sectionsList.map(sec => {
+                          const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
+                          const isSelected = currentList.includes(sec);
+                          return (
+                            <TouchableOpacity
+                              key={sec}
+                              style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                              onPress={() => {
+                                let updated: string[];
+                                if (isSelected) {
+                                  updated = currentList.filter(s => s !== sec);
+                                } else {
+                                  updated = [...currentList, sec];
+                                }
+                                setFormSection(updated.join(', '));
+                              }}
+                            >
+                              <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sec}</Text>
+                              <MaterialIcons 
+                                name={isSelected ? "check-box" : "check-box-outline-blank"} 
+                                size={18} 
+                                color={isSelected ? "#003d9b" : "#94A3B8"} 
+                              />
+                            </TouchableOpacity>
+                          );
+                        })}
+
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#003d9b',
+                            paddingVertical: 8,
+                            alignItems: 'center',
+                            marginTop: 4,
+                            borderRadius: 8
+                          }}
+                          onPress={() => setShowSectionDropdown(false)}
+                        >
+                          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>Done Selecting</Text>
+                        </TouchableOpacity>
                       </View>
                     )}
                   </View>
@@ -772,19 +866,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
             <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
-              {/* Export Toolbar Buttons */}
-              <View style={styles.exportToolbarRow}>
-                {['Copy', 'CSV', 'Excel', 'PDF', 'Print'].map(btn => (
-                  <TouchableOpacity
-                    key={btn}
-                    style={styles.exportBtnPill}
-                    onPress={() => Alert.alert('Export', `${btn} report generated!`)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.exportBtnPillText}>{btn}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+
 
               {/* Result Search Input */}
               <View style={[styles.searchBar, { marginBottom: 14, height: 44 }]}>
@@ -887,14 +969,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           <View style={[styles.bandCircle, { width: 160, height: 160, top: -60, right: -40, opacity: 0.1 }]} />
           <View style={[styles.bandCircle, { width: 90, height: 90, bottom: -30, left: -20, opacity: 0.08 }]} />
 
-          {/* Top Label */}
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroBadge}>
-              <MaterialIcons name="auto-stories" size={12} color="#A5B4FC" style={{ marginRight: 5 }} />
-              <Text style={styles.heroBadgeText}>AI FLUENCY HUB</Text>
-            </View>
-            <Text style={styles.heroDate}>Aug 2026</Text>
-          </View>
+
 
           {/* Stats Row */}
           <View style={styles.heroStatsRow}>
@@ -926,63 +1001,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           </View>
         </LinearGradient>
 
-        {/* 3. CATEGORY FILTERS */}
-        <View style={styles.filterSection}>
-          <Text style={styles.sectionHeading}>Filter by Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {categoriesFilter.map(cat => {
-              const isSelected = selectedCategory === cat;
-              const chipAccent = getCategoryColor(cat);
-              const chipIcon =
-                cat === 'Stories' ? '📖' :
-                cat === 'Science' ? '🔬' :
-                cat === 'History' ? '📜' :
-                cat === 'Tech' ? '💻' : '✦';
-              const chipLabel = cat === 'All' ? 'All Passages' : cat;
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.filterChip,
-                    isSelected
-                      ? [styles.filterChipActive, { backgroundColor: chipAccent, borderColor: chipAccent, shadowColor: chipAccent }]
-                      : styles.filterChipInactive
-                  ]}
-                  onPress={() => setSelectedCategory(cat)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    isSelected ? styles.filterChipTextActive : [styles.filterChipTextInactive, { color: chipAccent }]
-                  ]}>
-                    {`${chipIcon}  ${chipLabel}`}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
 
-        {/* 4. SEARCH */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <View style={styles.searchIconBox}>
-              <MaterialIcons name="search" size={18} color="#003d9b" />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by title, topic, preview text..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity style={styles.searchClearBtn} onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="close" size={14} color="#64748B" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
 
         {/* 5. READING PASSAGE CARDS LIST */}
         <View style={styles.listSection}>
@@ -1002,107 +1021,68 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
             filteredPassages.map(item => {
               const accent = getCategoryColor(item.category);
               return (
-                <View key={item.id} style={[styles.card, { shadowColor: accent }]}>
+                <View key={item.id} style={[styles.card, { borderColor: '#CBD5E1' }]}>
 
-                  {/* ── Header Band (#, Class, Title, AI Speaking Waves) ── */}
+                  {/* ── Header Band (Title, Class, Listen AI Button) ── */}
                   <LinearGradient
-                    colors={[accent, accent + 'DD']}
+                    colors={[accent, accent + 'EE']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.cardTopBand}
                   >
-                    <View style={[styles.bandCircle, { width: 110, height: 110, bottom: -45, right: -15, opacity: 0.14 }]} />
-
-                    {/* Top Pill Row */}
-                    <View style={styles.cardHeaderTopPillRow}>
-                      <View style={styles.aiAgentTagPill}>
-                        <View style={styles.aiPulseDot} />
-                        <View style={{ marginRight: 4 }}>
-                          {renderVoiceWaves('#ffffff')}
-                        </View>
-                        <Text style={styles.aiAgentTagText}>AI SPEAKING COACH</Text>
-                      </View>
-                      <View style={styles.refPillBand}>
-                        <Text style={styles.refTextBand}>#{item.sNo}</Text>
-                      </View>
-                    </View>
-
-                    {/* Title & Grade Row */}
                     <View style={styles.bandContent}>
                       <View style={styles.bandLeft}>
                         <Text style={styles.cardTitleBand} numberOfLines={1}>{item.title}</Text>
                         <View style={styles.subtitleRow}>
-                          <MaterialIcons name="school" size={11} color="rgba(255,255,255,0.85)" style={{ marginRight: 4 }} />
+                          <MaterialIcons name="school" size={12} color="rgba(255,255,255,0.9)" style={{ marginRight: 4 }} />
                           <Text style={styles.cardSubtitleBand}>{item.class}</Text>
                         </View>
                       </View>
-                      <View style={styles.soundWaveIconBox}>
-                        <MaterialIcons name="record-voice-over" size={20} color="rgba(255,255,255,0.95)" />
-                      </View>
+
+                      <TouchableOpacity
+                        style={styles.listenSampleBtnHeader}
+                        onPress={() => Alert.alert('AI Voice Sample', `Playing AI vocal narration for "${item.title}"`)}
+                        activeOpacity={0.85}
+                      >
+                        <MaterialIcons name="play-circle-filled" size={14} color="#ffffff" style={{ marginRight: 4 }} />
+                        <View style={{ marginRight: 4 }}>
+                          {renderVoiceWaves('#ffffff')}
+                        </View>
+                        <Text style={styles.listenSampleTextHeader}>Listen AI</Text>
+                      </TouchableOpacity>
                     </View>
                   </LinearGradient>
 
-                  {/* ── Body (STORY, Speech Targets, Timeline, Actions) ── */}
+                  {/* ── Body (STORY Excerpt, Dates, Actions) ── */}
                   <View style={styles.cardBody}>
 
-                    {/* STORY Content Excerpt Box with Audio Waveform Bar */}
-                    <View style={[styles.storyBox, { borderLeftColor: accent }]}>
-                      <View style={styles.storyBoxHeaderRow}>
-                        <View style={styles.storyBoxTitleGroup}>
-                          <MaterialIcons name="auto-stories" size={13} color={accent} style={{ marginRight: 5 }} />
-                          <Text style={[styles.storyBoxLabel, { color: accent }]}>STORY PARAGRAPH</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={[styles.listenSampleBtn, { backgroundColor: accent + '14', borderColor: accent + '30' }]}
-                          onPress={() => Alert.alert('AI Voice Sample', `Playing AI vocal narration for "${item.title}"`)}
-                          activeOpacity={0.85}
-                        >
-                          <MaterialIcons name="play-circle-filled" size={13} color={accent} style={{ marginRight: 4 }} />
-                          <View style={{ marginRight: 4 }}>
-                            {renderVoiceWaves(accent)}
-                          </View>
-                          <Text style={[styles.listenSampleText, { color: accent }]}>Listen AI</Text>
-                        </TouchableOpacity>
+                    {/* STORY Content Excerpt with Left Accent Bar */}
+                    <View style={[styles.storyExcerptClean, { borderLeftColor: accent }]}>
+                      <View style={styles.storyBoxTitleGroup}>
+                        <MaterialIcons name="auto-stories" size={13} color={accent} style={{ marginRight: 5 }} />
+                        <Text style={[styles.storyBoxLabel, { color: accent }]}>STORY PARAGRAPH</Text>
                       </View>
-                      <Text style={styles.previewText} numberOfLines={3}>"{item.previewText}"</Text>
+                      <Text style={styles.previewTextClean} numberOfLines={3}>"{item.previewText}"</Text>
                     </View>
 
-                    {/* Speech Target Fluency Capsules Bar */}
-                    <View style={styles.speechTargetsRow}>
-                      <View style={styles.speechTargetPill}>
-                        <MaterialIcons name="speed" size={12} color="#0B8A7D" style={{ marginRight: 4 }} />
-                        <Text style={styles.speechTargetText}>{item.targetWpm || 110} WPM Target</Text>
-                      </View>
-                      <View style={styles.speechTargetPill}>
-                        <MaterialIcons name="verified" size={12} color="#3B4FD8" style={{ marginRight: 4 }} />
-                        <Text style={styles.speechTargetText}>{item.avgAccuracy || '95%'} Goal</Text>
-                      </View>
-                      <View style={[styles.speechTargetPill, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
-                        <MaterialIcons name="graphic-eq" size={12} color="#059669" style={{ marginRight: 4 }} />
-                        <Text style={[styles.speechTargetText, { color: '#059669', fontWeight: '900' }]}>Voice Active</Text>
-                      </View>
-                    </View>
-
-                    {/* START DATE → END DATE Timeline Row */}
+                    {/* START DATE & DEADLINE Row - Simple, High Contrast, No Line Wrap */}
                     <View style={styles.compactDateRow}>
                       <View style={styles.dateColLeft}>
                         <View style={styles.dateHeaderRow}>
-                          <View style={[styles.compactDateDot, { backgroundColor: '#10B981' }]} />
+                          <MaterialIcons name="event-available" size={13} color="#059669" style={{ marginRight: 4 }} />
                           <Text style={styles.dateLabelMini}>START DATE</Text>
                         </View>
-                        <Text style={styles.compactDateStart}>{item.startDateTime}</Text>
+                        <Text style={styles.compactDateStart} numberOfLines={1}>{item.startDateTime}</Text>
                       </View>
 
-                      <View style={styles.dateArrowBox}>
-                        <MaterialIcons name="trending-flat" size={16} color="#94A3B8" />
-                      </View>
+                      <View style={styles.dateDividerLine} />
 
                       <View style={styles.dateColRight}>
                         <View style={styles.dateHeaderRowRight}>
-                          <Text style={[styles.dateLabelMini, { color: '#E11D48' }]}>END DATE</Text>
-                          <View style={[styles.compactDateDot, { backgroundColor: '#E11D48', marginLeft: 4 }]} />
+                          <Text style={[styles.dateLabelMini, { color: '#DC2626' }]}>DEADLINE</Text>
+                          <MaterialIcons name="event-busy" size={13} color="#DC2626" style={{ marginLeft: 4 }} />
                         </View>
-                        <Text style={styles.compactDateDeadline}>{item.deadline}</Text>
+                        <Text style={styles.compactDateDeadline} numberOfLines={1}>{item.deadline}</Text>
                       </View>
                     </View>
 
@@ -1126,7 +1106,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
                       <TouchableOpacity
                         style={styles.btnDesktopEdit}
-                        onPress={() => Alert.alert('Edit Assignment', `Edit configuration active for #${item.sNo}`)}
+                        onPress={() => {
+                          setEditingPassage(item);
+                          setEditStartDateTime(item.startDateTime);
+                          setEditDeadline(item.deadline);
+                        }}
                         activeOpacity={0.8}
                       >
                         <MaterialIcons name="edit" size={13} color="#003d9b" style={{ marginRight: 4 }} />
@@ -1135,7 +1119,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
                       <TouchableOpacity
                         style={styles.btnDesktopDelete}
-                        onPress={() => Alert.alert('Delete', `Delete assignment #${item.sNo}?`)}
+                        onPress={() => setDeletingPassage(item)}
                         activeOpacity={0.8}
                       >
                         <MaterialIcons name="delete-outline" size={15} color="#E11D48" />
@@ -1163,9 +1147,325 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               );
             })
           )}
+
+          {/* Bottom Status Pill Badge */}
+          {passages.length > 0 && (
+            <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 28 }}>
+              <View style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1,
+                borderColor: '#E2E8F0',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 20,
+                shadowColor: '#0F172A',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.04,
+                shadowRadius: 6,
+                elevation: 2,
+              }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+                  All {passages.length} passages loaded
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
 
       </ScrollView>
+
+      {/* EDIT SCHEDULE MODAL (ViewportModal) */}
+      <ViewportModal visible={editingPassage !== null} onClose={() => setEditingPassage(null)}>
+        <View style={{
+          backgroundColor: '#ffffff',
+          width: '100%',
+          maxWidth: 420,
+          borderRadius: 22,
+          overflow: 'hidden',
+          shadowColor: '#041B3C',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.18,
+          shadowRadius: 20,
+          elevation: 10,
+        }}>
+          {/* Header Band */}
+          <LinearGradient
+            colors={['#041B3C', '#003D9B', '#0052CC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingHorizontal: 18,
+              paddingVertical: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+              }}>
+                <MaterialIcons name="edit-calendar" size={18} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.3 }} numberOfLines={1}>
+                  Edit Schedule
+                </Text>
+                <Text style={{ fontSize: 11.5, fontWeight: '700', color: 'rgba(255, 255, 255, 0.85)', marginTop: 1 }} numberOfLines={1}>
+                  {editingPassage?.title} ({editingPassage?.class})
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => setEditingPassage(null)}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MaterialIcons name="close" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+          </LinearGradient>
+
+          {/* Form Fields Body */}
+          <View style={{ padding: 18, gap: 14 }}>
+            {/* Start Date & Time Field */}
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialIcons name="access-time" size={15} color="#0052CC" />
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Start Date & Time
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#F8FAFC',
+                  borderWidth: 1.5,
+                  borderColor: '#CBD5E1',
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  height: 48,
+                }}
+                onPress={() => {
+                  setDatePickerTarget('editStart');
+                  setDatePickerValue(editStartDateTime);
+                  setDatePickerTitle('Select Start Date & Time');
+                  setIsDatePickerVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#0F172A' }}>
+                  {editStartDateTime}
+                </Text>
+                <MaterialIcons name="calendar-today" size={17} color="#0052CC" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Due / Deadline Date & Time Field */}
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialIcons name="event-busy" size={15} color="#C62828" />
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#991B1B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Due / Deadline Date & Time
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#FFF5F5',
+                  borderWidth: 1.5,
+                  borderColor: '#FECDD3',
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  height: 48,
+                }}
+                onPress={() => {
+                  setDatePickerTarget('editDeadline');
+                  setDatePickerValue(editDeadline);
+                  setDatePickerTitle('Select Submission Deadline');
+                  setIsDatePickerVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#C62828' }}>
+                  {editDeadline}
+                </Text>
+                <MaterialIcons name="calendar-month" size={17} color="#C62828" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Save Button */}
+            <TouchableOpacity
+              style={{
+                borderRadius: 14,
+                overflow: 'hidden',
+                marginTop: 6,
+                shadowColor: '#0052CC',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+              onPress={() => {
+                if (editingPassage) {
+                  setPassages(passages.map(p => p.id === editingPassage.id ? {
+                    ...p,
+                    startDateTime: editStartDateTime,
+                    deadline: editDeadline,
+                  } : p));
+                  setEditingPassage(null);
+                  Alert.alert('Schedule Updated', 'Passage start date and deadline updated successfully!');
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#0052CC', '#003D9B']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  paddingVertical: 13,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                }}
+              >
+                <MaterialIcons name="check-circle" size={18} color="#FFFFFF" />
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 }}>
+                  Save Schedule Changes
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ViewportModal>
+
+      {/* DATE TIME PICKER */}
+      <PremiumDateTimePicker
+        visible={isDatePickerVisible}
+        onClose={() => setIsDatePickerVisible(false)}
+        value={datePickerValue}
+        title={datePickerTitle}
+        onSelect={(formattedValue: string) => {
+          if (datePickerTarget === 'editStart') {
+            setEditStartDateTime(formattedValue);
+          } else if (datePickerTarget === 'editDeadline') {
+            setEditDeadline(formattedValue);
+          } else if (datePickerTarget === 'start') {
+            setFormStart(formattedValue);
+          } else if (datePickerTarget === 'deadline') {
+            setFormDeadline(formattedValue);
+          }
+          setIsDatePickerVisible(false);
+        }}
+      />
+
+      {/* CONFIRM DELETE MODAL (ViewportModal) */}
+      <ViewportModal visible={deletingPassage !== null} onClose={() => setDeletingPassage(null)}>
+        <View style={{
+          backgroundColor: '#ffffff',
+          width: '100%',
+          maxWidth: 400,
+          borderRadius: 22,
+          overflow: 'hidden',
+          shadowColor: '#991B1B',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.2,
+          shadowRadius: 20,
+          elevation: 10,
+          padding: 22,
+          alignItems: 'center',
+        }}>
+          {/* Danger Icon Badge */}
+          <View style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: '#FEF2F2',
+            borderWidth: 1.5,
+            borderColor: '#FECDD3',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 14,
+          }}>
+            <MaterialIcons name="delete-forever" size={28} color="#DC2626" />
+          </View>
+
+          <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', textAlign: 'center', marginBottom: 6 }}>
+            Confirm Delete
+          </Text>
+          
+          <Text style={{ fontSize: 13.5, fontWeight: '600', color: '#64748B', textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
+            Are you sure you want to delete <Text style={{ fontWeight: '800', color: '#0F172A' }}>"{deletingPassage?.title}"</Text>? This action cannot be undone.
+          </Text>
+
+          {/* Action Buttons Row */}
+          <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                backgroundColor: '#F8FAFC',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={() => setDeletingPassage(null)}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '800', color: '#475569' }}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderRadius: 14,
+                backgroundColor: '#DC2626',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#DC2626',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+              onPress={() => {
+                if (deletingPassage) {
+                  setPassages(passages.filter(p => p.id !== deletingPassage.id));
+                  setDeletingPassage(null);
+                  Alert.alert('Deleted', 'Assignment deleted successfully!');
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#ffffff' }}>Confirm Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ViewportModal>
 
       {/* 6. AI COACH LIVE PRACTICE MODAL */}
 
@@ -1797,18 +2097,18 @@ const styles = StyleSheet.create({
   },
   // HERO CARD
   heroCard: {
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 20,
-    marginBottom: 20,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    marginBottom: 14,
     overflow: 'hidden',
     position: 'relative',
     shadowColor: '#1E1B4B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   bandCircle: {
     position: 'absolute',
@@ -1819,34 +2119,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 10,
   },
   heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
   heroBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '900',
+    fontSize: 9,
+    fontWeight: '800',
     color: '#A5B4FC',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   heroDate: {
     fontSize: 11,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.5)',
+    color: '#FFFFFF',
   },
   heroStatsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   heroStat: {
     flex: 1,
@@ -1854,33 +2154,33 @@ const styles = StyleSheet.create({
   },
   heroStatDivider: {
     width: 1,
-    height: 36,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    height: 26,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   heroStatNum: {
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#ffffff',
     letterSpacing: -0.5,
   },
   heroStatLabel: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.55)',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 3,
+    marginTop: 1,
   },
   heroProgressRow: {
     flexDirection: 'row',
-    height: 5,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     overflow: 'hidden',
     gap: 2,
   },
   heroProgressSegment: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
     opacity: 0.85,
   },
   // FILTERS
@@ -2010,12 +2310,15 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 20,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
     marginBottom: 14,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
+    shadowColor: '#003d9b',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
     elevation: 4,
   },
   cardTopBand: {
@@ -2034,7 +2337,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   cardTitleBand: {
-    fontSize: 14.5,
+    fontSize: 16.5,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: -0.4,
@@ -2045,9 +2348,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cardSubtitleBand: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
   },
   bandRight: {
     alignItems: 'flex-end',
@@ -2065,15 +2368,14 @@ const styles = StyleSheet.create({
   cardBody: {
     paddingHorizontal: 14,
     paddingVertical: 14,
-    gap: 11,
+    gap: 12,
     backgroundColor: '#ffffff',
   },
   previewText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    color: '#475569',
-    fontStyle: 'italic',
-    lineHeight: 18,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
+    lineHeight: 20,
   },
   infoRowPair: {
     flexDirection: 'row',
@@ -2662,27 +2964,35 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 0.8,
   },
-  soundWaveIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  listenSampleBtnHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  storyBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  listenSampleTextHeader: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  storyExcerptClean: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
     padding: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderLeftWidth: 4,
   },
-  storyBoxHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+  previewTextClean: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
+    lineHeight: 20,
+    marginTop: 4,
   },
   storyBoxTitleGroup: {
     flexDirection: 'row',
@@ -2691,13 +3001,13 @@ const styles = StyleSheet.create({
   listenSampleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   listenSampleText: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '900',
   },
   speechTargetsRow: {
@@ -2708,19 +3018,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
   },
   speechTargetText: {
-    fontSize: 9,
+    fontSize: 10.5,
     fontWeight: '800',
-    color: '#334155',
+    color: '#0F172A',
   },
   storyBoxLabel: {
-    fontSize: 9.5,
+    fontSize: 10.5,
     fontWeight: '900',
     letterSpacing: 0.6,
   },
@@ -2741,54 +3051,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    paddingHorizontal: 14,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
   },
   dateColLeft: {
     flex: 1,
+    minWidth: 0,
   },
   dateHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   dateColRight: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'flex-end',
   },
   dateHeaderRowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 2,
   },
-  dateArrowBox: {
-    paddingHorizontal: 8,
-  },
-  compactDateDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
+  dateDividerLine: {
+    width: 1.5,
+    height: 28,
+    backgroundColor: '#CBD5E1',
+    marginHorizontal: 10,
   },
   dateLabelMini: {
-    fontSize: 8.5,
+    fontSize: 9.5,
     fontWeight: '900',
-    color: '#64748B',
-    letterSpacing: 0.5,
+    color: '#059669',
+    letterSpacing: 0.6,
   },
   compactDateStart: {
-    fontSize: 10.5,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '900',
     color: '#0F172A',
   },
   compactDateDeadline: {
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: '900',
-    color: '#E11D48',
+    color: '#991B1B',
   },
   desktopActionsRow: {
     flexDirection: 'row',
@@ -2800,8 +3109,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 10,
   },
   btnDesktopPreview: {
@@ -2809,7 +3118,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   btnDesktopPreviewText: {
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: '900',
     color: '#ffffff',
   },
@@ -2877,7 +3186,7 @@ const styles = StyleSheet.create({
   resultCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,

@@ -98,10 +98,6 @@ export const TimeTableScreen = ({ navigation }: any) => {
               </View>
             </View>
           </View>
-          <TouchableOpacity style={styles.printBtn} onPress={() => alert('Preparing print...')} activeOpacity={0.8}>
-            <MaterialIcons name="print" size={14} color="#2563EB" />
-            <Text style={styles.printBtnText}>Print</Text>
-          </TouchableOpacity>
         </View>
 
         {/* ── DAY TABS (glass pills) ── */}
@@ -151,26 +147,6 @@ export const TimeTableScreen = ({ navigation }: any) => {
 
         {/* ── MAIN SCROLL ── */}
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-          {/* Admin Banner (glass card) */}
-          <View style={styles.adminBanner}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.78)', 'rgba(255,255,255,0.60)']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.adminStripe} />
-            <View style={styles.adminIconBox}>
-              <LinearGradient colors={['#2563EB', '#1D4ED8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-              <View style={styles.iconShine} />
-              <MaterialIcons name="cloud-done" size={19} color="#fff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.adminTitle}>Uploaded by School Admin</Text>
-              <Text style={styles.adminSub}>Synced with your Teacher ID · Auto-updated</Text>
-            </View>
-            <View style={styles.liveDot} />
-          </View>
 
           {/* ── GLASSMORPHIC TABLE CARD ── */}
           <View style={styles.tableCard}>

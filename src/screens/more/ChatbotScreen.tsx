@@ -48,65 +48,7 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
 
   // Modal View State
   const [activeResult, setActiveResult] = useState<ChatbotResult | null>(null);
-
-  // Pre-seeded Demo Results
-  const [results, setResults] = useState<ChatbotResult[]>([
-    {
-      id: 'cb-1',
-      topic: 'Respiratory System Teaching Strategy',
-      date: 'Aug 12, 2026',
-      fileName: 'Human_Anatomy_Ch4.pdf',
-      response: {
-        intro: 'Hello! I am here to help. When you ask about "respiratory system", here are comprehensive, tailored classroom solutions for your students:',
-        points: [
-          {
-            title: 'Classroom Strategies',
-            desc: 'Interactive diaphragm model demonstration using plastic bottles, balloons, and straws to visualize inhalation and exhalation.'
-          },
-          {
-            title: 'Activity Ideas',
-            desc: 'Hands-on lung capacity test using water displacement jugs, plus student roleplay of oxygen transport through capillaries.'
-          },
-          {
-            title: 'Explanations',
-            desc: 'Breaking down gas exchange across alveoli using an apple-tree analogy (trachea as trunk, bronchi as branches, alveoli as leaves).'
-          },
-          {
-            title: 'Assessments',
-            desc: '5-question quick check quiz on gas exchange, plus a diagram labeling worksheet for lung structures.'
-          },
-          {
-            title: 'Parent Communication',
-            desc: 'Draft message to parents summarizing this week\'s human anatomy topic and home observation exercises.'
-          }
-        ],
-        outro: 'The more details you provide, the better I can tailor my support to your specific grade level. I am ready to assist!'
-      }
-    },
-    {
-      id: 'cb-2',
-      topic: 'Fractions & Decimal Conversion Helper',
-      date: 'Aug 12, 2026',
-      response: {
-        intro: 'Here is a complete lesson enhancement package for converting fractions to decimals:',
-        points: [
-          {
-            title: 'Visual Representation',
-            desc: '10x10 grid shading exercises to visually connect tenths and hundredths to fraction bars.'
-          },
-          {
-            title: 'Guided Practice',
-            desc: 'Step-by-step long division method for converting non-ten denominator fractions like 3/8.'
-          },
-          {
-            title: 'Differentiated Tasks',
-            desc: 'Tier 1: Halves & Quarters. Tier 2: Eighths & Tenths. Tier 3: Repeating decimals & real-world money problems.'
-          }
-        ],
-        outro: 'Let me know if you would like me to generate a printable student practice sheet for this topic!'
-      }
-    }
-  ]);
+  const [results, setResults] = useState<ChatbotResult[]>([]);
 
   // Toggle Mock File
   const handleToggleMockFile = () => {
@@ -215,15 +157,6 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
       <LinearGradient colors={['#FED7AA', '#FBBF24']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBarGlow} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-
-        {/* ── FEATURE PILLS ── */}
-        <View style={styles.pillRow}>
-          {['🤖 Teaching Assistant', '⚡ Instant Response', '💡 Activity & Assessment Ideas'].map((t, i) => (
-            <View key={i} style={styles.featurePill}>
-              <Text style={styles.featurePillText}>{t}</Text>
-            </View>
-          ))}
-        </View>
 
         {/* ── FORM CARD ── */}
         <View style={styles.card}>
@@ -337,80 +270,82 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
           </View>
         )}
 
-        {/* ── GENERATED RESULT SECTION HEADER ── */}
-        <View style={styles.viewPlanHeaderRow}>
-          <LinearGradient colors={['#F97316', '#F59E0B']} style={styles.bulletIndicator} />
-          <Text style={styles.viewPlanTitle}>Generated Result</Text>
-          <View style={styles.planCountBadge}>
-            <Text style={styles.planCountText}>{results.length}</Text>
-          </View>
-        </View>
-
-        {/* ── GENERATED RESULT CARDS ── */}
-        <View style={styles.plansListContainer}>
-          {results.map((res) => (
-            <View key={res.id} style={styles.resultBoxCard}>
-              
-
-              {/* Result Meta Bar */}
-              <View style={styles.resultMetaHeader}>
-                <View style={styles.botAvatarBox}>
-                  <MaterialIcons name="smart-toy" size={18} color="#F97316" />
-                  <View style={styles.onlineBadgeDot} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.resultTopicTitle} numberOfLines={1}>{res.topic}</Text>
-                  <Text style={styles.resultDateText}>{res.date} {res.fileName ? `• ${res.fileName}` : ''}</Text>
-                </View>
-
-                {/* ── Premium Eye Button ── */}
-                <TouchableOpacity onPress={() => setActiveResult(res)} activeOpacity={0.8}>
-                  <View style={styles.eyeBtnOuter}>
-                    <LinearGradient
-                      colors={['#F97316', '#FB923C']}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                      style={styles.eyeBtnCore}
-                    >
-                      <View style={styles.eyeBtnGloss} />
-                      <MaterialIcons name="remove-red-eye" size={18} color="#fff" />
-                    </LinearGradient>
-                  </View>
-                </TouchableOpacity>
+        {/* ── GENERATED RESULT SECTION (ONE-TIME / ONLY IF GENERATED) ── */}
+        {results.length > 0 && (
+          <>
+            <View style={styles.viewPlanHeaderRow}>
+              <LinearGradient colors={['#F97316', '#F59E0B']} style={styles.bulletIndicator} />
+              <Text style={styles.viewPlanTitle}>Generated Result</Text>
+              <View style={styles.planCountBadge}>
+                <Text style={styles.planCountText}>{results.length}</Text>
               </View>
-
-              {/* Result Body Text Preview */}
-              <View style={styles.resultBodyPreview}>
-                <Text style={styles.resultIntroText}>{res.response.intro}</Text>
-                
-                {res.response.points.slice(0, 3).map((p, idx) => (
-                  <View key={idx} style={styles.pointRow}>
-                    <Text style={styles.pointTitle}>•  {p.title}: </Text>
-                    <Text style={styles.pointDesc} numberOfLines={2}>{p.desc}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Action Toolbar */}
-              <View style={styles.resultFooterBar}>
-                <TouchableOpacity style={styles.footerActionBtn} onPress={() => setActiveResult(res)}>
-                  <MaterialIcons name="open-in-full" size={14} color="#F97316" style={{ marginRight: 4 }} />
-                  <Text style={styles.footerActionText}>Full View</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Copied', 'AI Response copied to clipboard.')}>
-                  <MaterialIcons name="content-copy" size={14} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerActionText, { color: '#64748B' }]}>Copy</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Print Queue', 'Sent to printer.')}>
-                  <MaterialIcons name="print" size={14} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerActionText, { color: '#64748B' }]}>Print</Text>
-                </TouchableOpacity>
-              </View>
-
             </View>
-          ))}
-        </View>
+
+            {/* ── GENERATED RESULT CARDS ── */}
+            <View style={styles.plansListContainer}>
+              {results.map((res) => (
+                <View key={res.id} style={styles.resultBoxCard}>
+                  {/* Result Meta Bar */}
+                  <View style={styles.resultMetaHeader}>
+                    <View style={styles.botAvatarBox}>
+                      <MaterialIcons name="smart-toy" size={18} color="#F97316" />
+                      <View style={styles.onlineBadgeDot} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.resultTopicTitle} numberOfLines={1}>{res.topic}</Text>
+                      <Text style={styles.resultDateText}>{res.date} {res.fileName ? `• ${res.fileName}` : ''}</Text>
+                    </View>
+
+                    {/* ── Premium Eye Button ── */}
+                    <TouchableOpacity onPress={() => setActiveResult(res)} activeOpacity={0.8}>
+                      <View style={styles.eyeBtnOuter}>
+                        <LinearGradient
+                          colors={['#F97316', '#FB923C']}
+                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                          style={styles.eyeBtnCore}
+                        >
+                          <View style={styles.eyeBtnGloss} />
+                          <MaterialIcons name="remove-red-eye" size={18} color="#fff" />
+                        </LinearGradient>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Result Body Text Preview */}
+                  <View style={styles.resultBodyPreview}>
+                    <Text style={styles.resultIntroText}>{res.response.intro}</Text>
+                    
+                    {res.response.points.slice(0, 3).map((p, idx) => (
+                      <View key={idx} style={styles.pointRow}>
+                        <Text style={styles.pointTitle}>•  {p.title}: </Text>
+                        <Text style={styles.pointDesc} numberOfLines={2}>{p.desc}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Action Toolbar */}
+                  <View style={styles.resultFooterBar}>
+                    <TouchableOpacity style={styles.footerActionBtn} onPress={() => setActiveResult(res)}>
+                      <MaterialIcons name="open-in-full" size={14} color="#F97316" style={{ marginRight: 4 }} />
+                      <Text style={styles.footerActionText}>Full View</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Copied', 'AI Response copied to clipboard.')}>
+                      <MaterialIcons name="content-copy" size={14} color="#64748B" style={{ marginRight: 4 }} />
+                      <Text style={[styles.footerActionText, { color: '#64748B' }]}>Copy</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Print Queue', 'Sent to printer.')}>
+                      <MaterialIcons name="print" size={14} color="#64748B" style={{ marginRight: 4 }} />
+                      <Text style={[styles.footerActionText, { color: '#64748B' }]}>Print</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
       </ScrollView>
 
@@ -568,48 +503,48 @@ const styles = StyleSheet.create({
   // FORM CARD
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 24,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(249, 115, 22, 0.1)',
+    borderColor: 'rgba(249, 115, 22, 0.12)',
     shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.07,
-    shadowRadius: 24,
-    elevation: 5,
-    marginBottom: 20,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 14,
   },
   fieldHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 7,
+    marginBottom: 5,
   },
   fieldDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#F97316',
-    marginRight: 7,
+    marginRight: 6,
   },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#334155',
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
+    letterSpacing: 0.6,
   },
   requestTextArea: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(249, 115, 22, 0.18)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
     color: '#0F172A',
     fontWeight: '600',
-    height: 88,
-    marginBottom: 16,
+    height: 60,
+    marginBottom: 10,
   },
 
   // File Upload Box
@@ -617,13 +552,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: 'rgba(249, 115, 22, 0.2)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 54,
-    marginBottom: 22,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    marginBottom: 12,
   },
   fileAttachmentBoxActive: {
     backgroundColor: '#FFF7ED',
@@ -631,15 +566,15 @@ const styles = StyleSheet.create({
     borderColor: '#F97316',
   },
   fileIconOrb: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   fileAttachmentText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#94A3B8',
     flex: 1,
@@ -651,20 +586,20 @@ const styles = StyleSheet.create({
 
   // SEND BUTTON
   generateBtnContainer: {
-    marginTop: 6,
-    borderRadius: 18,
+    marginTop: 2,
+    borderRadius: 12,
     shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 18,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
     overflow: 'visible',
   },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
@@ -673,64 +608,66 @@ const styles = StyleSheet.create({
   generateBtnHighlight: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 1.5,
+    height: 1,
     backgroundColor: 'rgba(255,255,255,0.45)',
   },
   generateBtnIconZone: {
-    width: 64,
-    height: 64,
+    width: 44,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
   generateBtnDivider: {
     width: 1,
-    height: 40,
+    height: 28,
     backgroundColor: 'rgba(255,255,255,0.22)',
-    marginRight: 14,
+    marginRight: 8,
   },
   generateBtnLabelBlock: {
     flex: 1,
+    justifyContent: 'center',
   },
   generateBtnText: {
     color: '#FFFFFF',
-    fontSize: 15.5,
+    fontSize: 12.5,
     fontWeight: '900',
-    letterSpacing: 0.6,
-    lineHeight: 20,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
   generateBtnSubText: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 10,
+    fontSize: 8.5,
     fontWeight: '700',
-    letterSpacing: 0.8,
-    marginTop: 2,
+    letterSpacing: 0.4,
+    marginTop: 1,
+    lineHeight: 11,
     textTransform: 'uppercase',
   },
   generateBtnArrow: {
-    height: 40,
-    paddingHorizontal: 13,
-    borderRadius: 11,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.38)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
 
   // Generating State
   generatingContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFF7ED',
-    borderRadius: 16,
-    height: 56,
+    borderRadius: 12,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: 'rgba(249,115,22,0.3)',
   },
   generatingButtonText: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '800',
     color: '#F97316',
     letterSpacing: 0.2,

@@ -10,6 +10,7 @@ import {
   Alert,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -170,33 +171,18 @@ const PremiumVoiceVisualizer = () => {
   );
 };
 
-// Flowing wave overlay inside topic cards
-const CardWaveOverlay = ({ color }: { color: string }) => {
-  return (
-    <Svg width="100%" height={45} style={styles.cardWaveSvg}>
-      <Defs>
-        <SvgLinearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.01} />
-          <Stop offset="50%" stopColor={color} stopOpacity={0.16} />
-          <Stop offset="100%" stopColor={color} stopOpacity={0.01} />
-        </SvgLinearGradient>
-      </Defs>
-      <Path d="M 0 20 C 60 5, 120 35, 180 20 C 240 5, 300 35, 360 20" stroke="url(#waveGrad)" strokeWidth={2} fill="none" />
-      <Path d="M 0 25 C 60 15, 120 25, 180 15 T 360 15" stroke={color} strokeWidth={0.8} fill="none" opacity={0.1} strokeDasharray="4,4" />
-    </Svg>
-  );
-};
+
 
 // Clean vector voice equalizer analyzer inside cards
 const CardWaveformAnalyzer = ({ color }: { color: string }) => {
   return (
     <View style={styles.waveformContainer}>
-      <View style={[styles.wavePillar, { height: 12, backgroundColor: color }]} />
-      <View style={[styles.wavePillar, { height: 22, backgroundColor: color, opacity: 0.9 }]} />
-      <View style={[styles.wavePillar, { height: 32, backgroundColor: color }]} />
-      <View style={[styles.wavePillar, { height: 26, backgroundColor: color, opacity: 0.8 }]} />
-      <View style={[styles.wavePillar, { height: 16, backgroundColor: color, opacity: 0.6 }]} />
-      <View style={[styles.wavePillar, { height: 8, backgroundColor: color, opacity: 0.4 }]} />
+      <View style={[styles.wavePillar, { height: 8, backgroundColor: color, opacity: 0.45 }]} />
+      <View style={[styles.wavePillar, { height: 16, backgroundColor: color, opacity: 0.75 }]} />
+      <View style={[styles.wavePillar, { height: 22, backgroundColor: color }]} />
+      <View style={[styles.wavePillar, { height: 17, backgroundColor: color, opacity: 0.85 }]} />
+      <View style={[styles.wavePillar, { height: 11, backgroundColor: color, opacity: 0.6 }]} />
+      <View style={[styles.wavePillar, { height: 6, backgroundColor: color, opacity: 0.35 }]} />
     </View>
   );
 };
@@ -213,25 +199,31 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
   const [showClassDD,   setShowClassDD]   = useState(false);
   const [showSectionDD, setShowSectionDD] = useState(false);
 
-  // Edit modal
-  const [editVisible, setEditVisible] = useState(false);
-  const [editItem,    setEditItem]    = useState<TopicItem | null>(null);
-  const [editTitle,   setEditTitle]   = useState('');
+  // Edit state
+  const [editVisible,       setEditVisible]       = useState(false);
+  const [editItem,          setEditItem]          = useState<TopicItem | null>(null);
+  const [editTitle,         setEditTitle]         = useState('');
+  const [editClass,         setEditClass]         = useState('');
+  const [editSection,       setEditSection]       = useState('');
+  const [showEditClassDD,   setShowEditClassDD]   = useState(false);
+  const [showEditSectionDD, setShowEditSectionDD] = useState(false);
 
-  // Preview modal
+  // Preview screen state
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewItem,    setPreviewItem]    = useState<TopicItem | null>(null);
-  const [voiceLog,       setVoiceLog]       = useState<{ sender: 'ai' | 'user'; text: string }[]>([]);
+  const [voiceLog,       setVoiceLog]       = useState<{ sender: 'ai' | 'user'; text: string; time?: string }[]>([]);
+  const [chatInput,      setChatInput]      = useState('');
   const [isListening,    setIsListening]    = useState(false);
-  const [aiStatus, setAiStatus] = useState<'idle'|'listening'|'thinking'|'speaking'>('idle');
+  const [aiStatus,       setAiStatus]       = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle');
+  const chatScrollRef = useRef<ScrollView>(null);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     if (isListening) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.15, duration: 550, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1,    duration: 550, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.18, duration: 500, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1,    duration: 500, useNativeDriver: true }),
         ])
       ).start();
     } else {
@@ -246,6 +238,9 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
       t.section.toLowerCase().includes(searchQuery.toLowerCase())
     ), [topics, searchQuery]);
 
+  // Delete confirmation state
+  const [itemToDelete, setItemToDelete] = useState<TopicItem | null>(null);
+
   const handleCreate = () => {
     if (!formTopic.trim()) { Alert.alert('Required', 'Enter a Topic title.'); return; }
     if (!formClass)        { Alert.alert('Required', 'Select a Class.');      return; }
@@ -256,39 +251,134 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
     Alert.alert('Success ✓', 'Topic created successfully!');
   };
 
-  const handleDelete = (id: string, name: string) => {
-    Alert.alert('Delete Topic', `Delete "${name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => setTopics(topics.filter(t => t.id !== id)) }
-    ]);
+  const handleDelete = (item: TopicItem) => {
+    setItemToDelete(item);
   };
 
-  const openEdit = (item: TopicItem) => { setEditItem(item); setEditTitle(item.topic); setEditVisible(true); };
+  const openEdit = (item: TopicItem) => {
+    setEditItem(item);
+    setEditTitle(item.topic);
+    setEditClass(item.className);
+    setEditSection(item.section);
+    setShowEditClassDD(false);
+    setShowEditSectionDD(false);
+    setEditVisible(true);
+  };
+
   const handleSaveEdit = () => {
     if (!editTitle.trim()) { Alert.alert('Required', 'Title cannot be empty.'); return; }
-    setTopics(topics.map(t => t.id === editItem?.id ? { ...t, topic: editTitle.trim() } : t));
+    if (!editClass)        { Alert.alert('Required', 'Select a Class.');      return; }
+    if (!editSection)      { Alert.alert('Required', 'Select a Section.');    return; }
+    setTopics(topics.map(t => t.id === editItem?.id ? {
+      ...t,
+      topic: editTitle.trim(),
+      className: editClass,
+      section: editSection,
+    } : t));
     setEditVisible(false);
+    Alert.alert('Success ✓', 'Topic updated successfully!');
   };
 
   const openPreview = (item: TopicItem) => {
     setPreviewItem(item);
-    setVoiceLog([{ sender: 'ai', text: `Hello! Let's practice speaking about "${item.topic}". Press the mic to start! 🎙` }]);
+    setVoiceLog([
+      {
+        sender: 'ai',
+        text: `Okay, I'm ready! What are we talking about ${item.topic.toLowerCase()} today? 😊`,
+        time: 'Just now'
+      }
+    ]);
+    setChatInput('');
     setIsListening(false);
     setAiStatus('idle');
     setPreviewVisible(true);
+  };
+
+  const getSmartReply = (userText: string, topicName: string) => {
+    const lower = userText.toLowerCase();
+    const topicLower = topicName.toLowerCase();
+
+    if (topicLower.includes('food')) {
+      if (lower.includes('biryani') || lower.includes('pizza') || lower.includes('burger') || lower.includes('fruit') || lower.includes('favorite') || lower.includes('like')) {
+        return `Yum! That sounds absolutely delicious! 😋 Why do you like it so much? Tell me more about who makes it best for you!`;
+      }
+      return `Food is such a wonderful topic! What is your favorite healthy meal, and what dessert do you enjoy after dinner? 🍎🍲`;
+    }
+
+    if (topicLower.includes('school')) {
+      if (lower.includes('teacher') || lower.includes('friend') || lower.includes('study') || lower.includes('class') || lower.includes('favorite')) {
+        return `That's great! Teachers and friends make school very special. 🏫 What is your favorite activity to do during recess?`;
+      }
+      return `School is full of learning adventures! Tell me, what subject do you enjoy the most and why? 📚✨`;
+    }
+
+    if (topicLower.includes('lion') || topicLower.includes('animal')) {
+      return `Lions are majestic creatures, known as the King of the Jungle! 🦁 Did you know they live in groups called prides? What other wild animals do you find fascinating?`;
+    }
+
+    // Default engaging intelligent reply
+    const replies = [
+      `That's a wonderful thought about "${topicName}"! 🌟 Can you explain more about what you like most about it?`,
+      `Excellent pronunciation and phrasing! 👏 How often do you practice or think about ${topicName.toLowerCase()}?`,
+      `I love how you shared that! 💡 Let's build on that: what is something new you learned about ${topicName.toLowerCase()} recently?`
+    ];
+    return replies[Math.floor(Math.random() * replies.length)];
+  };
+
+  const handleSendMessage = (customText?: string) => {
+    const textToSend = (typeof customText === 'string' ? customText : chatInput).trim();
+    if (!textToSend) return;
+
+    const topicName = previewItem?.topic || 'this topic';
+    setChatInput('');
+    setVoiceLog(prev => [...prev, { sender: 'user', text: textToSend, time: 'Just now' }]);
+    setAiStatus('thinking');
+
+    setTimeout(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollToEnd({ animated: true });
+      }
+    }, 100);
+
+    setTimeout(() => {
+      setAiStatus('speaking');
+      const aiReply = getSmartReply(textToSend, topicName);
+      setVoiceLog(prev => [...prev, { sender: 'ai', text: aiReply, time: 'Just now' }]);
+
+      setTimeout(() => {
+        if (chatScrollRef.current) {
+          chatScrollRef.current.scrollToEnd({ animated: true });
+        }
+      }, 100);
+
+      setTimeout(() => {
+        setAiStatus('idle');
+      }, 1800);
+    }, 1000);
   };
 
   const handleMic = () => {
     if (isListening) {
       setIsListening(false);
       setAiStatus('thinking');
+      const topicName = previewItem?.topic || 'this topic';
+
       setTimeout(() => {
-        setVoiceLog(prev => [...prev, { sender: 'user', text: `I'm speaking about "${previewItem?.topic}". It is a very important topic for students.` }]);
+        const spokenText = `I am practicing my English speech about ${topicName}. It is very exciting to talk with Echo AI!`;
+        setVoiceLog(prev => [...prev, { sender: 'user', text: spokenText, time: 'Just now' }]);
+
         setTimeout(() => {
           setAiStatus('speaking');
-          setVoiceLog(prev => [...prev, { sender: 'ai', text: `Excellent! Your fluency on "${previewItem?.topic}" was great. Well done! 🌟` }]);
-          setTimeout(() => setAiStatus('idle'), 2000);
-        }, 1200);
+          const aiReply = `Superb fluency! 🎙️ Your tone and vocabulary on "${topicName}" sounded clear and confident. What else would you like to say?`;
+          setVoiceLog(prev => [...prev, { sender: 'ai', text: aiReply, time: 'Just now' }]);
+          
+          setTimeout(() => {
+            if (chatScrollRef.current) {
+              chatScrollRef.current.scrollToEnd({ animated: true });
+            }
+            setAiStatus('idle');
+          }, 1800);
+        }, 1100);
       }, 900);
     } else {
       setIsListening(true);
@@ -296,59 +386,737 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
     }
   };
 
-  // ── Dynamic Premium Color Themes ──
-  const getCardTheme = (className: string) => {
-    if (className.includes('GRADE-V')) {
-      return {
-        gradColors: ['#ffffff', '#F0F6FF', '#E1EFFF'],
-        accent: '#0052cc',
-        secondary: '#003d9b',
-        iconBg: '#DBEAFE',
-        badgeBg: 'rgba(0, 82, 204, 0.08)',
-        badgeText: '#0052cc',
-        border: '#B9D7FE',
-        eqColor: '#1E40AF',
-        accentGlow: 'rgba(37, 99, 235, 0.06)',
-      };
-    }
-    if (className.includes('GRADE-III')) {
-      return {
-        gradColors: ['#ffffff', '#F2FDF5', '#DCFCE7'],
-        accent: '#0D9488',
-        secondary: '#0F766E',
-        iconBg: '#D1FAE5',
-        badgeBg: 'rgba(13, 148, 136, 0.08)',
-        badgeText: '#0D9488',
-        border: '#A7F3D0',
-        eqColor: '#0F766E',
-        accentGlow: 'rgba(13, 148, 136, 0.06)',
-      };
-    }
-    if (className.includes('GRADE-II')) {
-      return {
-        gradColors: ['#ffffff', '#FAF5FF', '#F3E8FF'],
-        accent: '#6366F1',
-        secondary: '#4F46E5',
-        iconBg: '#E0E7FF',
-        badgeBg: 'rgba(99, 102, 241, 0.08)',
-        badgeText: '#6366F1',
-        border: '#C7D2FE',
-        eqColor: '#4F46E5',
-        accentGlow: 'rgba(99, 102, 241, 0.06)',
-      };
-    }
-    return {
-      gradColors: ['#ffffff', '#FFFDF5', '#FEF3C7'],
-      accent: '#D97706',
-      secondary: '#B45309',
-      iconBg: '#FEF3C7',
-      badgeBg: 'rgba(217, 119, 6, 0.08)',
-      badgeText: '#D97706',
-      border: '#FDE68A',
-      eqColor: '#B45309',
-      accentGlow: 'rgba(217, 119, 6, 0.06)',
-    };
-  };
+
+
+  // ── EARLY FULL-SCREEN RETURN: PREVIEW AI SPEAKING SESSION ──
+  if (previewVisible && previewItem) {
+    return (
+      <SafeAreaView style={styles.previewFullScreen} edges={['top']}>
+        {/* ── TOP HEADER BAR (Light Clean Aesthetic Header) ── */}
+        <View style={styles.previewHeaderBar}>
+          <View style={styles.previewHeaderLeft}>
+            <TouchableOpacity
+              style={styles.previewBackBtn}
+              onPress={() => {
+                setPreviewVisible(false);
+                setIsListening(false);
+                setAiStatus('idle');
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            </TouchableOpacity>
+
+            <View style={styles.previewBotAvatarWrapper}>
+              <LinearGradient
+                colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.previewBotAvatarGrad}
+              >
+                <MaterialIcons name="graphic-eq" size={20} color="#FFFFFF" />
+              </LinearGradient>
+              <View style={styles.onlineDotPulse} />
+            </View>
+
+            <View style={{ marginLeft: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.previewBotTitle}>Echo AI</Text>
+                <View style={styles.onlineBadge}>
+                  <View style={styles.onlineDot} />
+                  <Text style={styles.onlineBadgeText}>Online</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* ── COMPACT AI VOICE & STATUS STRIP ── */}
+        <View style={styles.previewStatusStrip}>
+          <View style={styles.statusIndicatorBox}>
+            <View
+              style={[
+                styles.statusPulseOrb,
+                {
+                  backgroundColor:
+                    aiStatus === 'listening'
+                      ? '#EF4444'
+                      : aiStatus === 'thinking'
+                      ? '#F59E0B'
+                      : aiStatus === 'speaking'
+                      ? '#10B981'
+                      : '#0066FF',
+                },
+              ]}
+            />
+            <Text style={styles.statusStripLabel}>
+              {aiStatus === 'listening'
+                ? 'Listening to your voice... Speak now!'
+                : aiStatus === 'thinking'
+                ? 'Echo is analyzing your answer...'
+                : aiStatus === 'speaking'
+                ? 'Echo AI is speaking...'
+                : `Ready • Topic: "${previewItem.topic}"`}
+            </Text>
+          </View>
+
+          {/* Live Equalizer mini-bars */}
+          <View style={styles.miniEqualizerRow}>
+            {[8, 16, 24, 14, 20, 10, 22, 12].map((h, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.miniEqualizerBar,
+                  {
+                    height: aiStatus === 'listening' || aiStatus === 'speaking' ? h * 1.2 : 6,
+                    backgroundColor:
+                      aiStatus === 'listening'
+                        ? '#EF4444'
+                        : aiStatus === 'speaking'
+                        ? '#10B981'
+                        : '#94A3B8',
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+        {/* ── CHAT SCROLL FEED ── */}
+        <ScrollView
+          ref={chatScrollRef}
+          style={styles.previewChatFeed}
+          contentContainerStyle={styles.previewChatFeedContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Conversation Messages */}
+          {voiceLog.map((msg, index) => {
+            const isAI = msg.sender === 'ai';
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.msgBubbleRow,
+                  isAI ? styles.msgBubbleRowAI : styles.msgBubbleRowUser,
+                ]}
+              >
+                {isAI && (
+                  <View style={styles.msgAiAvatarSmall}>
+                    <LinearGradient
+                      colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.msgAiAvatarSmallGrad}
+                    >
+                      <MaterialIcons name="graphic-eq" size={14} color="#FFFFFF" />
+                    </LinearGradient>
+                  </View>
+                )}
+
+                {isAI ? (
+                  <View style={styles.msgBubbleCardAI}>
+                    <View style={styles.msgBubbleHeaderAI}>
+                      <View style={styles.aiNameBadge}>
+                        <MaterialIcons name="graphic-eq" size={11} color="#0066FF" style={{ marginRight: 4 }} />
+                        <Text style={styles.aiNameBadgeText}>Echo AI</Text>
+                      </View>
+                      <View style={styles.aiMsgMetaRow}>
+                        {msg.time && <Text style={styles.msgTimeTextAI}>{msg.time}</Text>}
+                        <TouchableOpacity style={styles.audioPlayChip} activeOpacity={0.7}>
+                          <MaterialIcons name="volume-up" size={14} color="#0066FF" />
+                          <Text style={styles.audioPlayText}>Listen</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <Text style={styles.msgBodyTextAI}>{msg.text}</Text>
+                  </View>
+                ) : (
+                  <LinearGradient
+                    colors={['#0066FF', '#0047CC', '#4338CA']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.msgBubbleCardUser}
+                  >
+                    <View style={styles.msgBubbleHeaderUser}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="person" size={13} color="rgba(255,255,255,0.85)" style={{ marginRight: 3 }} />
+                        <Text style={styles.msgSenderNameUser}>You</Text>
+                      </View>
+                      {msg.time && <Text style={styles.msgTimeTextUser}>{msg.time}</Text>}
+                    </View>
+
+                    <Text style={styles.msgBodyTextUser}>{msg.text}</Text>
+                  </LinearGradient>
+                )}
+              </View>
+            );
+          })}
+
+          {/* Thinking animation indicator */}
+          {aiStatus === 'thinking' && (
+            <View style={[styles.msgBubbleRow, styles.msgBubbleRowAI]}>
+              <View style={styles.msgAiAvatarSmall}>
+                <LinearGradient
+                  colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                  style={styles.msgAiAvatarSmallGrad}
+                >
+                  <MaterialIcons name="graphic-eq" size={14} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+              <View style={styles.thinkingCard}>
+                <View style={styles.thinkingPulseDot} />
+                <Text style={styles.thinkingText}>
+                  Echo is composing a thoughtful reply...
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Quick Suggestion Prompt Chips */}
+          <View style={styles.suggestionChipsSection}>
+            <View style={styles.suggestionHeaderRow}>
+              <MaterialIcons name="stars" size={13} color="#6366F1" />
+              <Text style={styles.suggestionChipsHeading}>SUGGESTED PROMPTS</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+              <TouchableOpacity
+                style={styles.suggestionChip}
+                onPress={() => handleSendMessage(`My favorite thing about ${previewItem.topic} is...`)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.suggestionChipText}>
+                  💬 My favorite thing about {previewItem.topic} is...
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.suggestionChip}
+                onPress={() => handleSendMessage(`Can you ask me a question about ${previewItem.topic}?`)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.suggestionChipText}>
+                  ❓ Ask me a question about {previewItem.topic}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.suggestionChip}
+                onPress={() => handleSendMessage(`How can I improve my English vocabulary for this topic?`)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.suggestionChipText}>
+                  ✨ Help me speak more fluently
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          <View style={{ height: 16 }} />
+        </ScrollView>
+
+        {/* ── BOTTOM INPUT BAR (Matching reference image + enhanced polish) ── */}
+        <View style={styles.previewBottomControlBar}>
+          <View style={styles.previewInputBoxContainer}>
+            <TextInput
+              style={styles.previewTextInputField}
+              placeholder="Type your response..."
+              placeholderTextColor="#94A3B8"
+              value={chatInput}
+              onChangeText={setChatInput}
+              onSubmitEditing={() => handleSendMessage()}
+              returnKeyType="send"
+            />
+
+            {/* Mic Button */}
+            <TouchableOpacity
+              style={[
+                styles.previewMicIconButton,
+                isListening && styles.previewMicIconButtonActive,
+              ]}
+              onPress={handleMic}
+              activeOpacity={0.8}
+            >
+              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <MaterialIcons
+                  name={isListening ? 'mic-off' : 'mic'}
+                  size={20}
+                  color={isListening ? '#FFFFFF' : '#0066FF'}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+
+            {/* Send Button */}
+            <TouchableOpacity
+              style={styles.previewSendIconButton}
+              onPress={() => handleSendMessage()}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#0066FF', '#0047CC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.previewSendBtnGrad}
+              >
+                <MaterialIcons name="send" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
+                <Text style={styles.previewSendBtnLabel}>Send</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── EARLY FULL-SCREEN RETURN: EDIT TOPIC SCREEN ──
+  if (editVisible && editItem) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* ── EDIT SCREEN HEADER ── */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => {
+                setEditVisible(false);
+                setEditItem(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.headerTitle}>Edit Conversation Topic</Text>
+              <Text style={styles.headerSubtitle}>Update Voice Practice Details</Text>
+            </View>
+          </View>
+          <View style={styles.badgePill}>
+            <View style={[styles.badgeDot, { backgroundColor: '#0284C7' }]} />
+            <Text style={[styles.badgePillText, { color: '#0284C7' }]}>EDIT TOPIC</Text>
+          </View>
+        </View>
+
+        {/* ── SCROLLABLE FORM CONTENT ── */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.createScreenScrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Form Card */}
+          <View style={styles.createFormCard}>
+            {/* Topic Title */}
+            <View style={styles.formField}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Topic Title</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <TextInput
+                style={styles.formInput}
+                placeholder="Enter topic title..."
+                placeholderTextColor="#94A3B8"
+                value={editTitle}
+                onChangeText={setEditTitle}
+              />
+            </View>
+
+            {/* Class Selection */}
+            <View style={[styles.formField, { marginTop: 18 }]}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Target Class</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.formSelectBox}
+                onPress={() => {
+                  setShowEditClassDD(!showEditClassDD);
+                  setShowEditSectionDD(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.selectTextRow}>
+                  <MaterialIcons name="groups" size={18} color={editClass ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !editClass && styles.formSelectPlaceholder]}>
+                    {editClass || 'Select a class...'}
+                  </Text>
+                </View>
+                <MaterialIcons name={showEditClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+              </TouchableOpacity>
+
+              {showEditClassDD && (
+                <View style={styles.formDropdownOptions}>
+                  {CLASSES.map((c) => {
+                    const isSelected = editClass === c;
+                    return (
+                      <TouchableOpacity
+                        key={c}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        onPress={() => {
+                          setEditClass(c);
+                          setShowEditClassDD(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                          {c}
+                        </Text>
+                        {isSelected && <MaterialIcons name="check" size={18} color="#0047CC" />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* Section Selection */}
+            <View style={[styles.formField, { marginTop: 18 }]}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Section(s)</Text>
+                <Text style={styles.requiredStar}>*</Text>
+                {editSection ? (
+                  <Text style={styles.selectedCountText}>
+                    {editSection.split(',').filter(Boolean).length} Selected
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity
+                style={styles.formSelectBox}
+                onPress={() => {
+                  setShowEditSectionDD(!showEditSectionDD);
+                  setShowEditClassDD(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.selectTextRow}>
+                  <MaterialIcons name="bookmark" size={18} color={editSection ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !editSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                    {editSection ? `Section ${editSection}` : 'Select section(s)...'}
+                  </Text>
+                </View>
+                <MaterialIcons name={showEditSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+              </TouchableOpacity>
+
+              {showEditSectionDD && (
+                <View style={styles.formDropdownOptions}>
+                  {/* Select All Option */}
+                  <TouchableOpacity
+                    style={[
+                      styles.formDropdownItem,
+                      { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' },
+                    ]}
+                    onPress={() => {
+                      const currentList = editSection ? editSection.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                      if (currentList.length === SECTIONS.length) {
+                        setEditSection('');
+                      } else {
+                        setEditSection(SECTIONS.join(', '));
+                      }
+                    }}
+                  >
+                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0047CC' }]}>
+                      {editSection && editSection.split(',').map((s) => s.trim()).filter(Boolean).length === SECTIONS.length
+                        ? '✓ Deselect All'
+                        : '✦ Select All Sections'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {SECTIONS.map((s) => {
+                    const currentList = editSection ? editSection.split(',').map((item) => item.trim()).filter(Boolean) : [];
+                    const isSelected = currentList.includes(s);
+                    return (
+                      <TouchableOpacity
+                        key={s}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        onPress={() => {
+                          let updated: string[];
+                          if (isSelected) {
+                            updated = currentList.filter((item) => item !== s);
+                          } else {
+                            updated = [...currentList, s];
+                          }
+                          setEditSection(updated.join(', '));
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                          Section {s}
+                        </Text>
+                        <MaterialIcons
+                          name={isSelected ? 'check-box' : 'check-box-outline-blank'}
+                          size={19}
+                          color={isSelected ? '#0047CC' : '#94A3B8'}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  <TouchableOpacity
+                    style={styles.doneSelectingBtn}
+                    onPress={() => setShowEditSectionDD(false)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={[styles.modalBtnRow, { marginTop: 24 }]}>
+              <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleSaveEdit} activeOpacity={0.85}>
+                <LinearGradient
+                  colors={['#0066FF', '#003D9B']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.modalSubmitGrad}
+                >
+                  <MaterialIcons name="check-circle" size={18} color="#fff" style={{ marginRight: 7 }} />
+                  <Text style={styles.modalSubmitText}>SAVE CHANGES</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => {
+                  setEditVisible(false);
+                  setEditItem(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ── EARLY FULL-SCREEN RETURN: CREATE TOPIC SCREEN ──
+  if (isCreateVisible) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* ── CREATE SCREEN HEADER ── */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => {
+                setIsCreateVisible(false);
+                setFormTopic('');
+                setFormClass('');
+                setFormSection('');
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.headerTitle}>Create Conversation Topic</Text>
+              <Text style={styles.headerSubtitle}>AI Voice Practice Setup</Text>
+            </View>
+          </View>
+          <View style={styles.badgePill}>
+            <View style={styles.badgeDot} />
+            <Text style={styles.badgePillText}>NEW TOPIC</Text>
+          </View>
+        </View>
+
+        {/* ── SCROLLABLE FORM CONTENT (Cleanly occupies available space above fixed Bottom Navigation) ── */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.createScreenScrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Form Card */}
+          <View style={styles.createFormCard}>
+            {/* Topic Title */}
+            <View style={styles.formField}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Topic Title</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <TextInput
+                style={styles.formInput}
+                placeholder="Enter topic title (e.g. My School, Family)..."
+                placeholderTextColor="#94A3B8"
+                value={formTopic}
+                onChangeText={setFormTopic}
+              />
+            </View>
+
+            {/* Class Selection */}
+            <View style={[styles.formField, { marginTop: 18 }]}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Target Class</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.formSelectBox}
+                onPress={() => {
+                  setShowClassDD(!showClassDD);
+                  setShowSectionDD(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.selectTextRow}>
+                  <MaterialIcons name="groups" size={18} color={formClass ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !formClass && styles.formSelectPlaceholder]}>
+                    {formClass || 'Select a class...'}
+                  </Text>
+                </View>
+                <MaterialIcons name={showClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+              </TouchableOpacity>
+
+              {showClassDD && (
+                <View style={styles.formDropdownOptions}>
+                  {CLASSES.map((c) => {
+                    const isSelected = formClass === c;
+                    return (
+                      <TouchableOpacity
+                        key={c}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        onPress={() => {
+                          setFormClass(c);
+                          setShowClassDD(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                          {c}
+                        </Text>
+                        {isSelected && <MaterialIcons name="check" size={18} color="#0047CC" />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* Section Selection */}
+            <View style={[styles.formField, { marginTop: 18 }]}>
+              <View style={styles.labelRow}>
+                <Text style={styles.formLabel}>Section(s)</Text>
+                <Text style={styles.requiredStar}>*</Text>
+                {formSection ? (
+                  <Text style={styles.selectedCountText}>
+                    {formSection.split(',').filter(Boolean).length} Selected
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity
+                style={styles.formSelectBox}
+                onPress={() => {
+                  setShowSectionDD(!showSectionDD);
+                  setShowClassDD(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.selectTextRow}>
+                  <MaterialIcons name="bookmark" size={18} color={formSection ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                    {formSection ? `Section ${formSection}` : 'Select section(s)...'}
+                  </Text>
+                </View>
+                <MaterialIcons name={showSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+              </TouchableOpacity>
+
+              {showSectionDD && (
+                <View style={styles.formDropdownOptions}>
+                  {/* Select All Option */}
+                  <TouchableOpacity
+                    style={[
+                      styles.formDropdownItem,
+                      { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' },
+                    ]}
+                    onPress={() => {
+                      const currentList = formSection ? formSection.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                      if (currentList.length === SECTIONS.length) {
+                        setFormSection('');
+                      } else {
+                        setFormSection(SECTIONS.join(', '));
+                      }
+                    }}
+                  >
+                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0047CC' }]}>
+                      {formSection && formSection.split(',').map((s) => s.trim()).filter(Boolean).length === SECTIONS.length
+                        ? '✓ Deselect All'
+                        : '✦ Select All Sections'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {SECTIONS.map((s) => {
+                    const currentList = formSection ? formSection.split(',').map((item) => item.trim()).filter(Boolean) : [];
+                    const isSelected = currentList.includes(s);
+                    return (
+                      <TouchableOpacity
+                        key={s}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        onPress={() => {
+                          let updated: string[];
+                          if (isSelected) {
+                            updated = currentList.filter((item) => item !== s);
+                          } else {
+                            updated = [...currentList, s];
+                          }
+                          setFormSection(updated.join(', '));
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                          Section {s}
+                        </Text>
+                        <MaterialIcons
+                          name={isSelected ? 'check-box' : 'check-box-outline-blank'}
+                          size={19}
+                          color={isSelected ? '#0047CC' : '#94A3B8'}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  <TouchableOpacity
+                    style={styles.doneSelectingBtn}
+                    onPress={() => setShowSectionDD(false)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Action Buttons (Always 100% visible and accessible above fixed bottom nav) */}
+            <View style={[styles.modalBtnRow, { marginTop: 24 }]}>
+              <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleCreate} activeOpacity={0.85}>
+                <LinearGradient
+                  colors={['#0066FF', '#003D9B']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.modalSubmitGrad}
+                >
+                  <MaterialIcons name="check-circle" size={18} color="#fff" style={{ marginRight: 7 }} />
+                  <Text style={styles.modalSubmitText}>CREATE TOPIC</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => {
+                  setIsCreateVisible(false);
+                  setFormTopic('');
+                  setFormClass('');
+                  setFormSection('');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -364,9 +1132,9 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             <Text style={styles.headerSubtitle}>Voice practice management</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.createBtn} onPress={() => setIsCreateVisible(true)} activeOpacity={0.85}>
-          <LinearGradient colors={['#0066FF', '#003D9B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createBtnGrad}>
-            <MaterialIcons name="add-circle" size={18} color="#fff" style={{ marginRight: 5 }} />
+        <TouchableOpacity style={styles.createButtonHeader} onPress={() => setIsCreateVisible(true)} activeOpacity={0.85}>
+          <LinearGradient colors={['#0066FF', '#003D9B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createBtnGradient}>
+            <MaterialIcons name="add-circle" size={19} color="#ffffff" style={{ marginRight: 5 }} />
             <Text style={styles.createBtnText}>Create</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -374,91 +1142,45 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* ── LUXURY ULTRA-PREMIUM HERO CARD ── */}
+        {/* ── MINIMAL LUXURY HERO CARD ── */}
         <LinearGradient 
-          colors={['#F4F9FF', '#E8F2FF', '#D8EAFF']} 
+          colors={['#F8FAFC', '#F0F9FF', '#EEF2FF']} 
           start={{ x: 0, y: 0 }} 
-          end={{ x: 1, y: 1 }} 
+          end={{ x: 1, y: 0 }} 
           style={styles.heroCard}
         >
-          {/* Subtle top shine */}
-          <View style={styles.heroTopShine} />
-
-          {/* Floating glowing circles */}
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#60A5FA', width: 240, height: 240, top: -85, right: -45, opacity: 0.25 }]} />
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#34D399', width: 140, height: 140, bottom: -50, left: 20, opacity: 0.12 }]} />
+          {/* Floating glowing subtle spheres */}
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#38BDF8', width: 200, height: 200, top: -70, right: -40, opacity: 0.12 }]} />
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#10B981', width: 120, height: 120, bottom: -40, left: 10, opacity: 0.08 }]} />
 
           {/* Sound waves vectors */}
           <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
             <Defs>
               <SvgLinearGradient id="siriWaveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#0052cc" stopOpacity={0} />
-                <Stop offset="50%" stopColor="#0052cc" stopOpacity={0.16} />
-                <Stop offset="100%" stopColor="#0284C7" stopOpacity={0} />
+                <Stop offset="0%" stopColor="#0284C7" stopOpacity={0} />
+                <Stop offset="50%" stopColor="#0284C7" stopOpacity={0.12} />
+                <Stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
               </SvgLinearGradient>
               <SvgLinearGradient id="siriWaveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#34D399" stopOpacity={0} />
-                <Stop offset="50%" stopColor="#0052cc" stopOpacity={0.12} />
-                <Stop offset="100%" stopColor="#003d9b" stopOpacity={0} />
+                <Stop offset="0%" stopColor="#10B981" stopOpacity={0} />
+                <Stop offset="50%" stopColor="#0284C7" stopOpacity={0.08} />
+                <Stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
               </SvgLinearGradient>
             </Defs>
-            <Path d="M -20 100 Q 70 65 170 100 T 360 100 T 540 100" stroke="url(#siriWaveGrad1)" strokeWidth={2.8} fill="none" />
-            <Path d="M 0 108 Q 90 135 180 108 T 380 108 T 580 108" stroke="url(#siriWaveGrad2)" strokeWidth={1.2} fill="none" opacity={0.7} />
+            <Path d="M -20 50 Q 70 25 170 50 T 360 50 T 540 50" stroke="url(#siriWaveGrad1)" strokeWidth={2.4} fill="none" />
+            <Path d="M 0 58 Q 90 75 180 58 T 380 58 T 580 58" stroke="url(#siriWaveGrad2)" strokeWidth={1.2} fill="none" opacity={0.6} />
           </Svg>
 
-          {/* Futuristic Siri/Alexa style active Voice wave visualizer orb */}
+          {/* Active Voice wave visualizer orb */}
           <PremiumVoiceVisualizer />
 
           {/* Hero Content Stack */}
           <View style={styles.heroBodyLayout}>
-            <View style={styles.heroBadge}>
-              <MaterialIcons name="settings-voice" size={13} color="#0052cc" style={{ marginRight: 6 }} />
-              <Text style={styles.heroBadgeText}>AI SPEECH INTELLIGENCE</Text>
-            </View>
-
             <Text style={styles.luxuryHeroTitle}>Vocal Studio</Text>
-            <Text style={styles.luxuryHeroSub}>Enhance student fluency with active audio evaluations</Text>
-
-            {/* Dashboard stats panel (Frosted layout) */}
-            <View style={styles.statsGlassPanel}>
-              <View style={styles.statGlassCell}>
-                <Text style={styles.statGlassNum}>{topics.length}</Text>
-                <Text style={styles.statGlassLabel}>TOPICS</Text>
-              </View>
-              <View style={styles.statGlassSep} />
-              <View style={styles.statGlassCell}>
-                <Text style={[styles.statGlassNum, { color: '#0D9488' }]}>{topics.filter(t => t.className.includes('GRADE-V')).length}</Text>
-                <Text style={styles.statGlassLabel}>GRADE V</Text>
-              </View>
-              <View style={styles.statGlassSep} />
-              <View style={styles.statGlassCell}>
-                <Text style={[styles.statGlassNum, { color: '#0052cc' }]}>{topics.filter(t => t.className.includes('GRADE-II')).length}</Text>
-                <Text style={styles.statGlassLabel}>GRADE II</Text>
-              </View>
-            </View>
           </View>
         </LinearGradient>
 
-        {/* ── SEARCH ── */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <View style={styles.searchIconBox}>
-              <MaterialIcons name="search" size={18} color="#003d9b" />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search topics, class, section..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity style={{ padding: 8 }} onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                <MaterialIcons name="close" size={15} color="#64748B" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+
 
         {/* ── LIST HEADER ── */}
         <View style={styles.listHeader}>
@@ -469,6 +1191,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
         </View>
 
         {/* ── TOPIC CARDS (WOW FACTOR REDESIGN) ── */}
+        {/* ── TOPIC CARDS (MINIMAL & TEACHER-FRIENDLY REDESIGN) ── */}
         {filtered.length === 0 ? (
           <View style={styles.emptyBox}>
             <MaterialIcons name="mic-off" size={40} color="#BFDBFE" />
@@ -477,34 +1200,15 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
           </View>
         ) : (
           filtered.map((item) => {
-            const themeColors = getCardTheme(item.className);
             return (
-              <View key={item.id} style={[styles.topicCard, { borderColor: themeColors.border, shadowColor: themeColors.accent }]}>
-                {/* Dynamic Gradient Background */}
-                <LinearGradient
-                  colors={themeColors.gradColors as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                {/* Left accent ribbon */}
-                <View style={[styles.cardAccent, { backgroundColor: themeColors.accent }]} />
-
-                {/* Glow Overlay */}
-                <View style={[styles.cardInteriorGlow, { backgroundColor: themeColors.accentGlow }]} />
-
-                {/* Sound wave graphic background */}
-                <CardWaveOverlay color={themeColors.accent} />
-
+              <View key={item.id} style={styles.topicCard}>
                 <View style={styles.cardBody}>
-                  {/* Card Title Header with polished layout */}
+                  {/* Card Header Row */}
                   <View style={styles.cardTopRow}>
                     <View style={styles.cardHeaderLeftGroup}>
-                      {/* Premium circular mic orb with outer white border & shadow */}
-                      <View style={[styles.micIconBox, { backgroundColor: '#ffffff', borderColor: themeColors.border }]}>
+                      <View style={styles.micIconBox}>
                         <LinearGradient
-                          colors={[themeColors.accent, themeColors.secondary]}
+                          colors={['#0066FF', '#0044B2']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                           style={styles.micIconGrad}
@@ -513,79 +1217,77 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                         </LinearGradient>
                       </View>
                       
-                      <View style={{ marginLeft: 12 }}>
+                      <View style={{ marginLeft: 10, flex: 1 }}>
                         <Text style={styles.cardTopicTitle} numberOfLines={1}>{item.topic}</Text>
-                        <View style={styles.activeStatusTagRow}>
-                          <View style={styles.activePulseDot} />
-                          <Text style={styles.voiceLogLabel}>Vocal Practice Active</Text>
-                        </View>
                       </View>
                     </View>
                     
-                    {/* Equalizer Visualizer inside Card */}
-                    <CardWaveformAnalyzer color={themeColors.eqColor} />
+                    {/* Equalizer Visualizer inside Pill Badge */}
+                    <View style={styles.waveformBadge}>
+                      <CardWaveformAnalyzer color="#0052cc" />
+                    </View>
                   </View>
 
-                  {/* Metadata Chips (Class & Section) */}
+                  {/* Inner Metadata Cards (Class & Section) */}
                   <View style={styles.fieldsRow}>
-                    <View style={[styles.fieldChip, { borderLeftColor: themeColors.accent, backgroundColor: '#ffffff98' }]}>
-                      <View style={[styles.chipIndicatorOrb, { backgroundColor: themeColors.accent + '20' }]}>
-                        <MaterialIcons name="school" size={12} color={themeColors.accent} />
+                    <View style={styles.fieldChipClass}>
+                      <View style={styles.classOrbBox}>
+                        <MaterialIcons name="school" size={16} color="#0052cc" />
                       </View>
-                      <View style={{ marginLeft: 6 }}>
-                        <Text style={styles.fieldChipLabel}>CLASS</Text>
-                        <Text style={styles.fieldChipValue}>{item.className}</Text>
+                      <View style={{ marginLeft: 9, flex: 1 }}>
+                        <Text style={styles.fieldChipLabelClass}>CLASS</Text>
+                        <Text style={styles.fieldChipValue} numberOfLines={1}>{item.className}</Text>
                       </View>
                     </View>
 
                     <View style={styles.fieldSep} />
 
-                    <View style={[styles.fieldChip, { borderLeftColor: themeColors.secondary, backgroundColor: '#ffffff98' }]}>
-                      <View style={[styles.chipIndicatorOrb, { backgroundColor: themeColors.secondary + '20' }]}>
-                        <MaterialIcons name="meeting-room" size={12} color={themeColors.secondary} />
+                    <View style={styles.fieldChipSection}>
+                      <View style={styles.sectionOrbBox}>
+                        <MaterialIcons name="meeting-room" size={16} color="#059669" />
                       </View>
-                      <View style={{ marginLeft: 6 }}>
-                        <Text style={styles.fieldChipLabel}>SECTION</Text>
-                        <Text style={styles.fieldChipValue}>Section {item.section}</Text>
+                      <View style={{ marginLeft: 9, flex: 1 }}>
+                        <Text style={styles.fieldChipLabelSection}>SECTION</Text>
+                        <Text style={styles.fieldChipValue} numberOfLines={1}>Section {item.section}</Text>
                       </View>
                     </View>
                   </View>
 
-                  {/* Subtle Separator */}
-                  <View style={[styles.cardDivider, { backgroundColor: themeColors.border + '60' }]} />
+                  {/* Divider */}
+                  <View style={styles.cardDivider} />
 
-                  {/* Dynamic Action Buttons */}
+                  {/* Action Buttons */}
                   <View style={styles.actionsRow}>
                     <TouchableOpacity
-                      style={[styles.btnPreview, { backgroundColor: themeColors.accent }]}
+                      style={styles.btnPreview}
                       onPress={() => openPreview(item)}
                       activeOpacity={0.85}
                     >
                       <LinearGradient
-                        colors={[themeColors.accent, themeColors.secondary]}
+                        colors={['#0066FF', '#0044B2']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={StyleSheet.absoluteFill}
                       />
-                      <MaterialIcons name="play-arrow" size={15} color="#fff" style={{ marginRight: 5, zIndex: 2 }} />
-                      <Text style={[styles.btnPrimaryText, { zIndex: 2 }]}>Preview</Text>
+                      <MaterialIcons name="play-arrow" size={18} color="#fff" style={{ marginRight: 4, zIndex: 2 }} />
+                      <Text style={styles.btnPrimaryText}>Preview</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.btnEdit, { borderColor: themeColors.accent + '40', backgroundColor: '#ffffff95' }]}
+                      style={styles.btnEdit}
                       onPress={() => openEdit(item)}
-                      activeOpacity={0.85}
+                      activeOpacity={0.8}
                     >
-                      <MaterialIcons name="edit" size={14} color={themeColors.accent} style={{ marginRight: 4 }} />
-                      <Text style={[styles.btnSecText, { color: themeColors.accent }]}>Edit</Text>
+                      <MaterialIcons name="edit" size={15} color="#0052cc" style={{ marginRight: 4 }} />
+                      <Text style={styles.btnSecText}>Edit</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={styles.btnDelete}
-                      onPress={() => handleDelete(item.id, item.topic)}
-                      activeOpacity={0.85}
+                      onPress={() => handleDelete(item)}
+                      activeOpacity={0.8}
                     >
-                      <MaterialIcons name="delete-sweep" size={14} color="#E11D48" style={{ marginRight: 4 }} />
+                      <MaterialIcons name="delete-outline" size={16} color="#E11D48" style={{ marginRight: 4 }} />
                       <Text style={styles.btnDangerText}>Delete</Text>
                     </TouchableOpacity>
                   </View>
@@ -595,315 +1297,678 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
           })
         )}
 
+        {/* Bottom Status Pill Badge */}
+        {topics.length > 0 && (
+          <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 24 }}>
+            <View style={{
+              backgroundColor: '#F8FAFC',
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 20,
+              shadowColor: '#0F172A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.04,
+              shadowRadius: 6,
+              elevation: 2,
+            }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+                All {topics.length} topics loaded
+              </Text>
+            </View>
+          </View>
+        )}
+
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* ════ CREATE MODAL ════ */}
-      <Modal visible={isCreateVisible} animationType="slide" transparent>
-        <View style={styles.overlay}>
-          <View style={styles.sheet}>
-            <LinearGradient colors={['#003d9b', '#0052cc']} style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Create Conversation Topic</Text>
-              <TouchableOpacity onPress={() => { setIsCreateVisible(false); setFormTopic(''); setFormClass(''); setFormSection(''); }} style={styles.sheetCloseBtn} activeOpacity={0.7}>
-                <MaterialIcons name="close" size={20} color="#fff" />
+      {/* ════ DELETE CONFIRMATION DIALOG ════ */}
+      {itemToDelete && (
+        <View style={styles.deleteDialogOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setItemToDelete(null)}
+          />
+          <View style={styles.deleteDialogBox}>
+            {/* Red Alert Orb */}
+            <View style={styles.deleteIconOrb}>
+              <MaterialIcons name="delete-forever" size={32} color="#E11D48" />
+            </View>
+
+            <Text style={styles.deleteDialogTitle}>Delete Topic?</Text>
+            <Text style={styles.deleteDialogMessage}>
+              Are you sure you want to permanently delete{' '}
+              <Text style={{ fontWeight: '800', color: '#0F172A' }}>"{itemToDelete.topic}"</Text>? This action cannot be undone.
+            </Text>
+
+            <View style={styles.deleteDialogActions}>
+              <TouchableOpacity
+                style={styles.deleteConfirmBtn}
+                onPress={() => {
+                  const idToRemove = itemToDelete.id;
+                  setTopics(prev => prev.filter(t => t.id !== idToRemove));
+                  setItemToDelete(null);
+                }}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['#E11D48', '#BE123C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.deleteConfirmGrad}
+                >
+                  <MaterialIcons name="delete" size={17} color="#fff" style={{ marginRight: 6 }} />
+                  <Text style={styles.deleteConfirmText}>Delete Permanently</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </LinearGradient>
 
-            <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-              {/* Topic */}
-              <Text style={styles.fLabel}>Topic Title <Text style={{ color: '#E11D48' }}>*</Text></Text>
-              <TextInput
-                style={styles.fInput}
-                placeholder="Enter topic title..."
-                placeholderTextColor="#94A3B8"
-                value={formTopic}
-                onChangeText={setFormTopic}
-              />
-
-              {/* Class */}
-              <Text style={[styles.fLabel, { marginTop: 14 }]}>Class <Text style={{ color: '#E11D48' }}>*</Text></Text>
-              <TouchableOpacity style={styles.fDropdown} onPress={() => { setShowClassDD(!showClassDD); setShowSectionDD(false); }} activeOpacity={0.8}>
-                <Text style={[styles.fDropdownText, !formClass && { color: '#94A3B8' }]}>{formClass || 'Select Class'}</Text>
-                <MaterialIcons name={showClassDD ? 'arrow-drop-up' : 'arrow-drop-down'} size={24} color="#003d9b" />
+              <TouchableOpacity
+                style={styles.deleteCancelBtn}
+                onPress={() => setItemToDelete(null)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.deleteCancelText}>Cancel</Text>
               </TouchableOpacity>
-              {showClassDD && (
-                <View style={styles.ddList}>
-                  {CLASSES.map(c => (
-                    <TouchableOpacity key={c} style={styles.ddItem} onPress={() => { setFormClass(c); setShowClassDD(false); }} activeOpacity={0.7}>
-                      <Text style={styles.ddText}>{c}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {/* Section */}
-              <Text style={[styles.fLabel, { marginTop: 14 }]}>Section <Text style={{ color: '#E11D48' }}>*</Text></Text>
-              <TouchableOpacity style={styles.fDropdown} onPress={() => { setShowSectionDD(!showSectionDD); setShowClassDD(false); }} activeOpacity={0.8}>
-                <Text style={[styles.fDropdownText, !formSection && { color: '#94A3B8' }]}>{formSection ? `Section ${formSection}` : 'Select Section'}</Text>
-                <MaterialIcons name={showSectionDD ? 'arrow-drop-up' : 'arrow-drop-down'} size={24} color="#003d9b" />
-              </TouchableOpacity>
-              {showSectionDD && (
-                <View style={styles.ddList}>
-                  {SECTIONS.map(s => (
-                    <TouchableOpacity key={s} style={styles.ddItem} onPress={() => { setFormSection(s); setShowSectionDD(false); }} activeOpacity={0.7}>
-                      <Text style={styles.ddText}>Section {s}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.modalBtnRow}>
-                <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleCreate} activeOpacity={0.85}>
-                  <LinearGradient colors={['#0066FF', '#003D9B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.modalSubmitGrad}>
-                    <MaterialIcons name="check-circle" size={18} color="#fff" style={{ marginRight: 7 }} />
-                    <Text style={styles.modalSubmitText}>CREATE TOPIC</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => { setIsCreateVisible(false); setFormTopic(''); setFormClass(''); setFormSection(''); }} activeOpacity={0.8}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={{ height: 30 }} />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ════ EDIT MODAL ════ */}
-      <Modal visible={editVisible} animationType="fade" transparent>
-        <View style={styles.overlay}>
-          <View style={[styles.sheet, { maxHeight: 320 }]}>
-            <LinearGradient colors={['#0284C7', '#0052cc']} style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Edit Topic</Text>
-              <TouchableOpacity onPress={() => setEditVisible(false)} style={styles.sheetCloseBtn} activeOpacity={0.7}>
-                <MaterialIcons name="close" size={20} color="#fff" />
-              </TouchableOpacity>
-            </LinearGradient>
-            <View style={{ padding: 20 }}>
-              <Text style={styles.fLabel}>Topic Title</Text>
-              <TextInput style={styles.fInput} value={editTitle} onChangeText={setEditTitle} />
-              <View style={[styles.modalBtnRow, { marginTop: 16 }]}>
-                <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleSaveEdit} activeOpacity={0.85}>
-                  <LinearGradient colors={['#0284C7', '#0052cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.modalSubmitGrad}>
-                    <MaterialIcons name="save" size={18} color="#fff" style={{ marginRight: 7 }} />
-                    <Text style={styles.modalSubmitText}>SAVE CHANGES</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setEditVisible(false)} activeOpacity={0.8}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </View>
-      </Modal>
-
-      {/* ════ PREVIEW MODAL (PREMIUM AI SPEAKING CHATBOT REDESIGN) ════ */}
-      <Modal visible={previewVisible} animationType="slide" transparent>
-        <View style={styles.overlay}>
-          <View style={[styles.sheet, { maxHeight: '92%', height: '92%' }]}>
-            
-            {/* Header: Premium Glass Studio Bar */}
-            <LinearGradient colors={['#0A1F5C', '#003d9b']} style={styles.sheetHeader}>
-              <View style={styles.chatBotHeaderLeft}>
-                <View style={styles.botAvatarContainer}>
-                  {/* Glowing halo indicator */}
-                  <View style={styles.botStatusHalo} />
-                  <LinearGradient colors={['#00E5FF', '#0052cc']} style={styles.botAvatarGrad}>
-                    <MaterialIcons name="face" size={26} color="#ffffff" />
-                  </LinearGradient>
-                </View>
-                <View style={{ marginLeft: 12 }}>
-                  <Text style={styles.chatBotName}>Ayesha</Text>
-                  <View style={styles.chatBotStatusRow}>
-                    <View style={styles.chatBotLivePulse} />
-                    <Text style={styles.chatBotStatusText}>Role-play session • Online</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.chatBotHeaderRight}>
-                <View style={styles.sessionTopicBadge}>
-                  <Text style={styles.sessionTopicText} numberOfLines={1}>{previewItem?.topic}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setPreviewVisible(false)} style={styles.sheetCloseBtn} activeOpacity={0.7}>
-                  <MaterialIcons name="close" size={18} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
-
-            {/* Siri Waveform Visualizer Display */}
-            <LinearGradient colors={['#F0F6FF', '#E3EFFF']} style={styles.vizBox}>
-              <View style={styles.vizContainerHeader}>
-                <MaterialIcons name="graphic-eq" size={14} color="#0052cc" />
-                <Text style={styles.vizHeaderText}>AI SPEECH EVALUATOR</Text>
-              </View>
-              <View style={styles.vizBars}>
-                {[6, 15, 26, 38, 48, 38, 26, 15, 6].map((h, i) => (
-                  <View key={i} style={[styles.vizBar, {
-                    height: isListening ? h * 1.5 : h,
-                    backgroundColor: aiStatus === 'listening' ? '#EF4444' : aiStatus === 'speaking' ? '#10B981' : '#3B82F6'
-                  }]} />
-                ))}
-              </View>
-              <View style={styles.statusRow}>
-                <View style={[styles.statusDot, {
-                  backgroundColor: aiStatus === 'idle' ? '#64748B' : aiStatus === 'listening' ? '#EF4444' : aiStatus === 'thinking' ? '#F59E0B' : '#10B981'
-                }]} />
-                <Text style={styles.statusText}>
-                  {aiStatus === 'idle' ? 'Ready for your voice input' : aiStatus === 'listening' ? 'Listening... Speak now!' : aiStatus === 'thinking' ? 'AI is analyzing your accent...' : 'Ayesha is speaking...'}
-                </Text>
-              </View>
-            </LinearGradient>
-
-            {/* Conversation Bubbles Screen */}
-            <ScrollView style={styles.chatArea} contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
-              {voiceLog.map((msg, i) => {
-                const isAI = msg.sender === 'ai';
-                return (
-                  <View key={i} style={[
-                    styles.chatRow,
-                    isAI ? styles.aiRow : styles.userRow
-                  ]}>
-                    {/* Bot avatar placeholder in list */}
-                    {isAI && (
-                      <View style={styles.chatBubbleAvatar}>
-                        <LinearGradient colors={['#EEF2FF', '#DBEAFE']} style={styles.chatBubbleAvatarGrad}>
-                          <MaterialIcons name="smart-toy" size={14} color="#0052cc" />
-                        </LinearGradient>
-                      </View>
-                    )}
-
-                    <View style={[
-                      styles.chatBubbleBox,
-                      isAI ? styles.aiBubbleStyle : styles.userBubbleStyle
-                    ]}>
-                      {/* Speaker header tag */}
-                      <Text style={[styles.bubbleHeaderLabel, isAI ? { color: '#0052cc' } : { color: '#93C5FD' }]}>
-                        {isAI ? 'Ayesha (AI)' : 'You'}
-                      </Text>
-                      <Text style={[styles.bubbleText, isAI ? { color: '#0F172A' } : { color: '#ffffff' }]}>
-                        {msg.text}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </ScrollView>
-
-            {/* Input Board panel */}
-            <View style={styles.premiumInputArea}>
-              
-              {/* Write Response input field */}
-              <View style={styles.premiumChatBar}>
-                <View style={styles.inputPrefixIcon}>
-                  <MaterialIcons name="keyboard" size={18} color="#64748B" />
-                </View>
-                <TextInput
-                  style={styles.premiumChatInput}
-                  placeholder="Type your response here..."
-                  placeholderTextColor="#94A3B8"
-                  onSubmitEditing={handleMic}
-                />
-                
-                {/* Send Button */}
-                <TouchableOpacity style={styles.premiumSendBtn} onPress={handleMic} activeOpacity={0.8}>
-                  <LinearGradient colors={['#0066FF', '#003D9B']} style={styles.premiumSendBtnGrad}>
-                    <MaterialIcons name="send" size={16} color="#fff" />
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-
-              {/* Floating Pulse Microphone Control */}
-              <View style={styles.premiumMicButtonSection}>
-                <Text style={styles.micHintText}>
-                  {isListening ? 'Tap to stop recording' : 'Press & speak about this topic'}
-                </Text>
-                
-                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                  <TouchableOpacity onPress={handleMic} activeOpacity={0.85} style={styles.micOuterCircleShadow}>
-                    <LinearGradient
-                      colors={isListening ? ['#EF4444', '#DC2626'] : ['#0066FF', '#003D9B']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.micBtn}
-                    >
-                      <MaterialIcons name={isListening ? 'mic-off' : 'mic'} size={28} color="#ffffff" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </Animated.View>
-              </View>
-
-            </View>
-
-          </View>
-        </View>
-      </Modal>
-
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
 
+  // ── PREVIEW SCREEN STYLES (MATCHING REFERENCE IMAGE + ULTRA-PREMIUM CHATGPT/GEMINI POLISH) ──
+  previewFullScreen: {
+    flex: 1,
+    backgroundColor: '#E6F4F8', // Soft crisp blue-tint canvas inspired by reference image
+  },
+  previewHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF', // Clean aesthetic light background
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    zIndex: 10,
+  },
+  previewHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  previewBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  previewBotAvatarWrapper: {
+    width: 40,
+    height: 40,
+    position: 'relative',
+  },
+  previewBotAvatarGrad: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E0E7FF',
+  },
+  onlineDotPulse: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  previewBotTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.3,
+  },
+  onlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+    gap: 4,
+  },
+  onlineDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#10B981',
+  },
+  onlineBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  headerTopicPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    maxWidth: 130,
+  },
+  headerTopicPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0052CC',
+  },
+
+  // Status Strip
+  previewStatusStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  statusIndicatorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  statusPulseOrb: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  statusStripLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  miniEqualizerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 20,
+    gap: 2.5,
+  },
+  miniEqualizerBar: {
+    width: 2.5,
+    borderRadius: 1.25,
+  },
+
+  // Chat Feed
+  previewChatFeed: {
+    flex: 1,
+    backgroundColor: '#EAF4F8',
+  },
+  previewChatFeedContent: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+
+  // Message Bubbles
+  msgBubbleRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    width: '100%',
+  },
+  msgBubbleRowAI: {
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+  },
+  msgBubbleRowUser: {
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  msgAiAvatarSmall: {
+    width: 32,
+    height: 32,
+    marginRight: 9,
+    marginTop: 2,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  msgAiAvatarSmallGrad: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#EEF2FF',
+  },
+
+  // AI Message Card (Modern SaaS Luxury Box)
+  msgBubbleCardAI: {
+    maxWidth: '84%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderTopLeftRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1.2,
+    borderColor: '#EEF2F6',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  msgBubbleHeaderAI: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    gap: 8,
+  },
+  aiNameBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F3FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#EDE9FE',
+  },
+  aiNameBadgeText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#6366F1',
+    letterSpacing: 0.2,
+  },
+  aiMsgMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  msgTimeTextAI: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  audioPlayChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 10,
+    gap: 3,
+  },
+  audioPlayText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#6366F1',
+  },
+  msgBodyTextAI: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1E293B',
+    lineHeight: 22,
+  },
+
+  // User Message Card (Deep Royal Gradient)
+  msgBubbleCardUser: {
+    maxWidth: '84%',
+    borderRadius: 20,
+    borderTopRightRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    shadowColor: '#0047CC',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  msgBubbleHeaderUser: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+    gap: 8,
+  },
+  msgSenderNameUser: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 0.3,
+  },
+  msgTimeTextUser: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  msgBodyTextUser: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 22,
+  },
+
+  // Thinking Card
+  thinkingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1.2,
+    borderColor: '#EEF2F6',
+    gap: 8,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  thinkingPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6366F1',
+  },
+  thinkingText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+
+  // Suggestion Chips Section
+  suggestionChipsSection: {
+    marginTop: 12,
+    marginBottom: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1.2,
+    borderColor: '#EEF2F6',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  suggestionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 9,
+  },
+  suggestionChipsHeading: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#6366F1',
+    letterSpacing: 0.6,
+  },
+  suggestionChip: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    borderRadius: 20,
+    paddingHorizontal: 13,
+    paddingVertical: 7.5,
+  },
+  suggestionChipText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#334155',
+  },
+
+  // Bottom Control Bar
+  previewBottomControlBar: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: Platform.select({ ios: 32, default: 16 }),
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  previewInputBoxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 25,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    paddingLeft: 16,
+    paddingRight: 6,
+    height: 50,
+  },
+  previewTextInputField: {
+    flex: 1,
+    fontSize: 14.5,
+    fontWeight: '600',
+    color: '#0F172A',
+    height: '100%',
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }),
+  },
+  previewMicIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  previewMicIconButtonActive: {
+    backgroundColor: '#EF4444',
+    borderColor: '#DC2626',
+  },
+  previewSendIconButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  previewSendBtnGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    height: 38,
+    borderRadius: 20,
+  },
+  previewSendBtnLabel: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+  },
+
+  // ── MAIN LIST & CARDS STYLES ──
   // Header
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 11,
-    borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    zIndex: 10,
   },
-  headerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerButton:  { width: 36, height: 36, borderRadius: 10, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
-  headerTitle:   { fontSize: 16, fontWeight: '900', color: '#0A1F5C' },
-  headerSubtitle:{ fontSize: 11, fontWeight: '600', color: '#64748B', marginTop: 1 },
-  createBtn:     { borderRadius: 10, overflow: 'hidden' },
-  createBtnGrad: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 9 },
-  createBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 82, 204, 0.04)',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#041b3c',
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+  createButtonHeader: {
+    borderRadius: 24,
+    shadowColor: '#0052CC',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.38,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  createBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 24,
+  },
+  createBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
 
-  scrollContent: { paddingBottom: 60 },
+  // Create Screen Styles
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  badgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0066FF',
+  },
+  badgePillText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#0066FF',
+    letterSpacing: 0.5,
+  },
+  createScreenScrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  createFormCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1.2,
+    borderColor: '#EEF2F6',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
 
-  // Luxury Hero Card
+  scrollContent: { paddingBottom: 40 },
+
+  // Minimal Luxury Hero Card
   heroCard: {
-    margin: 10, borderRadius: 16, padding: 12, overflow: 'hidden',
+    marginHorizontal: 14,
+    marginTop: 10,
+    marginBottom: 10,
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+    overflow: 'hidden',
     position: 'relative',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12, shadowRadius: 10, elevation: 4,
-  },
-  heroTopShine: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.4)',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    minHeight: 88,
+    justifyContent: 'center',
   },
   heroAuroraSphere: {
-    position: 'absolute', borderRadius: 999,
+    position: 'absolute',
+    borderRadius: 999,
   },
   heroBodyLayout: {
-    width: '68%',
+    width: '64%',
     zIndex: 2,
+    justifyContent: 'center',
   },
   luxuryHeroTitle: {
-    fontSize: 18, fontWeight: '900', color: '#0A1F5C',
-    letterSpacing: 0.3, marginTop: 6,
+    fontSize: 17.5,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  luxuryHeroSub: {
-    fontSize: 10, fontWeight: '700', color: '#334155',
-    lineHeight: 13, marginTop: 2, opacity: 0.95,
-  },
-
-  // Stats dashboard panel on hero
-  statsGlassPanel: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
-    borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8,
-    borderWidth: 1, borderColor: 'rgba(0, 82, 204, 0.12)',
-    marginTop: 10,
-  },
-  statGlassCell: { flex: 1, alignItems: 'center' },
-  statGlassNum:  { fontSize: 14, fontWeight: '900', color: '#0A1F5C' },
-  statGlassLabel:{ fontSize: 7.5, fontWeight: '900', color: '#475569', marginTop: 1, letterSpacing: 0.4 },
-  statGlassSep:  { width: 1, height: 16, backgroundColor: 'rgba(0, 82, 204, 0.15)' },
 
   heroBubble:   { position: 'absolute', borderRadius: 999, backgroundColor: '#fff' },
   heroTopRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 3 },
@@ -929,7 +1994,7 @@ const styles = StyleSheet.create({
   // Luxury Voice Wave Visualizer Styles
   voiceOrbWrapper: {
     position: 'absolute',
-    right: -24,
+    right: -10,
     top: '50%',
     marginTop: -60,
     width: 180,
@@ -981,84 +2046,123 @@ const styles = StyleSheet.create({
   emptyTitle:{ fontSize: 13, fontWeight: '900', color: '#94A3B8', marginTop: 10 },
   emptyDesc: { fontSize: 11, fontWeight: '600', color: '#CBD5E1', marginTop: 3 },
 
-  // Topic Card (WOW FACTOR REDESIGNED)
+  // Topic Card (Ultra-Sharp, Compact & Modern Premium)
   topicCard: {
-    flexDirection: 'row', marginHorizontal: 14, marginBottom: 10,
-    backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden',
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08, shadowRadius: 10, elevation: 3,
+    marginHorizontal: 14,
+    marginBottom: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    padding: 13,
+    borderWidth: 1.2,
+    borderColor: '#EEF2F6',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  cardAccent: { width: 4, backgroundColor: '#003d9b' },
-  cardWaveSvg: { position: 'absolute', bottom: 36, left: 0, right: 0 },
-  cardInteriorGlow: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  cardBody:   { flex: 1, padding: 12, position: 'relative' },
+  cardBody: { position: 'relative' },
 
-  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8, justifyContent: 'space-between' },
-  cardHeaderLeftGroup: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 11, justifyContent: 'space-between' },
+  cardHeaderLeftGroup: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 },
   micIconBox: {
-    width: 32, height: 32, borderRadius: 16, borderWidth: 1,
+    width: 36, height: 36, borderRadius: 11,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08, shadowRadius: 3, elevation: 1,
+    shadowColor: '#0066FF', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
   },
-  micIconGrad: { width: '100%', height: '100%', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  cardTopicTitle: { fontSize: 13.5, fontWeight: '900', color: '#0A1F5C' },
-  activeStatusTagRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  activePulseDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10B981', marginRight: 5 },
-  voiceLogLabel: { fontSize: 9.5, color: '#64748B', fontWeight: '800' },
+  micIconGrad: { width: '100%', height: '100%', borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  cardTopicTitle: { fontSize: 15.5, fontWeight: '800', color: '#0F172A', letterSpacing: -0.2 },
 
-  // Equalizer visualizer
-  waveformContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 26, gap: 3 },
-  wavePillar: { width: 3, borderRadius: 1.5 },
-
-  fieldsRow:  { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  fieldChip: {
-    flex: 1, flexDirection: 'row', alignItems: 'center',
-    borderRadius: 10, padding: 7,
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.9)',
-    borderLeftWidth: 3,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02, shadowRadius: 2,
-  },
-  chipIndicatorOrb: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  fieldChipLabel: { fontSize: 8, fontWeight: '900', color: '#94A3B8', letterSpacing: 0.4 },
-  fieldChipValue: { fontSize: 11, fontWeight: '900', color: '#0A1F5C', marginTop: 1 },
-  fieldSep:       { width: 6 },
-
-  cardDivider: { height: 1, marginBottom: 10 },
-
-  actionsRow: { flexDirection: 'row', gap: 6 },
-  btnPreview: {
-    flexDirection: 'row', alignItems: 'center',
+  // Equalizer visualizer Pill
+  waveformBadge: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
     borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  waveformContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 18, gap: 2 },
+  wavePillar: { width: 2.8, borderRadius: 1.4 },
+
+  // Inner Metadata Cards (Class & Section)
+  fieldsRow:  { flexDirection: 'row', alignItems: 'center', marginBottom: 11 },
+  fieldChipClass: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    borderRadius: 12, paddingVertical: 7.5, paddingHorizontal: 9,
+    backgroundColor: '#F0F7FF',
+    borderWidth: 1.2, borderColor: '#DBEAFE',
+  },
+  classOrbBox: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#DBEAFE', alignItems: 'center', justifyContent: 'center' },
+  fieldChipLabelClass: { fontSize: 9, fontWeight: '800', color: '#0052cc', letterSpacing: 0.5 },
+
+  fieldChipSection: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    borderRadius: 12, paddingVertical: 7.5, paddingHorizontal: 9,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.2, borderColor: '#DCFCE7',
+  },
+  sectionOrbBox: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
+  fieldChipLabelSection: { fontSize: 9, fontWeight: '800', color: '#059669', letterSpacing: 0.5 },
+
+  fieldChipValue: { fontSize: 12.5, fontWeight: '900', color: '#0F172A', marginTop: 1 },
+  fieldSep:       { width: 8 },
+
+  cardDivider: { height: 1, backgroundColor: '#F1F5F9', marginBottom: 11 },
+
+  actionsRow: { flexDirection: 'row', gap: 7 },
+  btnPreview: {
+    flex: 1.15,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    height: 36,
+    borderRadius: 9,
     overflow: 'hidden',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12, shadowRadius: 4, elevation: 2,
+    shadowColor: '#0066FF', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
   },
   btnEdit: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#ffffff', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1,
+    flex: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    height: 36,
+    backgroundColor: '#F8FAFC', borderRadius: 9,
+    borderWidth: 1.2, borderColor: '#CBD5E1',
   },
   btnDelete: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFF1F2', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#FECDD3',
+    flex: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    height: 36,
+    backgroundColor: '#FFF1F2', borderRadius: 9,
+    borderWidth: 1.2, borderColor: '#FECDD3',
   },
-  btnPrimaryText: { fontSize: 12.5, fontWeight: '900', color: '#fff', letterSpacing: 0.2 },
-  btnSecText:     { fontSize: 12.5, fontWeight: '900', letterSpacing: 0.2 },
-  btnDangerText:  { fontSize: 12.5, fontWeight: '900', color: '#E11D48', letterSpacing: 0.2 },
+  btnPrimaryText: { fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.2, zIndex: 2 },
+  btnSecText:     { fontSize: 12, fontWeight: '800', color: '#0052cc', letterSpacing: 0.2 },
+  btnDangerText:  { fontSize: 12, fontWeight: '800', color: '#E11D48', letterSpacing: 0.2 },
 
   // Modals
-  overlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'flex-end' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15,23,42,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
   sheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    overflow: 'hidden', maxHeight: '92%',
-    borderTopWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    maxHeight: '82%',
+    width: '100%',
+    maxWidth: 480,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
   sheetHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -1071,11 +2175,125 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
+  // Form field styles (matching ActivityScreen design)
+  formField: {
+    gap: 8,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  formLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1E293B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  requiredStar: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  selectedCountText: {
+    fontSize: 11,
+    color: '#0047CC',
+    fontWeight: '800',
+    marginLeft: 'auto',
+  },
+  formInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 52,
+    fontSize: 15,
+    color: '#0F172A',
+    fontWeight: '600',
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }),
+  },
+  formSelectBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  selectTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  formSelectText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  formSelectPlaceholder: {
+    color: '#94A3B8',
+    fontWeight: '600',
+    fontSize: 14.5,
+  },
+  formDropdownOptions: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    overflow: 'hidden',
+    marginTop: 6,
+    shadowColor: '#1e293b',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  formDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  formDropdownItemActive: {
+    backgroundColor: '#EFF6FF',
+  },
+  formDropdownItemText: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  formDropdownItemTextActive: {
+    color: '#0047CC',
+    fontWeight: '900',
+  },
+  doneSelectingBtn: {
+    backgroundColor: '#0047CC',
+    paddingVertical: 10,
+    alignItems: 'center',
+    margin: 10,
+    borderRadius: 10,
+  },
+  doneSelectingText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 12.5,
+  },
+
   fLabel:       { fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 7, letterSpacing: 0.3 },
   fInput: {
-    height: 50, borderWidth: 1.5, borderColor: '#CBD5E1',
+    height: 48, borderWidth: 1.5, borderColor: '#CBD5E1',
     borderRadius: 12, paddingHorizontal: 14,
-    fontSize: 14, fontWeight: '600', color: '#0F172A', backgroundColor: '#F8FAFC',
+    fontSize: 14, fontWeight: '700', color: '#0F172A', backgroundColor: '#F8FAFC',
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }),
   },
   fDropdown: {
     height: 50, borderWidth: 1.5, borderColor: '#CBD5E1', borderRadius: 12,
@@ -1098,112 +2316,97 @@ const styles = StyleSheet.create({
   modalCancelBtn:  { paddingHorizontal: 18, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' },
   modalCancelText: { fontSize: 13, fontWeight: '800', color: '#64748B' },
 
-  // Preview
-  
-  vizBars:   { flexDirection: 'row', alignItems: 'center', height: 48, marginBottom: 10 },
-  vizBar:    { width: 6, borderRadius: 3, marginHorizontal: 3 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText:{ fontSize: 12, fontWeight: '800', color: '#0A1F5C' },
-
-  chatArea: { maxHeight: 200, backgroundColor: '#FAFAFA' },
-  bubble:   { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 10, paddingHorizontal: 14 },
-  userBubble:  { justifyContent: 'flex-end' },
-  aiBubble:    { justifyContent: 'flex-start' },
-  aiDot: {
-    width: 26, height: 26, borderRadius: 13, backgroundColor: '#EEF2FF',
-    borderWidth: 1, borderColor: '#BFDBFE',
-    alignItems: 'center', justifyContent: 'center', marginRight: 8,
+  // Delete Confirmation Dialog Styles
+  deleteDialogOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    paddingHorizontal: 20,
   },
-  bubbleBox:    { maxWidth: '78%', padding: 11, borderRadius: 14 },
-  aiBubbleBox:  { backgroundColor: '#EEF2FF', borderBottomLeftRadius: 4 },
-  userBubbleBox:{ backgroundColor: '#003d9b', borderBottomRightRadius: 4, alignSelf: 'flex-end' },
-  bubbleText:   { fontSize: 13, fontWeight: '600', color: '#0A1F5C', lineHeight: 18 },
-
-  micArea: { alignItems: 'center', padding: 18, borderTopWidth: 1, borderTopColor: '#E2E8F0', backgroundColor: '#fff' },
-  micHint: { fontSize: 11, fontWeight: '700', color: '#94A3B8', marginBottom: 12 },
-  micBtn: {
-    width: 66, height: 66, borderRadius: 33,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.35, shadowRadius: 12, elevation: 7,
-  },
-
-  // Premium chatbot styles
-  chatBotHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  botAvatarContainer: { width: 44, height: 44, position: 'relative', justifyContent: 'center', alignItems: 'center' },
-  botStatusHalo: {
-    position: 'absolute', width: 44, height: 44, borderRadius: 22,
-    borderWidth: 2, borderColor: '#00E5FF', opacity: 0.8,
-  },
-  botAvatarGrad: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  chatBotName: { fontSize: 16, fontWeight: '900', color: '#FFFFFF' },
-  chatBotStatusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  chatBotLivePulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF66', marginRight: 6 },
-  chatBotStatusText: { fontSize: 11, color: '#93C5FD', fontWeight: '700' },
-  chatBotHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sessionTopicBadge: {
-    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 5, maxWidth: 140,
-  },
-  sessionTopicText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF' },
-
-  vizBox: {
-    padding: 22, alignItems: 'center',
-    borderBottomWidth: 1.5, borderBottomColor: '#EEF2FF',
+  deleteDialogBox: {
+    width: '100%',
+    maxWidth: 360,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#003d9b', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03, shadowRadius: 8, elevation: 1,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
-  vizContainerHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  vizHeaderText: { fontSize: 10, fontWeight: '900', color: '#0052cc', letterSpacing: 0.5 },
-
-  chatRow: { flexDirection: 'row', marginBottom: 16, width: '100%' },
-  aiRow: { justifyContent: 'flex-start' },
-  userRow: { justifyContent: 'flex-end' },
-  chatBubbleAvatar: { width: 28, height: 28, marginRight: 8, alignSelf: 'flex-end' },
-  chatBubbleAvatarGrad: {
-    width: 28, height: 28, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#BFDBFE',
+  deleteIconOrb: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFE4E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: '#FFF1F2',
   },
-  chatBubbleBox: {
-    maxWidth: '82%', borderRadius: 16, padding: 14,
-    shadowColor: '#0A1F5C', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
+  deleteDialogTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  aiBubbleStyle: {
-    backgroundColor: '#ffffff',
-    borderBottomLeftRadius: 4,
-    borderWidth: 1.5, borderColor: '#EEF2FF',
+  deleteDialogMessage: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 22,
+    paddingHorizontal: 6,
   },
-  userBubbleStyle: {
-    backgroundColor: '#003d9b',
-    borderBottomRightRadius: 4,
+  deleteDialogActions: {
+    width: '100%',
+    gap: 10,
   },
-  bubbleHeaderLabel: { fontSize: 9.5, fontWeight: '900', marginBottom: 4, letterSpacing: 0.5 },
-
-  premiumInputArea: {
-    backgroundColor: '#FFFFFF', padding: 16,
-    borderTopWidth: 1.5, borderTopColor: '#EEF2FF',
+  deleteConfirmBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#E11D48',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  premiumChatBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0',
-    paddingHorizontal: 12, height: 52,
-    shadowColor: '#0052cc', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+  deleteConfirmGrad: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  inputPrefixIcon: { width: 32, alignItems: 'center', justifyContent: 'center' },
-  premiumChatInput: { flex: 1, height: '100%', fontSize: 14, fontWeight: '600', color: '#0F172A' },
-  premiumSendBtn: { borderRadius: 10, overflow: 'hidden', marginLeft: 8 },
-  premiumSendBtnGrad: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-
-  premiumMicButtonSection: { alignItems: 'center', marginTop: 14 },
-  micHintText: { fontSize: 10.5, fontWeight: '800', color: '#64748B', marginBottom: 8, letterSpacing: 0.3 },
-  micOuterCircleShadow: {
-    borderRadius: 33,
-    shadowColor: '#0066FF', shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28, shadowRadius: 12, elevation: 5,
+  deleteConfirmText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  deleteCancelBtn: {
+    width: '100%',
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+  },
+  deleteCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
   },
 });

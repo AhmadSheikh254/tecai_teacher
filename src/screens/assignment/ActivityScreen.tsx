@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+// @ts-ignore
+import ReactDOM from 'react-dom';
 import { NavigationContainer } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,7 +17,8 @@ import {
   Platform,
   KeyboardAvoidingView,
   Image,
-  ImageBackground
+  ImageBackground,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -23,6 +26,46 @@ import { theme } from '../../theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Rect, Circle, Line, G, Path, Defs, Stop, Text as SvgText, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
+
+const ViewportModal: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; zIndex?: number }> = ({ visible, onClose, children, zIndex = 999999 }) => {
+  if (!visible) return null;
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && (ReactDOM as any)?.createPortal) {
+    return (ReactDOM as any).createPortal(
+      <View style={{
+        position: 'fixed' as any,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw' as any,
+        height: '100vh' as any,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+        zIndex: zIndex,
+      }}>
+        {children}
+      </View>,
+      document.body
+    );
+  }
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade" statusBarTranslucent={true} onRequestClose={onClose}>
+      <View style={{
+        flex: 1,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+      }}>
+        {children}
+      </View>
+    </Modal>
+  );
+};
 
 const { width } = Dimensions.get('window');
 
@@ -195,7 +238,12 @@ const INITIAL_ASSIGNMENTS = [
     teacher: 'suman',
     startDateTime: '21 Jul 2026, 12:18 PM',
     deadline: '24 Jul 2026, 2:38 PM',
-    type: 'blanks'
+    type: 'blanks',
+    rawText: 'The state of a substance determines its form. For example, ice, water, and steam are all different states of the same substance, H2O. The particles in a solid are tightly packed and vibrate in fixed positions. In a liquid, particles are close together but can slide past each other. In a gas, particles are far apart and move randomly. Changes in temperature and pressure can cause matter to change from one state to another.',
+    originalWords: ['The', 'state', 'of', 'a', 'substance', 'determines', 'its', 'form.', 'For', 'example,', 'ice,', 'water,', 'and', 'steam', 'are', 'all', 'different', 'states', 'of', 'the', 'same', 'substance,', 'H2O.', 'The', 'particles', 'in', 'a', 'solid', 'are', 'tightly', 'packed', 'and', 'vibrate', 'in', 'fixed', 'positions.', 'In', 'a', 'liquid,', 'particles', 'are', 'close', 'together', 'but', 'can', 'slide', 'past', 'each', 'other.', 'In', 'a', 'gas,', 'particles', 'are', 'far', 'apart', 'and', 'move', 'randomly.', 'Changes', 'in', 'temperature', 'and', 'pressure', 'can', 'cause', 'matter', 'to', 'change', 'from', 'one', 'state', 'to', 'another.'],
+    blankIndices: [4, 27, 38, 51, 61],
+    correctAnswers: ['substance', 'solid', 'liquid', 'gas', 'temperature'],
+    themeUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=800&auto=format&fit=crop&q=80',
   },
   {
     sNo: '4647',
@@ -387,7 +435,7 @@ const generateCrosswordGrid = (clues: { word: string; clue: string }[]) => {
 };
 
 export const ActivityScreen = ({ navigation, route }: any) => {
-  const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
+  const [assignments, setAssignments] = useState<any[]>(INITIAL_ASSIGNMENTS);
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -1002,6 +1050,20 @@ export const ActivityScreen = ({ navigation, route }: any) => {
         Alert.alert('Empty Content', 'Please enter some text first.');
         return;
       }
+      if (selectedBlankIndices.length === 0) {
+        const words = blanksText.split(/\s+/).filter(w => w.length > 0);
+        const autoIndices: number[] = [];
+        words.forEach((w, idx) => {
+          const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+          if (clean.length >= 4 && (autoIndices.length === 0 || idx - autoIndices[autoIndices.length - 1] >= 5)) {
+            if (autoIndices.length < 5) {
+              autoIndices.push(idx);
+            }
+          }
+        });
+        if (autoIndices.length === 0 && words.length > 0) autoIndices.push(0);
+        setSelectedBlankIndices(autoIndices);
+      }
       setCreateStep('theme');
     } else if (createStep === 'match') {
       if (matchPairs.length === 0) {
@@ -1146,15 +1208,26 @@ export const ActivityScreen = ({ navigation, route }: any) => {
   // Filter types based on official assignment formats
   const filterTypes = ['All', 'blanks', 'match', 'crosswords', 'parts', 'truefalse', 'cluegames'];
 
-  const getTypeLabel = (type: string) => {
-    if (type === 'blanks') return 'Fill In the Blanks';
-    if (type === 'match') return 'Match the following';
-    if (type === 'crosswords') return 'Cross Words';
-    if (type === 'parts') return 'Label The Parts';
-    if (type === 'truefalse') return 'True/False';
-    if (type === 'cluegames') return 'Clue Games';
-    if (type === 'mcqs') return 'MCQs AI Generator';
-    return type;
+  const getTypeLabel = (type?: string, fallbackTitle?: string) => {
+    const norm = (type || '').toLowerCase();
+    if (norm === 'blanks') return 'Fill in the blanks';
+    if (norm === 'match') return 'Match the following';
+    if (norm === 'crosswords') return 'Cross Words';
+    if (norm === 'parts') return 'Label The Parts';
+    if (norm === 'truefalse' || norm === 'tf') return 'True/False';
+    if (norm === 'cluegames') return 'Clue Games';
+    if (norm === 'mcqs') return 'MCQs';
+
+    const normTitle = (fallbackTitle || '').toLowerCase();
+    if (normTitle.includes('blank') || normTitle.includes('fill')) return 'Fill in the blanks';
+    if (normTitle.includes('match') || normTitle.includes('opposite') || normTitle.includes('synonym') || normTitle.includes('column')) return 'Match the following';
+    if (normTitle.includes('crossword')) return 'Cross Words';
+    if (normTitle.includes('part') || normTitle.includes('diagram') || normTitle.includes('label')) return 'Label The Parts';
+    if (normTitle.includes('true') || normTitle.includes('false')) return 'True/False';
+    if (normTitle.includes('clue')) return 'Clue Games';
+    if (normTitle.includes('mcq') || normTitle.includes('quiz')) return 'MCQs';
+
+    return type || fallbackTitle || 'Assignment';
   };
 
   const getCardBgColors = (type: string) => {
@@ -1177,6 +1250,31 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     if (type === 'cluegames') return '#059669';
     if (type === 'mcqs') return '#0EA5E9';
     return '#003d9b';
+  };
+
+  const getActivityTypeIcon = (type?: string, title?: string): keyof typeof MaterialIcons.glyphMap => {
+    const normType = (type || '').toLowerCase();
+    const normTitle = (title || '').toLowerCase();
+
+    if (normType === 'blanks' || normTitle.includes('blank') || normTitle.includes('fill')) {
+      return 'edit-note';
+    }
+    if (normType === 'truefalse' || normType === 'tf' || normTitle.includes('true') || normTitle.includes('false')) {
+      return 'fact-check';
+    }
+    if (normType === 'match' || normTitle.includes('match') || normTitle.includes('opposite') || normTitle.includes('synonym')) {
+      return 'compare-arrows';
+    }
+    if (normType === 'parts' || normTitle.includes('part') || normTitle.includes('diagram') || normTitle.includes('label')) {
+      return 'category';
+    }
+    if (normType === 'crosswords' || normType === 'cluegames' || normTitle.includes('crossword')) {
+      return 'grid-view';
+    }
+    if (normType === 'mcqs' || normTitle.includes('mcq') || normTitle.includes('quiz')) {
+      return 'radio-button-checked';
+    }
+    return 'assignment';
   };
 
   const renderTypeWatermark = (type: string) => {
@@ -1282,6 +1380,36 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       return matchesType && matchesSearch;
     });
   }, [assignments, selectedType, searchQuery]);
+
+  // ===== MOBILE LOAD MORE PAGINATION STATE & LOGIC =====
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [loadMoreError, setLoadMoreError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+    setLoadMoreError(false);
+  }, [searchQuery, selectedType]);
+
+  const visibleAssignments = useMemo(() => {
+    return filteredAssignments.slice(0, visibleCount);
+  }, [filteredAssignments, visibleCount]);
+
+  const totalAssignmentsCount = filteredAssignments.length;
+  const currentlyLoadedCount = Math.min(visibleCount, totalAssignmentsCount);
+  const hasMoreAssignments = currentlyLoadedCount < totalAssignmentsCount;
+
+  const handleLoadMore = () => {
+    if (isLoadingMore || !hasMoreAssignments) return;
+    setIsLoadingMore(true);
+    setLoadMoreError(false);
+
+    setTimeout(() => {
+      setVisibleCount(prev => Math.min(prev + PAGE_SIZE, totalAssignmentsCount));
+      setIsLoadingMore(false);
+    }, 500);
+  };
 
   const initializeCrosswordHints = (clues: any[], gridData: any) => {
     const hints: { [key: string]: string } = {};
@@ -1493,11 +1621,24 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     }
 
     // Process blanks text if indices were selected
+    const wordsList = blanksText.split(/\s+/).filter(w => w.length > 0);
+    let finalIndices = [...selectedBlankIndices];
+    if (formType === 'blanks' && finalIndices.length === 0 && wordsList.length > 0) {
+      wordsList.forEach((w, idx) => {
+        const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+        if (clean.length >= 4 && (finalIndices.length === 0 || idx - finalIndices[finalIndices.length - 1] >= 5)) {
+          if (finalIndices.length < 5) {
+            finalIndices.push(idx);
+          }
+        }
+      });
+      if (finalIndices.length === 0) finalIndices.push(0);
+    }
+
     let finalBlanksText = blanksText;
-    if (formType === 'blanks' && selectedBlankIndices.length > 0) {
-      const words = blanksText.split(/\s+/);
-      const processed = words.map((word, idx) => {
-        if (selectedBlankIndices.includes(idx)) {
+    if (formType === 'blanks' && finalIndices.length > 0) {
+      const processed = wordsList.map((word, idx) => {
+        if (finalIndices.includes(idx)) {
           return '_____';
         }
         return word;
@@ -1505,15 +1646,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       finalBlanksText = processed.join(' ');
     }
 
-    const wordsList = blanksText.split(/\s+/).filter(w => w.length > 0);
     const newAssignment = {
       sNo: Math.floor(1000 + Math.random() * 9000).toString(),
-      title: formTitle,
-      class: formClass,
-      section: formSection,
-      course: formCourse,
-      chapter: formChapter.trim() || 'â€”',
-      topic: formTopic.trim() || 'â€”',
+      title: formTitle || 'Fill in the blanks',
+      class: formClass || 'GRADE-II',
+      section: formSection || 'Section A',
+      course: formCourse || 'English',
+      chapter: formChapter.trim() || '—',
+      topic: formTopic.trim() || '—',
       teacher: 'suman',
       startDateTime: formStart,
       deadline: formDeadline,
@@ -1521,8 +1661,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       content: formType === 'blanks' ? finalBlanksText : (formType === 'truefalse' ? `${tfQuestions.length} Questions` : ''),
       themeUrl: themesList[selectedThemeIndex] || '',
       originalWords: formType === 'blanks' ? wordsList : [],
-      blankIndices: formType === 'blanks' ? selectedBlankIndices : [],
-      correctAnswers: formType === 'blanks' ? selectedBlankIndices.map(idx => wordsList[idx]) : [],
+      blankIndices: formType === 'blanks' ? finalIndices : [],
+      correctAnswers: formType === 'blanks' ? finalIndices.map(idx => wordsList[idx]?.replace(/[.,;:!?]/g, '')) : [],
       rawText: formType === 'blanks' ? blanksText : '',
       matchPairs: formType === 'match' ? matchPairs : [],
       partsImage: formType === 'parts' ? partsImage : '',
@@ -1633,8 +1773,49 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     );
   };
 
+  // Edit Assignment Date & Time States
+  const [editingAssignment, setEditingAssignment] = useState<any>(null);
+  const [editStartDateTime, setEditStartDateTime] = useState<string>('');
+  const [editDeadlineDateTime, setEditDeadlineDateTime] = useState<string>('');
+
+  // Lock background body scroll on Web while Edit Modal is open
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      if (editingAssignment !== null) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+    return () => {
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+      }
+    };
+  }, [editingAssignment]);
+
   const handleEdit = (item: any) => {
-    Alert.alert('Edit Assignment', `Edit configuration active for assignment #${item.sNo}`);
+    playSound('click');
+    setEditingAssignment(item);
+    setEditStartDateTime(item.startDateTime || '13 May 2026, 06:48 AM');
+    setEditDeadlineDateTime(item.deadline || '14 May 2026, 11:00 AM');
+  };
+
+  const handleSaveEditedDateTime = () => {
+    if (!editingAssignment) return;
+    playSound('add');
+    setAssignments(prev => prev.map(a => {
+      if (a.sNo === editingAssignment.sNo) {
+        return {
+          ...a,
+          startDateTime: editStartDateTime,
+          deadline: editDeadlineDateTime,
+        };
+      }
+      return a;
+    }));
+    setEditingAssignment(null);
+    Alert.alert('Updated!', 'Assignment start date & deadline updated successfully.');
   };
 
   const handleReport = (item: any) => {
@@ -2499,7 +2680,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1, backgroundColor: '#ffffff' }}
         >
-          <View style={{ flex: 1, backgroundColor: '#ffffff', maxWidth: 640, width: '100%', alignSelf: 'center' }}>
+          <View style={{ flex: 1, backgroundColor: '#ffffff', maxWidth: 720, width: '100%', alignSelf: 'center' }}>
 
             {/* Premium Background Design (Glow & Mesh) */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -2553,7 +2734,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
                   <View style={styles.createModalIconBox}>
-                    <MaterialIcons name="add-task" size={16} color="#ffffff" />
+                    <MaterialIcons name="add-task" size={18} color="#ffffff" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.createModalTitle} numberOfLines={1}>Create Assignment</Text>
@@ -2570,7 +2751,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     clearFormFields();
                   }}
                 >
-                  <MaterialIcons name="close" size={15} color="#ffffff" />
+                  <MaterialIcons name="close" size={16} color="#ffffff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -2585,7 +2766,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     <View style={styles.formCard}>
                       <View style={styles.formCardHeaderRow}>
                         <View style={[styles.formHeaderIconBox, { backgroundColor: '#EEF2FF' }]}>
-                          <MaterialIcons name="assignment" size={16} color="#003d9b" />
+                          <MaterialIcons name="assignment" size={18} color="#003d9b" />
                         </View>
                         <Text style={styles.formCardHeader}>General Information</Text>
                       </View>
@@ -2598,7 +2779,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <TextInput
                           style={styles.formInput}
                           placeholder="e.g. Solve linear equations"
-                          placeholderTextColor="#94A3B8"
+                          placeholderTextColor="#64748B"
                           value={formTitle}
                           onChangeText={setFormTitle}
                         />
@@ -2698,11 +2879,16 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         )}
                       </View>
 
-                      {/* Dropdown Section */}
+                      {/* Dropdown Section (Multi-Select) */}
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Section</Text>
+                          <Text style={styles.formLabel}>Section(s)</Text>
                           <Text style={styles.requiredStar}>*</Text>
+                          {formSection ? (
+                            <Text style={{ fontSize: 11, color: '#0B8A7D', fontWeight: '800', marginLeft: 'auto' }}>
+                              {formSection.split(',').length} Selected
+                            </Text>
+                          ) : null}
                         </View>
                         <TouchableOpacity 
                           style={styles.formSelectBox}
@@ -2711,8 +2897,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         >
                           <View style={styles.selectTextRow}>
                             <MaterialIcons name="bookmark" size={16} color={formSection ? '#0B8A7D' : '#94A3B8'} style={{ marginRight: 8 }} />
-                            <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder]}>
-                              {formSection || 'Select a section...'}
+                            <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                              {formSection || 'Select section(s)...'}
                             </Text>
                           </View>
                           <MaterialIcons name={showSectionDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={20} color="#0B8A7D" />
@@ -2720,22 +2906,66 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                         {showSectionDropdown && (
                           <View style={styles.formDropdownOptions}>
+                            {/* Select All Option */}
+                            <TouchableOpacity
+                              style={[
+                                styles.formDropdownItem,
+                                { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                              ]}
+                              onPress={() => {
+                                const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
+                                if (currentList.length === sectionsList.length) {
+                                  setFormSection('');
+                                } else {
+                                  setFormSection(sectionsList.join(', '));
+                                }
+                              }}
+                            >
+                              <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0B8A7D' }]}>
+                                {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
+                              </Text>
+                            </TouchableOpacity>
+
                             {sectionsList.map(sec => {
-                              const isSelected = formSection === sec;
+                              const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
+                              const isSelected = currentList.includes(sec);
                               return (
                                 <TouchableOpacity
                                   key={sec}
                                   style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
                                   onPress={() => {
-                                    setFormSection(sec);
-                                    setShowSectionDropdown(false);
+                                    let updated: string[];
+                                    if (isSelected) {
+                                      updated = currentList.filter(s => s !== sec);
+                                    } else {
+                                      updated = [...currentList, sec];
+                                    }
+                                    setFormSection(updated.join(', '));
                                   }}
                                 >
                                   <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sec}</Text>
-                                  {isSelected && <MaterialIcons name="check" size={16} color="#0B8A7D" />}
+                                  <MaterialIcons 
+                                    name={isSelected ? "check-box" : "check-box-outline-blank"} 
+                                    size={18} 
+                                    color={isSelected ? "#0B8A7D" : "#94A3B8"} 
+                                  />
                                 </TouchableOpacity>
                               );
                             })}
+
+                            {/* Done Action Button */}
+                            <TouchableOpacity
+                              style={{
+                                backgroundColor: '#0B8A7D',
+                                paddingVertical: 8,
+                                alignItems: 'center',
+                                marginTop: 4,
+                                borderRadius: 8
+                              }}
+                              onPress={() => setShowSectionDropdown(false)}
+                            >
+                              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>Done Selecting</Text>
+                            </TouchableOpacity>
                           </View>
                         )}
                       </View>
@@ -2900,29 +3130,37 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                           <Text style={styles.blanksStepTitle}>
-                            {formType === 'match' 
-                              ? 'Create New Match' 
-                              : (formType === 'crosswords' || formType === 'cluegames') 
-                                ? 'Create Cross Words Game' 
-                                : formType === 'parts'
-                                  ? 'Label Diagram Parts'
-                                  : formType === 'truefalse'
-                                    ? 'Create True / False Questions'
-                                    : 'Create New Blanks'}
+                            {createStep === 'theme'
+                              ? 'Choose Theme'
+                              : createStep === 'generate'
+                                ? 'Assignment Preview'
+                                : formType === 'match' 
+                                  ? 'Create New Match' 
+                                  : (formType === 'crosswords' || formType === 'cluegames') 
+                                    ? 'Create Cross Words Game' 
+                                    : formType === 'parts'
+                                      ? 'Label Diagram Parts'
+                                      : formType === 'truefalse'
+                                        ? 'Create True / False Questions'
+                                        : 'Create New Blanks'}
                           </Text>
                         </View>
-                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '500', marginLeft: 10, letterSpacing: 0.1 }}>
-                          {formType === 'match' 
-                            ? 'Step 2 of 4 â€” Build your matching column pairs' 
-                            : (formType === 'crosswords' || formType === 'cluegames')
-                              ? 'Build your clues and word grids'
-                              : formType === 'parts'
-                                ? (createStep === 'partsCreator'
-                                    ? 'Step 2 of 3 â€” Choose image and click to place label pinpoints'
-                                    : 'Step 3 of 3 â€” Select theme wallpaper')
-                                : formType === 'truefalse'
-                                  ? 'Step 2 of 2 â€” Add statements and set correct answers'
-                                  : 'Step 1 of 4 â€” Write your text and select blanks'}
+                        <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600', marginLeft: 1, letterSpacing: 0.2 }}>
+                          {createStep === 'theme'
+                            ? 'Step 2 of 3 • Select visual theme or add custom wallpaper'
+                            : createStep === 'generate'
+                              ? 'Step 3 of 3 • Review output before publishing'
+                              : formType === 'match' 
+                                ? 'Step 1 of 3 • Build matching column pairs' 
+                                : (formType === 'crosswords' || formType === 'cluegames')
+                                  ? 'Step 1 of 3 • Build clues and word grids'
+                                  : formType === 'parts'
+                                    ? (createStep === 'partsCreator'
+                                        ? 'Step 1 of 3 • Choose image and place pinpoints'
+                                        : 'Step 2 of 3 • Select theme wallpaper')
+                                    : formType === 'truefalse'
+                                      ? 'Step 1 of 2 • Add statements and correct answers'
+                                      : 'Step 1 of 3 • Write your text and select blanks'}
                         </Text>
                       </View>
                     </View>
@@ -3237,7 +3475,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 <TextInput
                                   style={styles.matchTextInput}
                                   placeholder="e.g. Water"
-                                  placeholderTextColor="#94A3B8"
+                                  placeholderTextColor="#64748B"
                                   value={columnLeftText}
                                   onChangeText={setColumnLeftText}
                                 />
@@ -3247,8 +3485,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 <View style={styles.matchInputRightWrapper}>
                                   <TextInput
                                     style={[styles.matchTextInput, { paddingRight: 36 }]}
-                                    placeholder="e.g. Hâ‚‚O"
-                                    placeholderTextColor="#94A3B8"
+                                    placeholder="e.g. H2O"
+                                    placeholderTextColor="#64748B"
                                     value={columnRightText}
                                     onChangeText={setColumnRightText}
                                   />
@@ -3346,17 +3584,15 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           {/* Step Footer Navigation - Match */}
                           <View style={styles.stepFooterButtons}>
                             <TouchableOpacity
-                              style={{ flex: 1 }}
+                              style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}
                               onPress={handleStepPrev}
                               activeOpacity={0.7}
                             >
-                              <View style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}>
-                                <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
-                                <Text style={styles.stepFooterTextPrev}>Previous</Text>
-                              </View>
+                              <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                              <Text style={styles.stepFooterTextPrev}>Previous</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={{ flex: 1 }}
+                              style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
                               onPress={handleStepNext}
                               activeOpacity={0.8}
                             >
@@ -3364,7 +3600,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 colors={['#3B82F6', '#2563EB', '#1D4ED8']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
-                                style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
+                                style={styles.stepFooterGradient}
                               >
                                 <Text style={styles.stepFooterTextNext}>Next</Text>
                                 <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
@@ -3378,258 +3614,245 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     {/* Step 1.75: Crossword / Clue Games Builder */}
                     {createStep === 'crossword' && (
                       <>
-                        {/* Clue List at the top (if clues added) */}
-                        {crosswordClues.length > 0 && (
-                          <ScrollView style={{ maxHeight: 200, width: '100%', marginBottom: 16 }} contentContainerStyle={{ gap: 12, paddingVertical: 4 }}>
-                            {crosswordClues.map((c, idx) => {
-                              const isOdd = idx % 2 === 1;
-                              const cardBg = isOdd ? '#f0f9ff' : '#e0f2fe';
-                              const borderColor = isOdd ? '#93c5fd' : '#7dd3fc';
-                              const shadowColor = '#1d4ed8';
-                              const badgeBg = '#2563eb';
-
-                              return (
-                                <View 
-                                  key={c.id} 
-                                  style={{ 
-                                    flexDirection: 'row', 
-                                    backgroundColor: cardBg, 
-                                    borderRadius: 20, 
-                                    padding: 14, 
-                                    borderWidth: 2.5, 
-                                    borderColor: borderColor, 
-                                    alignItems: 'center', 
-                                    shadowColor: shadowColor, 
-                                    shadowOffset: { width: 0, height: 5 }, 
-                                    shadowOpacity: 0.1, 
-                                    shadowRadius: 8, 
-                                    elevation: 3 
-                                  }}
-                                >
-                                  {/* Bouncy Circular Badge */}
-                                  <View style={{ 
-                                    width: 44, 
-                                    height: 44, 
-                                    borderRadius: 22, 
-                                    backgroundColor: badgeBg, 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    marginRight: 12, 
-                                    borderWidth: 2.5, 
-                                    borderColor: '#ffffff',
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 3 },
-                                    shadowOpacity: 0.15,
-                                    shadowRadius: 4,
-                                    elevation: 2
-                                  }}>
-                                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#ffffff' }}>{idx + 1}</Text>
-                                  </View>
-
-                                  <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 15, color: '#1e3a8a', fontWeight: '900', marginBottom: 2 }}>
-                                      {c.word}
-                                    </Text>
-                                    <Text style={{ fontSize: 13, color: '#475569', fontWeight: '700' }}>
-                                      Clue: <Text style={{ color: '#1d4ed8', fontWeight: '800' }}>{c.clue}</Text>
-                                    </Text>
-                                  </View>
-
-                                  {/* Premium 3D Red Delete Button */}
-                                  <TouchableOpacity
-                                    onPress={() => handleRemoveCrosswordClue(c.id)}
-                                    style={{ 
-                                      width: 38, 
-                                      height: 38, 
-                                      borderRadius: 12, 
-                                      backgroundColor: '#EF4444', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center',
-                                      borderBottomWidth: 3.5,
-                                      borderBottomColor: '#B91C1C',
-                                      shadowColor: '#EF4444',
-                                      shadowOffset: { width: 0, height: 3 },
-                                      shadowOpacity: 0.3,
-                                      shadowRadius: 5,
-                                      elevation: 3
-                                    }}
-                                    activeOpacity={0.8}
-                                  >
-                                    <MaterialIcons name="delete" size={18} color="#ffffff" />
-                                  </TouchableOpacity>
-                                </View>
-                              );
-                            })}
-                          </ScrollView>
-                        )}
-
-                        {/* Clue Form Input Card - Glassmorphism Design */}
+                        {/* Clue Form Input Card - Compact Premium Minimal (NOW AT TOP) */}
                         <View style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.78)',
-                          borderRadius: 24,
+                          backgroundColor: '#ffffff',
+                          borderRadius: 18,
                           borderWidth: 1.5,
-                          borderColor: 'rgba(255, 255, 255, 0.7)',
+                          borderColor: '#E2E8F0',
                           shadowColor: '#2563eb',
-                          shadowOffset: { width: 0, height: 10 },
+                          shadowOffset: { width: 0, height: 4 },
                           shadowOpacity: 0.08,
-                          shadowRadius: 20,
-                          elevation: 4,
-                          overflow: 'hidden'
+                          shadowRadius: 12,
+                          elevation: 3,
+                          overflow: 'hidden',
+                          marginBottom: 10,
                         }}>
-                          {/* Card Header â€” Beautiful Neural theme matching Blanks */}
-                          <View style={{ height: 54, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8, position: 'relative' }}>
+                          {/* Card Header */}
+                          <View style={{ height: 46, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8, position: 'relative' }}>
                             <LinearGradient
                               colors={['#2563eb', '#1d4ed8']}
                               start={{ x: 0, y: 0 }}
                               end={{ x: 1, y: 0 }}
                               style={StyleSheet.absoluteFill}
                             />
-                            {/* Glossy top reflection overlay */}
-                            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, backgroundColor: 'rgba(255,255,255,0.4)' }} />
-                            <MaterialIcons name="auto-awesome" size={20} color="#ffffff" />
-                            <Text style={{ fontSize: 16, fontWeight: '900', color: '#ffffff', letterSpacing: 0.5 }}>Add new Clue</Text>
+                            <MaterialIcons name="auto-awesome" size={18} color="#ffffff" />
+                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#ffffff', letterSpacing: 0.3 }}>Add new Clue</Text>
                           </View>
 
-                          <View style={{ padding: 20, gap: 18 }}>
-                            {/* Word Field */}
-                            <View style={styles.formField}>
-                              <Text style={{ color: '#1e3a8a', fontWeight: '900', fontSize: 13, marginBottom: 6, letterSpacing: 0.2 }}>Word (Max 10 letters)*</Text>
-                              <TextInput
-                                style={{
-                                  borderRadius: 16,
-                                  borderWidth: 1.5,
-                                  borderColor: 'rgba(37, 99, 235, 0.25)',
-                                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                                  paddingHorizontal: 16,
-                                  height: 52,
-                                  fontSize: 14,
-                                  fontWeight: '600',
-                                  color: '#0f172a'
-                                }}
-                                placeholder="e.g. AHMAD"
-                                placeholderTextColor="#94a3b8"
-                                value={clueWord}
-                                onChangeText={(text) => setClueWord(text.toUpperCase().replace(/[^A-Z]/g, ''))}
-                                maxLength={10}
-                                autoCapitalize="characters"
-                              />
-                            </View>
+                          <View style={{ padding: 14, gap: 10 }}>
+                            {/* Inputs Row - Word & Clue side by side */}
+                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                              {/* Word Field */}
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#1E293B', fontWeight: '600', fontSize: 12.5, marginBottom: 5 }}>Word (Max 10 letters)*</Text>
+                                <TextInput
+                                  style={{
+                                    borderRadius: 12,
+                                    borderWidth: 1.5,
+                                    borderColor: '#94A3B8',
+                                    backgroundColor: '#FFFFFF',
+                                    paddingHorizontal: 12,
+                                    height: 44,
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: '#0F172A'
+                                  }}
+                                  placeholder="e.g. WATER"
+                                  placeholderTextColor="#64748B"
+                                  value={clueWord}
+                                  onChangeText={(text) => setClueWord(text.toUpperCase().replace(/[^A-Z]/g, ''))}
+                                  maxLength={10}
+                                  autoCapitalize="characters"
+                                />
+                              </View>
 
-                            {/* Clue Type Field */}
-                            <View style={styles.formField}>
-                              <Text style={{ color: '#1e3a8a', fontWeight: '900', fontSize: 13, marginBottom: 6, letterSpacing: 0.2 }}>Clue Type*</Text>
-                              <View style={{
-                                justifyContent: 'center',
-                                backgroundColor: 'rgba(241, 245, 249, 0.6)',
-                                borderColor: 'rgba(191, 219, 254, 0.5)',
-                                borderWidth: 1.5,
-                                borderRadius: 16,
-                                paddingHorizontal: 16,
-                                height: 52
-                              }}>
-                                <Text style={{ color: '#475569', fontWeight: '900', fontSize: 14 }}>Text</Text>
+                              {/* Clue Field */}
+                              <View style={{ flex: 1.2 }}>
+                                <Text style={{ color: '#1E293B', fontWeight: '600', fontSize: 12.5, marginBottom: 5 }}>Clue *</Text>
+                                <TextInput
+                                  style={{
+                                    borderRadius: 12,
+                                    borderWidth: 1.5,
+                                    borderColor: '#94A3B8',
+                                    backgroundColor: '#FFFFFF',
+                                    paddingHorizontal: 12,
+                                    height: 44,
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: '#0F172A'
+                                  }}
+                                  placeholder="e.g. Liquid for life"
+                                  placeholderTextColor="#64748B"
+                                  value={clueText}
+                                  onChangeText={setClueText}
+                                />
                               </View>
                             </View>
 
-                            {/* Clue Text Field */}
-                            <View style={styles.formField}>
-                              <Text style={{ color: '#1e3a8a', fontWeight: '900', fontSize: 13, marginBottom: 6, letterSpacing: 0.2 }}>Clue *</Text>
-                              <TextInput
-                                style={{
-                                  borderRadius: 16,
-                                  borderWidth: 1.5,
-                                  borderColor: 'rgba(37, 99, 235, 0.25)',
-                                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                                  paddingHorizontal: 16,
-                                  paddingTop: 12,
-                                  height: 82,
-                                  fontSize: 14,
-                                  fontWeight: '600',
-                                  color: '#0f172a'
-                                }}
-                                placeholder="Enter a Clue"
-                                placeholderTextColor="#94a3b8"
-                                value={clueText}
-                                onChangeText={setClueText}
-                                multiline
-                                numberOfLines={2}
-                              />
-                            </View>
-
-                            {/* ADD CLUE Button - Premium 3D Toy Button */}
+                            {/* ADD CLUE Button */}
                             <TouchableOpacity
                               style={{ 
-                                height: 54, 
-                                borderRadius: 18, 
-                                backgroundColor: '#1d4ed8', 
-                                borderBottomWidth: 5,
-                                borderBottomColor: '#0f172a',
-                                shadowColor: '#1d4ed8', 
-                                shadowOffset: { width: 0, height: 6 }, 
-                                shadowOpacity: 0.35, 
-                                shadowRadius: 10, 
-                                elevation: 5,
-                                marginTop: 10
+                                height: 44, 
+                                borderRadius: 12, 
+                                overflow: 'hidden',
+                                shadowColor: '#2563eb', 
+                                shadowOffset: { width: 0, height: 3 }, 
+                                shadowOpacity: 0.25, 
+                                shadowRadius: 6, 
+                                elevation: 3,
+                                marginTop: 4
                               }}
                               onPress={handleAddCrosswordClue}
-                              activeOpacity={0.9}
+                              activeOpacity={0.85}
                             >
                               <LinearGradient
-                                colors={['#3b82f6', '#2563eb']}
+                                colors={['#3b82f6', '#2563eb', '#1d4ed8']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
-                                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 14 }}
+                                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                               >
-                                <MaterialIcons name="add" size={22} color="#ffffff" style={{ fontWeight: '900' }} />
-                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.5 }}>ADD CLUE</Text>
+                                <MaterialIcons name="add-circle" size={18} color="#ffffff" />
+                                <Text style={{ color: '#ffffff', fontWeight: '800', fontSize: 14, letterSpacing: 0.4 }}>ADD CLUE</Text>
                               </LinearGradient>
                             </TouchableOpacity>
                           </View>
                         </View>
 
-                        {/* Interactive Preview & Gameplay View */}
-                        {crosswordClues.length >= 2 && (
-                          <View style={{ width: '100%', marginTop: 18, marginBottom: 18 }}>
-                            <TouchableOpacity
-                              style={{ 
-                                height: 56, 
-                                borderRadius: 18, 
-                                backgroundColor: '#1e3a8a', 
-                                borderBottomWidth: 5,
-                                borderBottomColor: '#0a1d37',
-                                shadowColor: '#2563eb', 
-                                shadowOffset: { width: 0, height: 8 }, 
-                                shadowOpacity: 0.4, 
-                                shadowRadius: 12, 
-                                elevation: 6 
-                              }}
-                              onPress={() => {
-                                playSound('click');
-                                const success = handleCreateCrosswordAssignment();
-                                if (success) {
-                                  // Pre-fill the first 2 letters of each word as hints!
-                                  const hints = initializeCrosswordHints(crosswordClues, crosswordGridData);
-                                  setCrosswordAnswers(hints);
-                                  
-                                  setCrosswordPreviewActive(true);
-                                  setCrosswordSplashActive(true);
-                                  setActiveCell(null);
-                                }
-                              }}
-                              activeOpacity={0.9}
+                        {/* Clue List Container with Clean Borderline & Header */}
+                        {crosswordClues.length > 0 && (
+                          <View style={{
+                            borderWidth: 1.5,
+                            borderColor: '#CBD5E1',
+                            borderRadius: 16,
+                            overflow: 'hidden',
+                            backgroundColor: '#FFFFFF',
+                            marginBottom: 10,
+                            shadowColor: '#0F172A',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.04,
+                            shadowRadius: 6,
+                            elevation: 2,
+                          }}>
+                            {/* Header row for the clues table */}
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              backgroundColor: '#2563EB',
+                              paddingVertical: 10,
+                              paddingHorizontal: 14,
+                            }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <MaterialIcons name="format-list-numbered" size={16} color="#ffffff" />
+                                <Text style={{ fontSize: 13, fontWeight: '800', color: '#ffffff', letterSpacing: 0.3 }}>
+                                  Added Clues ({crosswordClues.length})
+                                </Text>
+                              </View>
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>
+                                Word & Clue
+                              </Text>
+                            </View>
+
+                            {/* Scrollable list inside the bordered container */}
+                            <ScrollView 
+                              style={{ maxHeight: 150 }} 
+                              contentContainerStyle={{ padding: 8, gap: 6 }}
+                              nestedScrollEnabled={true}
+                              showsVerticalScrollIndicator={true}
                             >
-                              <LinearGradient
-                                colors={['#2563eb', '#1d4ed8', '#1e3a8a']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14 }}
-                              >
-                                <MaterialIcons name="videogame-asset" size={24} color="#ffffff" />
-                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16, letterSpacing: 0.5 }}>Preview Clue Game</Text>
-                              </LinearGradient>
-                            </TouchableOpacity>
+                              {crosswordClues.map((c, idx) => {
+                                const isOdd = idx % 2 === 1;
+                                const cardBg = isOdd ? '#F8FAFC' : '#FFFFFF';
+                                const borderColor = '#E2E8F0';
+
+                                return (
+                                  <View 
+                                    key={c.id} 
+                                    style={{ 
+                                      flexDirection: 'row', 
+                                      backgroundColor: cardBg, 
+                                      borderRadius: 10, 
+                                      paddingVertical: 8,
+                                      paddingHorizontal: 10, 
+                                      borderWidth: 1, 
+                                      borderColor: borderColor, 
+                                      alignItems: 'center', 
+                                    }}
+                                  >
+                                    {/* Compact Badge */}
+                                    <View style={{ 
+                                      width: 24, 
+                                      height: 24, 
+                                      borderRadius: 12, 
+                                      backgroundColor: '#EFF6FF', 
+                                      borderWidth: 1,
+                                      borderColor: '#BFDBFE',
+                                      alignItems: 'center', 
+                                      justifyContent: 'center', 
+                                      marginRight: 8,
+                                    }}>
+                                      <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#1D4ED8' }}>{idx + 1}</Text>
+                                    </View>
+
+                                    <View style={{ flex: 1, minWidth: 0 }}>
+                                      <Text style={{ fontSize: 13, color: '#0F172A', fontWeight: '800', marginBottom: 1 }} numberOfLines={1}>
+                                        {c.word}
+                                      </Text>
+                                      <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '500' }} numberOfLines={1}>
+                                        Clue: <Text style={{ color: '#2563EB', fontWeight: '600' }}>{c.clue}</Text>
+                                      </Text>
+                                    </View>
+
+                                    {/* Compact Delete Button */}
+                                    <TouchableOpacity
+                                      onPress={() => handleRemoveCrosswordClue(c.id)}
+                                      style={{ 
+                                        width: 28, 
+                                        height: 28, 
+                                        borderRadius: 7, 
+                                        backgroundColor: '#FEE2E2', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        marginLeft: 6,
+                                      }}
+                                      activeOpacity={0.7}
+                                    >
+                                      <MaterialIcons name="delete-outline" size={16} color="#EF4444" />
+                                    </TouchableOpacity>
+                                  </View>
+                                );
+                              })}
+                            </ScrollView>
                           </View>
                         )}
+
+                        {/* Standard Navigation Footer Buttons for Crosswords */}
+                        <View style={styles.stepFooterButtons}>
+                          <TouchableOpacity
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}
+                            onPress={handleStepPrev}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialIcons name="arrow-back" size={16} color="#64748B" style={{ marginRight: 6 }} />
+                            <Text style={styles.stepFooterTextPrev}>Previous</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
+                            onPress={handleStepNext}
+                            activeOpacity={0.8}
+                          >
+                            <LinearGradient
+                              colors={['#3B82F6', '#2563EB', '#1D4ED8']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={styles.stepFooterGradient}
+                            >
+                              <Text style={styles.stepFooterTextNext}>Next</Text>
+                              <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                            </LinearGradient>
+                          </TouchableOpacity>
+                        </View>
                       </>
                     )}
 
@@ -3650,7 +3873,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             </View>
                             <View style={{ flex: 1 }}>
                               <Text style={{ fontSize: 13, fontWeight: '900', color: '#1e3a8a' }}>Label The Diagram</Text>
-                              <Text style={{ fontSize: 11, fontWeight: '700', color: '#64748b' }}>Step 2 of 3</Text>
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: '#64748b' }}>Step 1 of 3</Text>
                             </View>
                           </View>
                           <Text style={{ fontSize: 11, fontWeight: '700', color: '#e11d48', lineHeight: 16, marginTop: 2 }}>
@@ -5137,7 +5360,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <ScrollView 
                           contentContainerStyle={styles.themesGrid} 
                           nestedScrollEnabled={true} 
-                          style={{ maxHeight: 240 }}
+                          showsVerticalScrollIndicator={false}
+                          style={{ maxHeight: 310 }}
                         >
                           {themesList.map((url, index) => {
                             const isSelected = selectedThemeIndex === index;
@@ -5221,7 +5445,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <ScrollView 
                           contentContainerStyle={styles.themesGrid} 
                           nestedScrollEnabled={true} 
-                          style={{ maxHeight: 280 }}
+                          showsVerticalScrollIndicator={false}
+                          style={{ maxHeight: 310 }}
                         >
                           {themesList.map((url, index) => {
                             const isSelected = selectedThemeIndex === index;
@@ -5253,7 +5478,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         {/* Step Footer Navigation */}
                         <View style={styles.stepFooterButtons}>
                           <TouchableOpacity
-                            style={[styles.stepFooterBtn, styles.stepFooterBtnPrev, { minWidth: 110 }]}
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnPrev]}
                             onPress={handleStepPrev}
                             activeOpacity={0.7}
                           >
@@ -5261,7 +5486,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             <Text style={styles.stepFooterTextPrev}>Previous</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { backgroundColor: '#2563EB' }]}
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnNext]}
                             onPress={handleStepNext}
                             activeOpacity={0.8}
                           >
@@ -5269,10 +5494,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               colors={['#3B82F6', '#2563EB', '#1D4ED8']}
                               start={{ x: 0, y: 0 }}
                               end={{ x: 1, y: 0 }}
-                              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14 }}
-                            />
-                            <Text style={styles.stepFooterTextNext}>Next</Text>
-                            <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                              style={styles.stepFooterGradient}
+                            >
+                              <Text style={styles.stepFooterTextNext}>Next</Text>
+                              <MaterialIcons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+                            </LinearGradient>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -5319,7 +5545,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <View style={styles.generateDivider} />
 
                         {/* Mini Preview Card */}
-                        <View style={[styles.miniPreviewContainer, (formType === 'match' || formType === 'crosswords' || formType === 'cluegames') && { height: 340 }]}>
+                        <View style={[styles.miniPreviewContainer, (formType === 'match' || formType === 'crosswords' || formType === 'cluegames') && { height: 220 }]}>
                           <ImageBackground
                             source={{ uri: themesList[selectedThemeIndex] }}
                             style={styles.miniPreviewBg}
@@ -5328,43 +5554,48 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             <View style={styles.miniPreviewOverlay} />
                             
                             <View style={styles.miniPreviewHeader}>
-                              <Text style={styles.miniPreviewTitle}>
-                                {formTitle || (formType === 'match' ? 'Match the Following' : (formType === 'crosswords' || formType === 'cluegames') ? 'Crossword Game' : 'Fill in the Blanks')}
+                              <Text style={[styles.miniPreviewTitle, { textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }]}>
+                                {formTitle || (formType === 'match' ? 'Match the following' : (formType === 'crosswords' || formType === 'cluegames') ? 'Cross Words' : 'Fill in the blanks')}
                               </Text>
                               <View style={styles.miniPreviewScoreBadge}>
                                 <Text style={styles.miniPreviewScoreText}>
-                                  SCORE : 0/{formType === 'match' ? matchPairs.length : (formType === 'crosswords' || formType === 'cluegames') ? crosswordClues.length : selectedBlankIndices.length}
+                                  SCORE : 0/{formType === 'match' ? matchPairs.length : (formType === 'crosswords' || formType === 'cluegames') ? crosswordClues.length : (selectedBlankIndices.length || 4)}
                                 </Text>
                               </View>
                             </View>
 
                             {(formType === 'crosswords' || formType === 'cluegames') ? (
-                              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                 <LinearGradient
                                   colors={['#8B5CF6', '#6D28D9']}
                                   start={{ x: 0, y: 0 }}
                                   end={{ x: 1, y: 1 }}
-                                  style={{ width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', shadowColor: '#6D28D9', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
+                                  style={{ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', shadowColor: '#6D28D9', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
                                 >
-                                  <MaterialIcons name="grid-on" size={26} color="#ffffff" />
+                                  <MaterialIcons name="grid-on" size={22} color="#ffffff" />
                                 </LinearGradient>
-                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 16, letterSpacing: 0.3 }}>Crossword Puzzle Ready</Text>
-                                <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '700' }}>{crosswordClues.length} clues successfully added</Text>
+                                <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.3 }}>Crossword Puzzle Ready</Text>
+                                <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11.5, fontWeight: '700' }}>{crosswordClues.length} clues successfully added</Text>
                               </View>
                             ) : formType === 'match' ? (
                               <ScrollView 
-                                style={{ flex: 1, maxHeight: 160, paddingHorizontal: 12, marginTop: 8 }}
-                                contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
+                                style={{ flex: 1, maxHeight: 140, paddingHorizontal: 8, marginTop: 4 }}
+                                contentContainerStyle={{ gap: 8, paddingBottom: 8 }}
                                 nestedScrollEnabled={true}
+                                showsVerticalScrollIndicator={false}
                               >
                                 {matchPairs.map((pair, idx) => (
                                   <View key={pair.id} style={styles.miniPreviewMatchRow}>
                                     <View style={styles.miniPreviewMatchLeftCard}>
-                                      <Text style={styles.miniPreviewMatchCardText}>{pair.left}</Text>
+                                      <Text style={styles.miniPreviewMatchCardText} numberOfLines={1}>{pair.left}</Text>
                                     </View>
-                                    <View style={styles.miniPreviewMatchLine} />
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: 32, justifyContent: 'center', marginHorizontal: 6 }}>
+                                      <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#3B82F6' }} />
+                                      <View style={{ flex: 1, height: 2, backgroundColor: '#3B82F6', opacity: 0.7 }} />
+                                      <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#3B82F6' }} />
+                                    </View>
                                     <View style={styles.miniPreviewMatchRightCard}>
-                                      <Text style={styles.miniPreviewMatchCardText}>{pair.right}</Text>
+                                      <Text style={styles.miniPreviewMatchCardText} numberOfLines={1}>{pair.right}</Text>
                                     </View>
                                   </View>
                                 ))}
@@ -5372,38 +5603,64 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             ) : (
                               <>
                                 <View style={styles.miniPreviewParagraphCard}>
-                                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                                    {(() => {
-                                      const words = blanksText.split(/\s+/).filter(w => w.length > 0);
-                                      return words.map((word, idx) => {
-                                        const isBlank = selectedBlankIndices.includes(idx);
-                                        if (!isBlank) {
-                                          return (
-                                            <Text key={idx} style={styles.miniPreviewWordText}>
-                                              {word}{' '}
-                                            </Text>
-                                          );
+                                  <ScrollView style={{ maxHeight: 130 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                                      {(() => {
+                                        const words = blanksText.split(/\s+/).filter(w => w.length > 0);
+                                        let previewIndices = [...selectedBlankIndices];
+                                        if (previewIndices.length === 0 && words.length > 0) {
+                                          words.forEach((w, idx) => {
+                                            const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+                                            if (clean.length >= 4 && (previewIndices.length === 0 || idx - previewIndices[previewIndices.length - 1] >= 5)) {
+                                              if (previewIndices.length < 5) {
+                                                previewIndices.push(idx);
+                                              }
+                                            }
+                                          });
+                                          if (previewIndices.length === 0) previewIndices = [0];
                                         }
-                                        return (
-                                          <View key={idx} style={styles.miniPreviewBlankSlot}>
-                                            <Text style={styles.miniPreviewBlankText}>          </Text>
-                                          </View>
-                                        );
-                                      });
-                                    })()}
-                                  </View>
+                                        return words.map((word, idx) => {
+                                          const isBlank = previewIndices.includes(idx);
+                                          if (!isBlank) {
+                                            return (
+                                              <Text key={idx} style={styles.miniPreviewWordText}>
+                                                {word}{' '}
+                                              </Text>
+                                            );
+                                          }
+                                          return (
+                                            <View key={idx} style={styles.miniPreviewBlankSlot}>
+                                              <Text style={styles.miniPreviewBlankText}>________</Text>
+                                            </View>
+                                          );
+                                        });
+                                      })()}
+                                    </View>
+                                  </ScrollView>
                                 </View>
 
                                 {/* Word chips preview */}
                                 <View style={styles.miniPreviewOptionsGrid}>
-                                  {selectedBlankIndices.map((idx, i) => {
+                                  {(() => {
                                     const words = blanksText.split(/\s+/).filter(w => w.length > 0);
-                                    return (
+                                    let previewIndices = [...selectedBlankIndices];
+                                    if (previewIndices.length === 0 && words.length > 0) {
+                                      words.forEach((w, idx) => {
+                                        const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+                                        if (clean.length >= 4 && (previewIndices.length === 0 || idx - previewIndices[previewIndices.length - 1] >= 5)) {
+                                          if (previewIndices.length < 5) {
+                                            previewIndices.push(idx);
+                                          }
+                                        }
+                                      });
+                                      if (previewIndices.length === 0 && words.length > 0) previewIndices = [0];
+                                    }
+                                    return previewIndices.map((idx, i) => (
                                       <View key={i} style={styles.miniPreviewOptionPill}>
-                                        <Text style={styles.miniPreviewOptionText}>{words[idx]}</Text>
+                                        <Text style={styles.miniPreviewOptionText}>{words[idx]?.replace(/[.,;:!?]/g, '')}</Text>
                                       </View>
-                                    );
-                                  })}
+                                    ));
+                                  })()}
                                 </View>
                               </>
                             )}
@@ -5412,7 +5669,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
                         <View style={styles.stepFooterButtons}>
                           <TouchableOpacity
-                            style={[styles.stepFooterBtn, styles.stepFooterBtnPrev, { minWidth: 110, flex: 0 }]}
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnPrev, { flex: 0.8 }]}
                             onPress={handleStepPrev}
                             activeOpacity={0.7}
                           >
@@ -5420,7 +5677,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             <Text style={styles.stepFooterTextPrev}>Previous</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { flex: 1, backgroundColor: formType === 'match' ? '#1D4ED8' : '#059669', paddingHorizontal: 8 }]}
+                            style={[styles.stepFooterBtn, styles.stepFooterBtnNext, { flex: 1.2 }]}
                             onPress={handleCreateAssignment}
                             activeOpacity={0.85}
                           >
@@ -5428,12 +5685,13 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               colors={formType === 'match' ? ['#3B82F6', '#2563EB', '#1D4ED8'] : ['#34D399', '#10B981', '#059669']}
                               start={{ x: 0, y: 0 }}
                               end={{ x: 1, y: 0 }}
-                              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14 }}
-                            />
-                            <MaterialIcons name={formType === 'match' ? 'bolt' : 'flash-on'} size={17} color="#ffffff" style={{ marginRight: 4 }} />
-                            <Text style={[styles.stepFooterTextNext, { fontSize: 12.5 }]} numberOfLines={1}>
-                              {formType === 'match' ? 'Generate & Play' : 'Generate Output'}
-                            </Text>
+                              style={styles.stepFooterGradient}
+                            >
+                              <MaterialIcons name={formType === 'match' ? 'bolt' : 'flash-on'} size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                              <Text style={styles.stepFooterTextNext} numberOfLines={1}>
+                                {formType === 'match' ? 'Generate & Play' : 'Generate Output'}
+                              </Text>
+                            </LinearGradient>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -5746,20 +6004,48 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     );
   }
 
-  // â”€â”€ EARLY FULL-SCREEN RETURN: INTERACTIVE BLANKS PLAYER â”€â”€
+  // ── EARLY FULL-SCREEN RETURN: INTERACTIVE BLANKS PLAYER ──
   if (activeBlanksPlayer) {
-    // Add safe guards to prevent crashes when Firestore data is incomplete
-    const originalWords = activeBlanksPlayer.originalWords || [];
-    const blankIndices = activeBlanksPlayer.blankIndices || [];
-    const correctAnswers = activeBlanksPlayer.correctAnswers || [];
+    // Add safe guards to prevent crashes and ensure blanks are ALWAYS present
+    let originalWords: string[] = activeBlanksPlayer.originalWords || [];
+    if (originalWords.length === 0 && activeBlanksPlayer.rawText) {
+      originalWords = activeBlanksPlayer.rawText.split(/\s+/).filter((w: string) => w.length > 0);
+    }
+    if (originalWords.length === 0 && activeBlanksPlayer.content) {
+      originalWords = activeBlanksPlayer.content.split(/\s+/).filter((w: string) => w.length > 0);
+    }
+    if (originalWords.length === 0) {
+      const defaultText = 'The state of a substance determines its form. For example, ice, water, and steam are all different states of the same substance, H2O. The particles in a solid are tightly packed and vibrate in fixed positions. In a liquid, particles are close together but can slide past each other. In a gas, particles are far apart and move randomly. Changes in temperature and pressure can cause matter to change from one state to another.';
+      originalWords = defaultText.split(/\s+/).filter(w => w.length > 0);
+    }
+
+    let blankIndices: number[] = activeBlanksPlayer.blankIndices || [];
+    if (blankIndices.length === 0 && originalWords.length > 0) {
+      originalWords.forEach((w, idx) => {
+        const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+        if (clean.length >= 4 && (blankIndices.length === 0 || idx - blankIndices[blankIndices.length - 1] >= 5)) {
+          if (blankIndices.length < 5) {
+            blankIndices.push(idx);
+          }
+        }
+      });
+      if (blankIndices.length === 0) blankIndices = [4, 10, 27, 38, 51];
+    }
+
+    let correctAnswers: string[] = activeBlanksPlayer.correctAnswers || [];
+    if (correctAnswers.length === 0 && blankIndices.length > 0) {
+      correctAnswers = blankIndices.map(idx => originalWords[idx]?.replace(/[.,;:!?]/g, ''));
+    }
+
     return (
       <ImageBackground
-        source={{ uri: activeBlanksPlayer.themeUrl }}
+        source={{ uri: activeBlanksPlayer.themeUrl || themesList[0] }}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.45)' }} />
-        <SafeAreaView style={styles.playerContainer} edges={['top', 'bottom']}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.55)' }} />
+        <SafeAreaView style={[styles.playerContainer, { maxWidth: 540, width: '100%', alignSelf: 'center' }]} edges={['top', 'bottom']}>
+          {/* Header Bar */}
           <View style={styles.playerHeaderBar}>
             <TouchableOpacity style={styles.playerExitBtn} onPress={() => setActiveBlanksPlayer(null)} activeOpacity={0.7}>
               <MaterialIcons name="close" size={20} color="#0F172A" />
@@ -5769,86 +6055,209 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <Text style={styles.playerScoreBadgeLabel}>SCORE : {playerScore}</Text>
             </View>
           </View>
-          <ScrollView style={styles.playerScroll} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-            <View style={styles.playerSettingsPanel}>
-              <View style={styles.playerSizer}>
-                <Text style={styles.playerSettingsText}>Text size ({playerFontSize}px)</Text>
-                <View style={styles.customSizerTrack}>
-                  <View style={styles.customSizerLine} />
-                  {[12, 14, 16, 18, 20, 22, 24].map((size) => {
-                    const isCurrent = playerFontSize === size;
-                    return (
-                      <TouchableOpacity key={size} style={[styles.sizerDot, isCurrent && styles.sizerDotActive]} onPress={() => setPlayerFontSize(size)} activeOpacity={0.7}>
-                        <View style={[styles.sizerDotInner, isCurrent && styles.sizerDotInnerActive]} />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-              <View style={styles.playerSettingsDivider} />
-              <View style={styles.playerFontSelector}>
-                <Text style={styles.playerSettingsText}>Font</Text>
-                <TouchableOpacity style={styles.playerFontDropdown} onPress={() => { const fonts = ['System', 'serif', 'monospace']; const idx = fonts.indexOf(playerFontFamily); setPlayerFontFamily(fonts[(idx + 1) % fonts.length]); }} activeOpacity={0.7}>
-                  <Text style={styles.playerFontDropdownText}>{playerFontFamily === 'System' ? 'Arial' : playerFontFamily}</Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={16} color="#475569" />
-                </TouchableOpacity>
-              </View>
-            </View>
+
+          <ScrollView style={styles.playerScroll} contentContainerStyle={{ paddingBottom: 36, paddingHorizontal: 12 }} showsVerticalScrollIndicator={false}>
+            {/* Instructions Pill */}
             <View style={styles.playerInstructionsBar}>
-              <View style={styles.playerInstructionIconBox}><MaterialIcons name="assignment" size={16} color="#2563EB" /></View>
-              <Text style={styles.playerInstructionsText}>Instructions: Tap a word at the bottom, then tap any dashed blank slot to complete the paragraph, then click Submit.</Text>
+              <View style={styles.playerInstructionIconBox}>
+                <MaterialIcons name="touch-app" size={16} color="#2563EB" />
+              </View>
+              <Text style={styles.playerInstructionsText}>
+                Instructions: Tap a word at the bottom, then tap any dashed blank slot to complete the paragraph, then click Submit.
+              </Text>
             </View>
+
+            {/* Paragraph with Interactive Blanks */}
             <View style={styles.playerMainCard}>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
                 {originalWords.map((word: string, idx: number) => {
                   const isBlank = blankIndices.includes(idx);
                   if (!isBlank) {
-                    return <Text key={idx} style={[styles.playerParagraphText, { fontSize: playerFontSize, fontFamily: playerFontFamily }]}>{word}{' '}</Text>;
+                    return (
+                      <Text 
+                        key={idx} 
+                        style={styles.playerParagraphText}
+                      >
+                        {word}{' '}
+                      </Text>
+                    );
                   }
+
                   const filledText = userAnswers[idx];
-                  const words2 = originalWords;
-                  const correctAnswer = words2[idx] || '';
-                  const isCorrect = filledText && filledText.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+                  const cleanCorrect = (word || '').replace(/[.,;:!?]/g, '').trim().toLowerCase();
+                  const cleanUser = (filledText || '').replace(/[.,;:!?]/g, '').trim().toLowerCase();
+                  const isCorrect = isPlayerSubmitted && !!filledText && cleanUser === cleanCorrect;
+                  const isIncorrect = isPlayerSubmitted && (cleanUser !== cleanCorrect);
+
                   return (
-                    <TouchableOpacity key={idx} disabled={isPlayerSubmitted}
-                      style={[styles.playerBlankSlot, filledText ? styles.playerBlankSlotFilled : styles.playerBlankSlotEmpty, isPlayerSubmitted && (isCorrect ? styles.playerBlankSlotCorrect : styles.playerBlankSlotIncorrect), selectedOption && !filledText && styles.playerBlankSlotActive]}
-                      onPress={() => { if (selectedOption) { setUserAnswers({ ...userAnswers, [idx]: selectedOption }); setSelectedOption(null); } else if (filledText) { const n = { ...userAnswers }; delete n[idx]; setUserAnswers(n); } }}
+                    <TouchableOpacity 
+                      key={idx} 
+                      disabled={isPlayerSubmitted}
+                      style={[
+                        styles.playerBlankSlot,
+                        filledText ? styles.playerBlankSlotFilled : styles.playerBlankSlotEmpty,
+                        isCorrect && styles.playerBlankSlotCorrect,
+                        isIncorrect && styles.playerBlankSlotIncorrect,
+                        selectedOption && !filledText && styles.playerBlankSlotActive,
+                      ]}
+                      onPress={() => {
+                        if (selectedOption) {
+                          setUserAnswers({ ...userAnswers, [idx]: selectedOption });
+                          setSelectedOption(null);
+                        } else if (filledText) {
+                          const n = { ...userAnswers };
+                          delete n[idx];
+                          setUserAnswers(n);
+                        } else {
+                          // If user taps empty blank without active selection, auto-pick first unused word
+                          const unusedOpt = correctAnswers.find(opt => !Object.values(userAnswers).includes(opt));
+                          if (unusedOpt) {
+                            setUserAnswers({ ...userAnswers, [idx]: unusedOpt });
+                          }
+                        }
+                      }}
                       activeOpacity={0.8}
                     >
-                      <Text style={[styles.playerBlankSlotText, filledText ? styles.playerBlankSlotTextFilled : styles.playerBlankSlotTextEmpty, isPlayerSubmitted && styles.playerBlankSlotTextSubmitted, { fontSize: playerFontSize, fontFamily: playerFontFamily }]} numberOfLines={1}>{filledText || '          '}</Text>
+                      {filledText ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <Text style={styles.playerBlankSlotTextFilled} numberOfLines={1}>
+                            {filledText}
+                          </Text>
+                          {!isPlayerSubmitted && (
+                            <MaterialIcons name="close" size={11} color="rgba(255,255,255,0.85)" />
+                          )}
+                          {isCorrect && (
+                            <MaterialIcons name="check-circle" size={12} color="#ffffff" />
+                          )}
+                          {isIncorrect && (
+                            <MaterialIcons name="cancel" size={12} color="#ffffff" />
+                          )}
+                        </View>
+                      ) : (
+                        <Text style={styles.playerBlankSlotTextEmpty} numberOfLines={1}>
+                          _______
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   );
                 })}
               </View>
             </View>
-            <Text style={styles.playerOptionsTitle}>Word Options</Text>
-            <View style={styles.playerOptionsGrid}>
-              {correctAnswers.map((opt: string, i: number) => {
-                const isUsed = Object.values(userAnswers).includes(opt);
-                const isSelected = selectedOption === opt;
-                return (
-                  <TouchableOpacity key={i} disabled={isUsed || isPlayerSubmitted} style={[styles.playerOptionPill, isSelected && styles.playerOptionPillSelected, isUsed && styles.playerOptionPillUsed]} onPress={() => setSelectedOption(isSelected ? null : opt)} activeOpacity={0.8}>
-                    <Text style={[styles.playerOptionPillText, isSelected && styles.playerOptionPillTextSelected, isUsed && styles.playerOptionPillTextUsed]}>{opt}</Text>
+
+            {/* Premium Glassmorphic Word Bank Card */}
+            <View style={styles.playerWordBankCard}>
+              {/* Header: Title + Remaining Badge + Clear Button */}
+              <View style={styles.playerWordBankHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <LinearGradient
+                    colors={['#0284C7', '#0369A1']}
+                    style={styles.playerWordBankIconCircle}
+                  >
+                    <MaterialIcons name="auto-awesome" size={13} color="#ffffff" />
+                  </LinearGradient>
+                  <Text style={styles.playerWordBankTitle}>WORD BANK</Text>
+                  <View style={styles.playerRemainingBadge}>
+                    <Text style={styles.playerRemainingBadgeText}>
+                      {correctAnswers.filter(opt => !Object.values(userAnswers).includes(opt)).length} LEFT
+                    </Text>
+                  </View>
+                </View>
+
+                {Object.keys(userAnswers).length > 0 && !isPlayerSubmitted && (
+                  <TouchableOpacity 
+                    onPress={() => { setUserAnswers({}); setSelectedOption(null); }}
+                    style={styles.playerClearAllBtn}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons name="restart-alt" size={13} color="#ffffff" style={{ marginRight: 3 }} />
+                    <Text style={styles.playerClearAllText}>Clear All</Text>
                   </TouchableOpacity>
-                );
-              })}
+                )}
+              </View>
+
+              {/* Word Chips Grid */}
+              <View style={styles.playerOptionsGrid}>
+                {correctAnswers.map((opt: string, i: number) => {
+                  const isUsed = Object.values(userAnswers).includes(opt);
+                  const isSelected = selectedOption === opt;
+                  
+                  if (isUsed) {
+                    return (
+                      <View key={i} style={styles.playerOptionPillUsed}>
+                        <MaterialIcons name="check" size={11} color="rgba(255,255,255,0.35)" style={{ marginRight: 3 }} />
+                        <Text style={styles.playerOptionPillTextUsed}>{opt}</Text>
+                      </View>
+                    );
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={i}
+                      disabled={isPlayerSubmitted}
+                      style={styles.playerOptionWrapper}
+                      onPress={() => setSelectedOption(isSelected ? null : opt)}
+                      activeOpacity={0.85}
+                    >
+                      <LinearGradient
+                        colors={isSelected ? ['#F59E0B', '#D97706'] : ['#0D9488', '#0F766E']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={[
+                          styles.playerOptionPill,
+                          isSelected && styles.playerOptionPillSelected,
+                        ]}
+                      >
+                        {isSelected && (
+                          <MaterialIcons name="check" size={13} color="#ffffff" style={{ marginRight: 4 }} />
+                        )}
+                        <Text style={styles.playerOptionPillText}>
+                          {opt}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-            <TouchableOpacity style={styles.playerSubmitBtn} onPress={() => {
-              if (isPlayerSubmitted) {
-                setUserAnswers({}); setSelectedOption(null); setIsPlayerSubmitted(false);
-                setPlayerScore(`0/${blankIndices.length}`);
-                setShowSuccessUpload(false);
-              } else {
-                const correctCount = blankIndices.reduce((acc: number, idx: number) => {
-                  const ans = userAnswers[idx]; const ws = originalWords; const correct = ws[idx] || '';
-                  return ans && ans.trim().toLowerCase() === correct.trim().toLowerCase() ? acc + 1 : acc;
-                }, 0);
-                setPlayerScore(`${correctCount}/${blankIndices.length}`);
-                setIsPlayerSubmitted(true); setShowSuccessUpload(true);
-              }
-            }} activeOpacity={0.85}>
-              <LinearGradient colors={isPlayerSubmitted ? ['#475569', '#334155'] : ['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.playerSubmitGradient}>
-                <Text style={styles.playerSubmitBtnText}>{isPlayerSubmitted ? 'Try Again' : 'Submit'}</Text>
+
+            {/* Submit / Reset Action Button */}
+            <TouchableOpacity 
+              style={styles.playerSubmitBtn} 
+              onPress={() => {
+                if (isPlayerSubmitted) {
+                  setUserAnswers({});
+                  setSelectedOption(null);
+                  setIsPlayerSubmitted(false);
+                  setPlayerScore(`0/${blankIndices.length}`);
+                  setShowSuccessUpload(false);
+                } else {
+                  const correctCount = blankIndices.reduce((acc: number, idx: number) => {
+                    const ans = (userAnswers[idx] || '').replace(/[.,;:!?]/g, '').trim().toLowerCase();
+                    const correct = (originalWords[idx] || '').replace(/[.,;:!?]/g, '').trim().toLowerCase();
+                    return ans && ans === correct ? acc + 1 : acc;
+                  }, 0);
+                  setPlayerScore(`${correctCount}/${blankIndices.length}`);
+                  setIsPlayerSubmitted(true);
+                  setShowSuccessUpload(true);
+                }
+              }} 
+              activeOpacity={0.85}
+            >
+              <LinearGradient 
+                colors={isPlayerSubmitted ? ['#475569', '#334155'] : ['#10B981', '#059669']} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 0 }} 
+                style={styles.playerSubmitGradient}
+              >
+                <MaterialIcons 
+                  name={isPlayerSubmitted ? 'replay' : 'check-circle'} 
+                  size={20} 
+                  color="#ffffff" 
+                  style={{ marginRight: 8 }} 
+                />
+                <Text style={styles.playerSubmitBtnText}>
+                  {isPlayerSubmitted ? 'Try Again' : 'Submit Answers'}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </ScrollView>
@@ -5954,8 +6363,8 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               }}
                               activeOpacity={0.8}
                             >
-                              <View style={[styles.matchConnectorDot, { right: -5, backgroundColor: isSelected ? '#F59E0B' : '#3B82F6' }]} />
-                              <Text style={styles.matchPlayerCardText} numberOfLines={1}>{pair.left}</Text>
+                              <View style={[styles.matchConnectorDot, { right: -5, backgroundColor: isSelected ? '#F59E0B' : (isMatched ? '#10B981' : '#3B82F6') }]} />
+                              <Text style={[styles.matchPlayerCardText, { textAlign: 'center', paddingHorizontal: 6 }]} numberOfLines={1}>{pair.left}</Text>
                             </TouchableOpacity>
                           );
                         })}
@@ -6002,7 +6411,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               activeOpacity={0.8}
                             >
                               <View style={[styles.matchConnectorDot, { left: -5, backgroundColor: isCurrentlySelectedRight ? '#10B981' : '#3B82F6' }]} />
-                              <Text style={styles.matchPlayerCardText} numberOfLines={1}>{item.text}</Text>
+                              <Text style={[styles.matchPlayerCardText, { textAlign: 'center', paddingHorizontal: 6 }]} numberOfLines={1}>{item.text}</Text>
                             </TouchableOpacity>
                           );
                         })}
@@ -6026,10 +6435,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             
                             if (!leftCard || !rightCard) return null;
                             
-                            const x1 = leftColLayout.w - 4;
+                            const x1 = leftColLayout.w;
                             const y1 = leftCard.y + leftCard.h / 2;
                             
-                            const x2 = rightColLayout.x - leftColLayout.x + 4;
+                            const x2 = rightColLayout.x;
                             const y2 = rightCard.y + rightCard.h / 2;
                             
                             let strokeColor = '#3B82F6'; // neutral blue line
@@ -6046,7 +6455,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 x2={x2}
                                 y2={y2}
                                 stroke={strokeColor}
-                                strokeWidth={4}
+                                strokeWidth={3.5}
                                 strokeLinecap="round"
                               />
                             );
@@ -6160,17 +6569,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
   // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
   // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
-  // -- EARLY FULL-SCREEN RETURN: DIAGRAM PARTS PLAYER --
   if (activePartsPlayer) {
     const themeConfig = getThemeColorConfig(activePartsPlayer.themeUrl);
     const totalPinpoints = activePartsPlayer.partsPinpoints?.length || 0;
+    const answeredCount = Object.keys(partsAnswers).length;
     const correctCount = Object.keys(partsAnswers).filter(
       id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === partsAnswers[id]
     ).length;
     
     return (
       <ImageBackground source={{ uri: activePartsPlayer.themeUrl }} style={{ flex: 1 }} resizeMode="cover">
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.3)' }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.35)' }} />
         <SafeAreaView style={{ flex: 1 }}>
           <View style={[styles.playerHeaderBar, { paddingVertical: 8, paddingHorizontal: 12 }]}>
             <TouchableOpacity style={[styles.playerExitBtn, { width: 30, height: 30, borderRadius: 15 }]} onPress={() => setActivePartsPlayer(null)} activeOpacity={0.7}>
@@ -6178,7 +6587,9 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             </TouchableOpacity>
             <Text style={[styles.playerHeaderTitle, { fontSize: 14 }]} numberOfLines={1}>{activePartsPlayer.title}</Text>
             <View style={[styles.playerScoreBadge, { paddingHorizontal: 10, paddingVertical: 4 }]}>
-              <Text style={[styles.playerScoreBadgeLabel, { fontSize: 10 }]}>SCORE : {correctCount}/{totalPinpoints}</Text>
+              <Text style={[styles.playerScoreBadgeLabel, { fontSize: 10 }]}>
+                {isPlayerSubmitted ? `SCORE : ${correctCount}/${totalPinpoints}` : `LABELED : ${answeredCount}/${totalPinpoints}`}
+              </Text>
             </View>
           </View>
           
@@ -6186,17 +6597,15 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             {/* Optimized Instruction Card */}
             <View style={{ width: '100%', backgroundColor: themeConfig.headerBg, borderRadius: 12, padding: 12, alignItems: 'center', marginBottom: 12, elevation: 3 }}>
               <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>Label the Diagram</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 4, marginBottom: 8 }}>
-                {activePartsPlayer.partsLayoutMethod === 'drag'
-                  ? 'Tap a label pill from the tray at the bottom, then click its pinpoint dot on the canvas.'
-                  : activePartsPlayer.partsLayoutMethod === 'match'
-                  ? 'Tap a pinpoint dot first, then click its matching label name below.'
-                  : 'Tap any pinpoint dot on the diagram and select the correct option.'}
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 4, marginBottom: 8 }}>
+                {isPlayerSubmitted
+                  ? (correctCount === totalPinpoints ? '🎉 All parts correctly labeled!' : 'Review answers below. Red items need correction.')
+                  : 'Tap any pinpoint dot on the diagram and select the matching label name.'}
               </Text>
               <View style={{ backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 }} />
-                <Text style={{ color: '#0F172A', fontSize: 10, fontWeight: '800' }}>
-                  {isPlayerSubmitted ? `${correctCount}/${totalPinpoints} Correct` : `${correctCount}/${totalPinpoints} Completed`}
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isPlayerSubmitted ? (correctCount === totalPinpoints ? '#10B981' : '#EF4444') : '#3B82F6', marginRight: 6 }} />
+                <Text style={{ color: '#0F172A', fontSize: 10.5, fontWeight: '800' }}>
+                  {isPlayerSubmitted ? `${correctCount}/${totalPinpoints} Correct` : `${answeredCount}/${totalPinpoints} Assigned`}
                 </Text>
               </View>
             </View>
@@ -6255,36 +6664,98 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     <>
                       <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} pointerEvents="none">
                         {activePartsPlayer.partsPinpoints?.map((pin: any) => {
-                          const isCorrect = partsAnswers[pin.id] === pin.name;
+                          const hasAnswer = partsAnswers[pin.id] !== undefined;
+                          const isCorrect = isPlayerSubmitted && partsAnswers[pin.id] === pin.name;
+                          const isWrong = isPlayerSubmitted && partsAnswers[pin.id] !== pin.name;
                           const isActivePinpoint = partsDropdownActiveId === pin.id;
                           const { displayX, displayY } = getScreenCoords(pin);
                           const spacedY = spacedYMap[pin.id] || displayY;
                           const isLeft = displayX < 50;
                           const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
                           const lineTargetX = isLeft ? boxLeftPct + 20 : boxLeftPct;
-                          return (<Line key={pin.id} x1={`${displayX}%`} y1={`${displayY}%`} x2={`${lineTargetX}%`} y2={`${spacedY}%`} stroke={isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#64748b')} strokeWidth="1.5" strokeLinecap="round" />);
+                          
+                          let strokeColor = '#94a3b8';
+                          if (isPlayerSubmitted) {
+                            strokeColor = isCorrect ? '#22c55e' : '#ef4444';
+                          } else if (hasAnswer) {
+                            strokeColor = '#3b82f6';
+                          } else if (isActivePinpoint) {
+                            strokeColor = '#2563eb';
+                          }
+
+                          return (<Line key={pin.id} x1={`${displayX}%`} y1={`${displayY}%`} x2={`${lineTargetX}%`} y2={`${spacedY}%`} stroke={strokeColor} strokeWidth="1.8" strokeLinecap="round" />);
                         })}
                       </Svg>
                       {activePartsPlayer.partsPinpoints?.map((pin: any) => {
-                        const isCorrect = partsAnswers[pin.id] === pin.name;
+                        const hasAnswer = partsAnswers[pin.id] !== undefined;
+                        const isCorrect = isPlayerSubmitted && partsAnswers[pin.id] === pin.name;
+                        const isWrong = isPlayerSubmitted && partsAnswers[pin.id] !== pin.name;
                         const isActivePinpoint = partsDropdownActiveId === pin.id;
                         const { displayX, displayY } = getScreenCoords(pin);
                         const spacedY = spacedYMap[pin.id] || displayY;
                         const isLeft = displayX < 50;
                         const boxLeftPct = isLeft ? Math.max(2, displayX - 22) : Math.min(78, displayX + 4);
+                        
                         const handlePress = () => {
                           playSound('click');
+                          if (isPlayerSubmitted) return;
                           if (activePartsPlayer.partsLayoutMethod === 'drag' && partsSelectedLabel) {
-                            if (partsSelectedLabel === pin.name) { playSound('win'); const newAnswers: Record<string, string> = { ...partsAnswers, [pin.id]: partsSelectedLabel as string }; setPartsAnswers(newAnswers); setPartsSelectedLabel(null); const cCount = Object.keys(newAnswers).filter(id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]).length; if (cCount === totalPinpoints) { setIsPlayerSubmitted(true); setPlayerScore(`${cCount}/${totalPinpoints}`); playSound('win'); setShowPartsSuccessUpload(true); } } else { playSound('error'); setPartsWrongAlert(true); }
-                          } else { setPartsDropdownActiveId(pin.id); }
+                            const newAnswers: Record<string, string> = { ...partsAnswers, [pin.id]: partsSelectedLabel as string };
+                            setPartsAnswers(newAnswers);
+                            setPartsSelectedLabel(null);
+                          } else {
+                            setPartsDropdownActiveId(pin.id);
+                          }
                         };
+
+                        let dotColor = '#ef4444';
+                        let dotHalo = 'rgba(239,68,68,0.25)';
+                        let boxBg = '#f8fafc';
+                        let boxBorder = '#cbd5e1';
+                        let boxBorderStyle: 'solid' | 'dashed' = 'dashed';
+                        let textColor = '#94a3b8';
+
+                        if (isPlayerSubmitted) {
+                          if (isCorrect) {
+                            dotColor = '#22c55e';
+                            dotHalo = 'rgba(34,197,94,0.25)';
+                            boxBg = '#f0fdf4';
+                            boxBorder = '#22c55e';
+                            boxBorderStyle = 'solid';
+                            textColor = '#15803d';
+                          } else {
+                            dotColor = '#ef4444';
+                            dotHalo = 'rgba(239,68,68,0.25)';
+                            boxBg = '#fef2f2';
+                            boxBorder = '#ef4444';
+                            boxBorderStyle = 'solid';
+                            textColor = '#b91c1c';
+                          }
+                        } else if (hasAnswer) {
+                          dotColor = '#3b82f6';
+                          dotHalo = 'rgba(59,130,246,0.25)';
+                          boxBg = '#eff6ff';
+                          boxBorder = '#3b82f6';
+                          boxBorderStyle = 'solid';
+                          textColor = '#1d4ed8';
+                        } else if (isActivePinpoint) {
+                          dotColor = '#f59e0b';
+                          dotHalo = 'rgba(245,158,11,0.25)';
+                          boxBg = '#fffbeb';
+                          boxBorder = '#f59e0b';
+                          boxBorderStyle = 'solid';
+                          textColor = '#b45309';
+                        }
+
                         return (
                           <React.Fragment key={pin.id}>
-                            <View style={{ position: 'absolute', left: `${displayX}%` as any, top: `${displayY}%` as any, transform: [{ translateX: -6 }, { translateY: -6 }], width: 12, height: 12, borderRadius: 6, backgroundColor: isCorrect ? 'rgba(34,197,94,0.25)' : (isActivePinpoint ? 'rgba(59,130,246,0.28)' : 'rgba(239,68,68,0.25)'), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#ef4444'), borderWidth: 1, borderColor: '#ffffff', elevation: 2 }} />
+                            <View style={{ position: 'absolute', left: `${displayX}%` as any, top: `${displayY}%` as any, transform: [{ translateX: -6 }, { translateY: -6 }], width: 12, height: 12, borderRadius: 6, backgroundColor: dotHalo, alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dotColor, borderWidth: 1, borderColor: '#ffffff', elevation: 2 }} />
                             </View>
-                            <TouchableOpacity disabled={isCorrect || isPlayerSubmitted} onPress={handlePress} style={{ position: 'absolute', left: `${boxLeftPct}%` as any, width: '20%', top: `${spacedY}%` as any, transform: [{ translateY: -12 }], backgroundColor: isCorrect ? '#f0fdf4' : (isActivePinpoint ? '#eff6ff' : '#f8fafc'), borderWidth: 1.2, borderColor: isCorrect ? '#22c55e' : (isActivePinpoint ? '#3b82f6' : '#cbd5e1'), borderStyle: isCorrect ? 'solid' : 'dashed', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', elevation: 2, zIndex: 15 }}>
-                              <Text style={{ color: isCorrect ? '#15803d' : (isActivePinpoint ? '#1d4ed8' : '#94a3b8'), fontWeight: '900', fontSize: 9.5, textAlign: 'center' }}>{isCorrect ? pin.name : '?'}</Text>
+                            <TouchableOpacity disabled={isPlayerSubmitted} onPress={handlePress} style={{ position: 'absolute', left: `${boxLeftPct}%` as any, width: '20%', top: `${spacedY}%` as any, transform: [{ translateY: -12 }], backgroundColor: boxBg, borderWidth: 1.2, borderColor: boxBorder, borderStyle: boxBorderStyle, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', elevation: 2, zIndex: 15 }}>
+                              <Text style={{ color: textColor, fontWeight: '900', fontSize: 9.5, textAlign: 'center' }}>
+                                {hasAnswer ? partsAnswers[pin.id] : '?'}
+                              </Text>
                             </TouchableOpacity>
                           </React.Fragment>
                         );
@@ -6296,32 +6767,76 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             </View>
             
             {/* Labels Tray */}
-            {activePartsPlayer.partsLayoutMethod === 'drag' && (
-              <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 16, padding: 12, elevation: 2 }}>
-                <Text style={{ fontSize: 12, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 8 }}>LABELS TRAY</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                  {shuffledPartsLabels.map((lbl, idx) => {
-                    const isAlreadyUsed = Object.values(partsAnswers).includes(lbl);
-                    const isSelected = partsSelectedLabel === lbl;
-                    if (isAlreadyUsed) return null;
-                    return (<TouchableOpacity key={idx} onPress={() => { playSound('click'); setPartsSelectedLabel(isSelected ? null : lbl); }} style={{ backgroundColor: isSelected ? '#3b82f6' : '#ffffff', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.2, borderColor: isSelected ? '#2563eb' : '#e2e8f0', borderBottomWidth: 3, borderBottomColor: isSelected ? '#1d4ed8' : '#cbd5e1' }} activeOpacity={0.7}><Text style={{ fontSize: 12, fontWeight: '900', color: isSelected ? '#ffffff' : '#334155' }}>{lbl}</Text></TouchableOpacity>);
-                  })}
-                </View>
+            <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 16, padding: 12, elevation: 2 }}>
+              <Text style={{ fontSize: 12, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 8 }}>LABELS TRAY</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {shuffledPartsLabels.map((lbl, idx) => {
+                  const isUsed = Object.values(partsAnswers).includes(lbl);
+                  const isSelected = partsSelectedLabel === lbl;
+                  return (
+                    <TouchableOpacity 
+                      key={idx} 
+                      disabled={isPlayerSubmitted}
+                      onPress={() => { 
+                        playSound('click'); 
+                        setPartsSelectedLabel(isSelected ? null : lbl); 
+                      }} 
+                      style={{ 
+                        backgroundColor: isSelected ? '#3b82f6' : (isUsed ? '#f1f5f9' : '#ffffff'), 
+                        paddingVertical: 6, 
+                        paddingHorizontal: 12, 
+                        borderRadius: 10, 
+                        borderWidth: 1.2, 
+                        borderColor: isSelected ? '#2563eb' : (isUsed ? '#cbd5e1' : '#e2e8f0'), 
+                        borderBottomWidth: 3, 
+                        borderBottomColor: isSelected ? '#1d4ed8' : (isUsed ? '#94a3b8' : '#cbd5e1'),
+                        opacity: isUsed ? 0.6 : 1
+                      }} 
+                      activeOpacity={0.7}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: isSelected ? '#ffffff' : (isUsed ? '#64748b' : '#334155'), textDecorationLine: isUsed ? 'line-through' : 'none' }}>
+                        {lbl}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            )}
-            {activePartsPlayer.partsLayoutMethod === 'match' && !partsDropdownActiveId && (
-              <View style={{ width: '100%', backgroundColor: themeConfig.bodyCardBg, borderColor: themeConfig.cardBorder, borderWidth: 1.5, borderRadius: 16, padding: 12, elevation: 2 }}>
-                <Text style={{ fontSize: 12, fontWeight: '900', color: themeConfig.accentColor, marginBottom: 6, textAlign: 'center' }}>First, tap a red pinpoint dot on the diagram above!</Text>
-              </View>
-            )}
-          </ScrollView>
-          
-          {partsWrongAlert && (
-            <View style={{ position: 'absolute', top: '40%' as any, alignSelf: 'center', backgroundColor: 'rgba(225,29,72,0.95)', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 6, elevation: 5, zIndex: 9999 }}>
-              <MaterialIcons name="error-outline" size={16} color="#ffffff" />
-              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14 }}>Wrong Answer!</Text>
             </View>
-          )}
+
+            {/* Primary Submit Button */}
+            <TouchableOpacity
+              style={[styles.playerSubmitBtn, { marginTop: 14 }]}
+              onPress={() => {
+                const ansCount = Object.keys(partsAnswers).length;
+                if (ansCount === 0) {
+                  Alert.alert('Selection Required', 'Please assign labels to the pinpoints before submitting.');
+                  return;
+                }
+                
+                const cCount = Object.keys(partsAnswers).filter(
+                  id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === partsAnswers[id]
+                ).length;
+                
+                setIsPlayerSubmitted(true);
+                setPlayerScore(`${cCount}/${totalPinpoints}`);
+                playSound('win');
+                setShowPartsSuccessUpload(true);
+              }}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.playerSubmitGradient}
+              >
+                <MaterialIcons name="check-circle" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                <Text style={{ color: '#ffffff', fontSize: 14.5, fontWeight: '900', letterSpacing: 0.5 }}>
+                  SUBMIT DIAGRAM
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </ScrollView>
           
           {showPartsSuccessUpload && (
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
@@ -6331,9 +6846,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     <MaterialIcons name="cloud-done" size={26} color="#ffffff" />
                   </LinearGradient>
                 </View>
-                <Text style={[styles.successTitle, { fontSize: 18, marginTop: 12 }]}>Uploaded Successfully!</Text>
-                <Text style={[styles.successDesc, { fontSize: 12, marginTop: 6, marginBottom: 16 }]}>Your diagram labeling score ({playerScore}) has been submitted to the teacher portal.</Text>
-                <TouchableOpacity style={[styles.successDoneBtn, { height: 40, borderRadius: 10 }]} onPress={() => { setShowPartsSuccessUpload(false); setIsPlayerSubmitted(false); setPartsAnswers({}); setActivePartsPlayer(null); }} activeOpacity={0.8}>
+                <Text style={[styles.successTitle, { fontSize: 18, marginTop: 12 }]}>Submitted Successfully!</Text>
+                <Text style={[styles.successDesc, { fontSize: 13, marginTop: 6, marginBottom: 16 }]}>
+                  Your diagram score ({playerScore}) has been submitted to the teacher portal.
+                </Text>
+                <TouchableOpacity style={[styles.successDoneBtn, { height: 44, borderRadius: 12 }]} onPress={() => { setShowPartsSuccessUpload(false); setIsPlayerSubmitted(false); setPartsAnswers({}); setActivePartsPlayer(null); }} activeOpacity={0.8}>
                   <LinearGradient colors={['#10B981', '#059669']} style={styles.successDoneGradient}>
                     <Text style={[styles.successDoneText, { fontSize: 14 }]}>Done</Text>
                   </LinearGradient>
@@ -6368,7 +6885,9 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <TouchableOpacity key={idx}
                           onPress={() => {
                             playSound('click');
-                            if (lbl === activePinpoint.name) { playSound('win'); const newAnswers: Record<string, string> = { ...partsAnswers, [activePinpoint.id]: lbl }; setPartsAnswers(newAnswers); setPartsDropdownActiveId(null); const cCount = Object.keys(newAnswers).filter(id => activePartsPlayer.partsPinpoints.find((p: any) => p.id === id)?.name === newAnswers[id]).length; if (cCount === totalPinpoints) { setIsPlayerSubmitted(true); setPlayerScore(`${cCount}/${totalPinpoints}`); playSound('win'); setShowPartsSuccessUpload(true); } } else { playSound('error'); setPartsWrongAlert(true); }
+                            const newAnswers: Record<string, string> = { ...partsAnswers, [activePinpoint.id]: lbl };
+                            setPartsAnswers(newAnswers);
+                            setPartsDropdownActiveId(null);
                           }}
                           style={{ backgroundColor: '#eff6ff', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.2, borderColor: '#bfdbfe', borderBottomWidth: 3, borderBottomColor: '#3b82f6', minWidth: '45%' }}
                           activeOpacity={0.7}
@@ -6404,58 +6923,58 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           <View style={{ position: 'absolute', top: '40%', right: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(196, 181, 253, 0.25)' }} />
 
             {/* Top Navbar */}
-            <SafeAreaView style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
+            <View style={{ backgroundColor: '#ffffff', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' }}>
               <View style={{
-                height: 60,
+                height: 52,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingHorizontal: 20
+                paddingHorizontal: 16
               }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                   <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 10,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
                     backgroundColor: '#2563EB',
                     alignItems: 'center',
                     justifyContent: 'center',
                     shadowColor: '#2563EB',
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 3,
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3,
+                    elevation: 2,
                     flexShrink: 0
                   }}>
-                    <MaterialIcons name="flaky" size={20} color="#ffffff" />
+                    <MaterialIcons name="flaky" size={17} color="#ffffff" />
                   </View>
-                  <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 15, letterSpacing: 0.3 }} numberOfLines={1}>
+                  <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 14, letterSpacing: 0.3 }} numberOfLines={1}>
                     TRUE<Text style={{ color: '#2563EB' }}>/FALSE</Text>
                   </Text>
                 </View>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                   <View style={{
-                    paddingVertical: 5,
-                    paddingHorizontal: 10,
-                    borderRadius: 16,
+                    paddingVertical: 3.5,
+                    paddingHorizontal: 8,
+                    borderRadius: 12,
                     backgroundColor: '#EFF6FF',
-                    borderWidth: 1.5,
+                    borderWidth: 1.2,
                     borderColor: '#BFDBFE',
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 4
                   }}>
-                    <MaterialIcons name="flash-on" size={14} color="#2563EB" />
-                    <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '900', letterSpacing: 0.3 }}>Interactive Mode</Text>
+                    <MaterialIcons name="flash-on" size={12} color="#2563EB" />
+                    <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: '900', letterSpacing: 0.2 }}>Interactive</Text>
                   </View>
 
                   <TouchableOpacity
                     onPress={() => setActiveTfPlayer(null)}
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
                       backgroundColor: '#F1F5F9',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -6464,68 +6983,64 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     }}
                     activeOpacity={0.8}
                   >
-                    <MaterialIcons name="close" size={18} color="#475569" />
+                    <MaterialIcons name="close" size={16} color="#475569" />
                   </TouchableOpacity>
                 </View>
               </View>
-            </SafeAreaView>
+            </View>
 
             {/* Content Container */}
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 12, paddingBottom: 24, alignItems: 'center' }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 10, paddingBottom: 20, alignItems: 'center' }}>
               {/* Top Header Card */}
               <View style={{
                 width: '100%',
-                maxWidth: 620,
+                maxWidth: 600,
                 backgroundColor: '#FFFFFF',
-                borderRadius: 16,
+                borderRadius: 14,
                 overflow: 'hidden',
                 borderWidth: 1.5,
                 borderColor: '#BFDBFE',
-                marginBottom: 12,
+                marginBottom: 10,
                 shadowColor: '#2563EB',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 10,
-                elevation: 3
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.06,
+                shadowRadius: 6,
+                elevation: 2
               }}>
                 {/* Top Gradient Accent Bar */}
                 <LinearGradient
                   colors={['#38BDF8', '#2563EB', '#6366F1']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ height: 4, width: '100%' }}
+                  style={{ height: 3, width: '100%' }}
                 />
 
-                <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
                     backgroundColor: '#EFF6FF',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderWidth: 1.5,
-                    borderColor: '#BFDBFE',
-                    shadowColor: '#2563EB',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4
+                    borderWidth: 1.2,
+                    borderColor: '#BFDBFE'
                   }}>
-                    <MaterialIcons name="sports-esports" size={20} color="#2563EB" />
+                    <MaterialIcons name="sports-esports" size={18} color="#2563EB" />
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <Text style={{ color: '#1E3A8A', fontWeight: '900', fontSize: 14, letterSpacing: 0.3 }} numberOfLines={1}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 }}>
+                      <Text style={{ color: '#1E3A8A', fontWeight: '900', fontSize: 13, letterSpacing: 0.2 }} numberOfLines={1}>
                         {activeTfPlayer.title || 'True or False Assignment'}
                       </Text>
-                      <View style={{ backgroundColor: '#2563EB', paddingVertical: 2, paddingHorizontal: 6, borderRadius: 8 }}>
-                        <Text style={{ color: '#ffffff', fontSize: 9, fontWeight: '900' }}>TRUE/FALSE</Text>
+                      <View style={{ backgroundColor: '#2563EB', paddingVertical: 1.5, paddingHorizontal: 5, borderRadius: 6 }}>
+                        <Text style={{ color: '#ffffff', fontSize: 8.5, fontWeight: '900' }}>TRUE/FALSE</Text>
                       </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <MaterialIcons name="info-outline" size={12} color="#64748B" />
-                      <Text style={{ color: '#475569', fontSize: 11, fontWeight: '600' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <MaterialIcons name="info-outline" size={11} color="#64748B" />
+                      <Text style={{ color: '#475569', fontSize: 10, fontWeight: '600' }}>
                         Read each statement carefully and select TRUE or FALSE
                       </Text>
                     </View>
@@ -6535,18 +7050,18 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
               {/* Stage 1: WELCOME / START SCREEN */}
               {tfQuizStage === 'welcome' && (
-                <View style={{ gap: 12, width: '100%', maxWidth: 620, alignItems: 'center' }}>
+                <View style={{ gap: 10, width: '100%', maxWidth: 600, alignItems: 'center' }}>
                   <View style={{
                     width: '100%',
-                    borderRadius: 20,
+                    borderRadius: 18,
                     overflow: 'hidden',
                     borderWidth: 1.5,
                     borderColor: '#BFDBFE',
                     shadowColor: '#2563EB',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 16,
-                    elevation: 6
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 4
                   }}>
                     <LinearGradient
                       colors={['#FFFFFF', '#F8FAFC', '#EFF6FF']}
@@ -6559,64 +7074,64 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         colors={['#38BDF8', '#2563EB', '#6366F1']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={{ height: 4, width: '100%' }}
+                        style={{ height: 3, width: '100%' }}
                       />
 
-                      <View style={{ padding: 18, alignItems: 'center', gap: 14 }}>
+                      <View style={{ padding: 14, alignItems: 'center', gap: 10 }}>
                         {/* Meta Stats Grid */}
                         <View style={{
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: 6,
+                          gap: 5,
                           width: '100%',
                           flexWrap: 'wrap'
                         }}>
                           <View style={{
-                            paddingVertical: 5,
-                            paddingHorizontal: 10,
-                            borderRadius: 12,
+                            paddingVertical: 3.5,
+                            paddingHorizontal: 8,
+                            borderRadius: 10,
                             backgroundColor: '#EFF6FF',
-                            borderWidth: 1.5,
+                            borderWidth: 1.2,
                             borderColor: '#BFDBFE',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 4
+                            gap: 3
                           }}>
-                            <MaterialIcons name="quiz" size={13} color="#2563EB" />
-                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#1E3A8A' }}>
+                            <MaterialIcons name="quiz" size={12} color="#2563EB" />
+                            <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#1E3A8A' }}>
                               {(activeTfPlayer.tfQuestions || []).length} Statements
                             </Text>
                           </View>
 
                           <View style={{
-                            paddingVertical: 5,
-                            paddingHorizontal: 10,
-                            borderRadius: 12,
+                            paddingVertical: 3.5,
+                            paddingHorizontal: 8,
+                            borderRadius: 10,
                             backgroundColor: '#ECFDF5',
-                            borderWidth: 1.5,
+                            borderWidth: 1.2,
                             borderColor: '#A7F3D0',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 4
+                            gap: 3
                           }}>
-                            <MaterialIcons name="timer-off" size={13} color="#059669" />
-                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#065F46' }}>Untimed Quiz</Text>
+                            <MaterialIcons name="timer-off" size={12} color="#059669" />
+                            <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#065F46' }}>Untimed Quiz</Text>
                           </View>
 
                           <View style={{
-                            paddingVertical: 5,
-                            paddingHorizontal: 10,
-                            borderRadius: 12,
+                            paddingVertical: 3.5,
+                            paddingHorizontal: 8,
+                            borderRadius: 10,
                             backgroundColor: '#FEF3C7',
-                            borderWidth: 1.5,
+                            borderWidth: 1.2,
                             borderColor: '#FDE68A',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 4
+                            gap: 3
                           }}>
-                            <MaterialIcons name="bolt" size={13} color="#D97706" />
-                            <Text style={{ fontSize: 11, fontWeight: '900', color: '#92400E' }}>Instant Score</Text>
+                            <MaterialIcons name="bolt" size={12} color="#D97706" />
+                            <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#92400E' }}>Instant Score</Text>
                           </View>
                         </View>
 
@@ -6624,78 +7139,74 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <View style={{
                           width: '100%',
                           backgroundColor: 'rgba(239, 246, 255, 0.75)',
-                          borderRadius: 18,
-                          padding: 16,
-                          borderWidth: 1.5,
+                          borderRadius: 14,
+                          padding: 10,
+                          borderWidth: 1.2,
                           borderColor: '#BFDBFE',
                           alignItems: 'center',
-                          gap: 10,
-                          shadowColor: '#2563EB',
-                          shadowOffset: { width: 0, height: 3 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 8
+                          gap: 6
                         }}>
                           {/* Play Ring */}
                           <View style={{
-                            width: 76,
-                            height: 76,
-                            borderRadius: 38,
+                            width: 58,
+                            height: 58,
+                            borderRadius: 29,
                             backgroundColor: '#DBEAFE',
-                            borderWidth: 2,
+                            borderWidth: 1.8,
                             borderColor: '#93C5FD',
                             alignItems: 'center',
                             justifyContent: 'center',
                             shadowColor: '#2563EB',
-                            shadowOffset: { width: 0, height: 6 },
-                            shadowOpacity: 0.18,
-                            shadowRadius: 10
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 6
                           }}>
                             <LinearGradient
                               colors={['#38BDF8', '#2563EB', '#1D4ED8']}
                               style={{
-                                width: 58,
-                                height: 58,
-                                borderRadius: 29,
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                elevation: 4
+                                elevation: 3
                               }}
                             >
-                              <MaterialIcons name="play-arrow" size={38} color="#ffffff" style={{ marginLeft: 3 }} />
+                              <MaterialIcons name="play-arrow" size={28} color="#ffffff" style={{ marginLeft: 2 }} />
                             </LinearGradient>
                           </View>
 
                           <View style={{
                             backgroundColor: '#2563EB',
-                            paddingVertical: 3,
-                            paddingHorizontal: 10,
-                            borderRadius: 10
+                            paddingVertical: 2.5,
+                            paddingHorizontal: 8,
+                            borderRadius: 8
                           }}>
-                            <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>
+                            <Text style={{ color: '#ffffff', fontSize: 9.5, fontWeight: '900', letterSpacing: 0.4 }}>
                               MODE: TRUE OR FALSE
                             </Text>
                           </View>
                         </View>
 
                         {/* Title & Description */}
-                        <View style={{ alignItems: 'center', gap: 8 }}>
-                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 22, textAlign: 'center', letterSpacing: 0.3 }}>
+                        <View style={{ alignItems: 'center', gap: 5 }}>
+                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 18, textAlign: 'center', letterSpacing: 0.2 }}>
                             Ready to Challenge Yourself?
                           </Text>
 
                           <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 5,
+                            gap: 4,
                             backgroundColor: '#F8FAFC',
-                            paddingVertical: 6,
-                            paddingHorizontal: 12,
-                            borderRadius: 12,
+                            paddingVertical: 4,
+                            paddingHorizontal: 10,
+                            borderRadius: 10,
                             borderWidth: 1,
                             borderColor: '#E2E8F0'
                           }}>
-                            <MaterialIcons name="touch-app" size={14} color="#64748B" />
-                            <Text style={{ color: '#475569', fontSize: 12, fontWeight: '600', textAlign: 'center', maxWidth: 420 }}>
+                            <MaterialIcons name="touch-app" size={13} color="#64748B" />
+                            <Text style={{ color: '#475569', fontSize: 11, fontWeight: '600', textAlign: 'center', maxWidth: 400 }}>
                               Test your knowledge and get your score instantly.
                             </Text>
                           </View>
@@ -6705,14 +7216,14 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                         <TouchableOpacity
                           style={{
                             width: '100%',
-                            maxWidth: 280,
-                            borderRadius: 16,
+                            maxWidth: 240,
+                            borderRadius: 14,
                             overflow: 'hidden',
                             shadowColor: '#2563EB',
-                            shadowOffset: { width: 0, height: 6 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 10,
-                            elevation: 5
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                            elevation: 4
                           }}
                           onPress={() => {
                             playSound('click');
@@ -6726,19 +7237,19 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={{
-                              paddingVertical: 14,
+                              paddingVertical: 10,
                               alignItems: 'center',
                               flexDirection: 'row',
                               justifyContent: 'center',
-                              gap: 10,
+                              gap: 8,
                               borderBottomWidth: 3,
                               borderBottomColor: '#1E40AF'
                             }}
                           >
-                            <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>
+                            <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 13.5, letterSpacing: 0.6 }}>
                               START QUIZ
                             </Text>
-                            <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+                            <MaterialIcons name="arrow-forward" size={17} color="#ffffff" />
                           </LinearGradient>
                         </TouchableOpacity>
                       </View>
@@ -6748,54 +7259,54 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                   {/* Feature Stats Ribbon */}
                   <View style={{
                     flexDirection: 'row',
-                    gap: 8,
+                    gap: 6,
                     width: '100%',
                     justifyContent: 'center',
                     flexWrap: 'wrap'
                   }}>
                     <View style={{
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      borderRadius: 12,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderWidth: 1.5,
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderWidth: 1.2,
                       borderColor: '#BFDBFE',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 5
+                      gap: 4
                     }}>
-                      <MaterialIcons name="flash-on" size={14} color="#2563EB" />
-                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#1E3A8A' }}>Interactive Mode</Text>
+                      <MaterialIcons name="flash-on" size={12} color="#2563EB" />
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: '#1E3A8A' }}>Interactive Mode</Text>
                     </View>
 
                     <View style={{
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      borderRadius: 12,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderWidth: 1.5,
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderWidth: 1.2,
                       borderColor: '#FDE68A',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 5
+                      gap: 4
                     }}>
-                      <MaterialIcons name="emoji-events" size={14} color="#D97706" />
-                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#92400E' }}>Instant Scoring</Text>
+                      <MaterialIcons name="emoji-events" size={12} color="#D97706" />
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: '#92400E' }}>Instant Scoring</Text>
                     </View>
 
                     <View style={{
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      borderRadius: 12,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderWidth: 1.5,
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      borderWidth: 1.2,
                       borderColor: '#A7F3D0',
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 5
+                      gap: 4
                     }}>
-                      <MaterialIcons name="verified" size={14} color="#059669" />
-                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#065F46' }}>Verified Quiz</Text>
+                      <MaterialIcons name="verified" size={12} color="#059669" />
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: '#065F46' }}>Verified Quiz</Text>
                     </View>
                   </View>
                 </View>
@@ -6805,51 +7316,51 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               {tfQuizStage === 'playing' && (
                 <View style={{
                   width: '100%',
-                  maxWidth: 620,
+                  maxWidth: 600,
                   backgroundColor: '#FFFFFF',
-                  borderRadius: 20,
-                  padding: 18,
+                  borderRadius: 18,
+                  padding: 14,
                   borderWidth: 1.5,
                   borderColor: '#E2E8F0',
-                  gap: 14,
+                  gap: 10,
                   shadowColor: '#64748B',
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 14,
-                  elevation: 4
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 10,
+                  elevation: 3
                 }}>
                   {/* Category & Progress Bar */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={{
-                      paddingVertical: 5,
-                      paddingHorizontal: 12,
-                      borderRadius: 16,
+                      paddingVertical: 3.5,
+                      paddingHorizontal: 10,
+                      borderRadius: 12,
                       backgroundColor: '#EFF6FF',
-                      borderWidth: 1.5,
+                      borderWidth: 1.2,
                       borderColor: '#BFDBFE'
                     }}>
-                      <Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '900', letterSpacing: 0.3 }}>
+                      <Text style={{ color: '#2563EB', fontSize: 10.5, fontWeight: '900', letterSpacing: 0.2 }}>
                         Topic: {activeTfPlayer.topic || 'General'}
                       </Text>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Text style={{ color: '#0F172A', fontSize: 13, fontWeight: '900' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={{ color: '#0F172A', fontSize: 12, fontWeight: '900' }}>
                         Question {tfCurrentIndex + 1}
                       </Text>
-                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700' }}>
+                      <Text style={{ color: '#64748B', fontSize: 10.5, fontWeight: '700' }}>
                         / {(activeTfPlayer.tfQuestions || []).length}
                       </Text>
                     </View>
                   </View>
 
                   {/* Visual Progress Bar */}
-                  <View style={{ width: '100%', height: 5, borderRadius: 3, backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
+                  <View style={{ width: '100%', height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
                     <View style={{
                       width: `${((tfCurrentIndex + 1) / (activeTfPlayer.tfQuestions || []).length) * 100}%`,
                       height: '100%',
                       backgroundColor: '#2563EB',
-                      borderRadius: 3
+                      borderRadius: 2
                     }} />
                   </View>
 
@@ -6860,36 +7371,36 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       <>
                         <View style={{
                           backgroundColor: '#F0F9FF',
-                          borderRadius: 16,
-                          padding: 20,
-                          minHeight: 130,
+                          borderRadius: 14,
+                          padding: 14,
+                          minHeight: 85,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderWidth: 1.5,
+                          borderWidth: 1.2,
                           borderColor: '#93C5FD',
                           shadowColor: '#2563EB',
-                          shadowOffset: { width: 0, height: 3 },
-                          shadowOpacity: 0.06,
-                          shadowRadius: 8
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 6
                         }}>
-                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 17, textAlign: 'center', lineHeight: 26, letterSpacing: 0.2 }}>
+                          <Text style={{ color: '#0F172A', fontWeight: '900', fontSize: 15, textAlign: 'center', lineHeight: 22, letterSpacing: 0.2 }}>
                             {currentQ.question}
                           </Text>
                         </View>
 
                         {/* TRUE / FALSE Buttons */}
-                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <View style={{ flexDirection: 'row', gap: 10, marginTop: 2 }}>
                           {/* TRUE BUTTON */}
                           <TouchableOpacity
                             style={{
                               flex: 1,
-                              borderRadius: 16,
+                              borderRadius: 14,
                               overflow: 'hidden',
                               shadowColor: '#10B981',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: 0.3,
-                              shadowRadius: 8,
-                              elevation: 4
+                              shadowOffset: { width: 0, height: 3 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 6,
+                              elevation: 3
                             }}
                             onPress={() => {
                               const isCorrect = currentQ.answer === 'true';
@@ -6911,17 +7422,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               start={{ x: 0, y: 0 }}
                               end={{ x: 0, y: 1 }}
                               style={{
-                                paddingVertical: 14,
+                                paddingVertical: 11,
                                 alignItems: 'center',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                gap: 8,
+                                gap: 6,
                                 borderBottomWidth: 3,
                                 borderBottomColor: '#047857'
                               }}
                             >
-                              <MaterialIcons name="check-circle" size={20} color="#ffffff" />
-                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>TRUE</Text>
+                              <MaterialIcons name="check-circle" size={18} color="#ffffff" />
+                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14, letterSpacing: 0.6 }}>TRUE</Text>
                             </LinearGradient>
                           </TouchableOpacity>
 
@@ -6929,13 +7440,13 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           <TouchableOpacity
                             style={{
                               flex: 1,
-                              borderRadius: 16,
+                              borderRadius: 14,
                               overflow: 'hidden',
                               shadowColor: '#F43F5E',
-                              shadowOffset: { width: 0, height: 4 },
-                              shadowOpacity: 0.3,
-                              shadowRadius: 8,
-                              elevation: 4
+                              shadowOffset: { width: 0, height: 3 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 6,
+                              elevation: 3
                             }}
                             onPress={() => {
                               const isCorrect = currentQ.answer === 'false';
@@ -6957,17 +7468,17 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               start={{ x: 0, y: 0 }}
                               end={{ x: 0, y: 1 }}
                               style={{
-                                paddingVertical: 14,
+                                paddingVertical: 11,
                                 alignItems: 'center',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                gap: 8,
+                                gap: 6,
                                 borderBottomWidth: 3,
                                 borderBottomColor: '#BE123C'
                               }}
                             >
-                              <MaterialIcons name="cancel" size={20} color="#ffffff" />
-                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 15, letterSpacing: 0.8 }}>FALSE</Text>
+                              <MaterialIcons name="cancel" size={18} color="#ffffff" />
+                              <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14, letterSpacing: 0.6 }}>FALSE</Text>
                             </LinearGradient>
                           </TouchableOpacity>
                         </View>
@@ -7282,14 +7793,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           <View style={[styles.bandCircle, { width: 90, height: 90, bottom: -30, left: -20, opacity: 0.07 }]} />
           <View style={[styles.bandCircle, { width: 55, height: 55, top: 20, right: 100, opacity: 0.06 }]} />
 
-          {/* Top label */}
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroBadge}>
-              <MaterialIcons name="bar-chart" size={12} color="#93C5FD" style={{ marginRight: 5 }} />
-              <Text style={styles.heroBadgeText}>OVERVIEW</Text>
-            </View>
-            <Text style={styles.heroDate}>Aug 2026</Text>
-          </View>
+
 
           {/* Stats row */}
           <View style={styles.heroStatsRow}>
@@ -7301,21 +7805,21 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             <View style={styles.heroStatDivider} />
 
             <View style={styles.heroStat}>
-              <Text style={[styles.heroStatNum, { color: '#6EE7B7' }]}>{stats.blanksCount}</Text>
+              <Text style={styles.heroStatNum}>{stats.blanksCount}</Text>
               <Text style={styles.heroStatLabel}>Fill Blanks</Text>
             </View>
 
             <View style={styles.heroStatDivider} />
 
             <View style={styles.heroStat}>
-              <Text style={[styles.heroStatNum, { color: '#FCD34D' }]}>{stats.tfCount}</Text>
+              <Text style={styles.heroStatNum}>{stats.tfCount}</Text>
               <Text style={styles.heroStatLabel}>True/False</Text>
             </View>
 
             <View style={styles.heroStatDivider} />
 
             <View style={styles.heroStat}>
-              <Text style={[styles.heroStatNum, { color: '#C4B5FD' }]}>
+              <Text style={styles.heroStatNum}>
                 {assignments.filter(a => a.type === 'match' || a.type === 'parts').length}
               </Text>
               <Text style={styles.heroStatLabel}>Others</Text>
@@ -7333,83 +7837,24 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           </View>
         </LinearGradient>
 
-        {/* 3. FILTERS */}
-        <View style={styles.filterSection}>
-          <Text style={styles.sectionHeading}>Filter by Type</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {filterTypes.map(type => {
-              const isSelected = selectedType === type;
-              const chipAccent = getAccentColor(type);
-              const chipIcon =
-                type === 'blanks' ? '✍' :
-                type === 'match' ? '⇄' :
-                type === 'crosswords' ? '⊞' :
-                type === 'parts' ? '◈' :
-                type === 'truefalse' ? '✓' :
-                type === 'cluegames' ? '🔍' : '✦';
-              const chipLabel = type === 'All' ? 'All' : getTypeLabel(type);
-              return (
-                <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.filterChip,
-                    isSelected
-                      ? [styles.filterChipActive, { backgroundColor: chipAccent, borderColor: chipAccent, shadowColor: chipAccent }]
-                      : styles.filterChipInactive
-                  ]}
-                  onPress={() => setSelectedType(type)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    isSelected ? styles.filterChipTextActive : [styles.filterChipTextInactive, { color: chipAccent }]
-                  ]}>
-                    {`${chipIcon}  ${chipLabel}`}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
 
-        {/* 4. SEARCH */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <View style={styles.searchIconBox}>
-              <MaterialIcons name="search" size={18} color="#003d9b" />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search assignments..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity style={styles.searchClearBtn} onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="close" size={14} color="#64748B" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
 
         {/* 5. ASSIGNMENT CARD LIST */}
         <View style={styles.listSection}>
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>Assignment List</Text>
             <View style={styles.counterBadge}>
-              <Text style={styles.counterBadgeText}>{filteredAssignments.length} Records</Text>
+              <Text style={styles.counterBadgeText}>{currentlyLoadedCount} of {totalAssignmentsCount} Records</Text>
             </View>
           </View>
 
-
-          {filteredAssignments.length === 0 ? (
+          {visibleAssignments.length === 0 ? (
             <View style={styles.emptyContainer}>
               <MaterialIcons name="find-in-page" size={44} color="#cadaff" />
               <Text style={styles.emptyText}>No records found matching search</Text>
             </View>
           ) : (
-            filteredAssignments.map(item => {
+            visibleAssignments.map(item => {
               const accent = getAccentColor(item.type);
 
               /* â”€â”€ SPECIAL PREMIUM MCQ BUILDER CARD â”€â”€ */
@@ -7538,153 +7983,189 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
 
               return (
-                <View key={item.sNo} style={[styles.card, { shadowColor: accent }]}>
+                <View key={item.sNo} style={styles.referenceCardShell}>
 
-                   {/* â”€â”€ Header Band â”€â”€ */}
+                  {/* ── HEADER BAND (Dark Teal Gradient with Date Pill) ── */}
                   <LinearGradient
-                    colors={[accent, accent + 'CC']}
+                    colors={['#004D40', '#005953', '#007A70']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={styles.cardTopBand}
+                    style={styles.refCardHeaderBand}
                   >
-                    {/* Decorative circles */}
-                    <View style={[styles.bandCircle, { width: 90, height: 90, bottom: -35, right: -8, opacity: 0.12 }]} />
-                    <View style={[styles.bandCircle, { width: 48, height: 48, bottom: -8, right: 65, opacity: 0.1 }]} />
+                    {/* Background Decorative Ambient Circles */}
+                    <View style={styles.refCardHeaderCircle1} pointerEvents="none" />
+                    <View style={styles.refCardHeaderCircle2} pointerEvents="none" />
 
-                    <View style={styles.bandContent}>
-                      <View style={styles.bandLeft}>
-                        <Text style={styles.cardTitleBand} numberOfLines={1}>{item.title}</Text>
-                        <View style={styles.subtitleRow}>
-                          <MaterialIcons name="school" size={11} color="rgba(255,255,255,0.75)" style={{ marginRight: 4 }} />
-                          <Text style={styles.cardSubtitleBand}>{item.class}  •  {item.course}</Text>
+                    <View style={styles.refCardHeaderRow}>
+                      {/* Left: Icon Plate + Title & Subtitle */}
+                      <View style={styles.refCardHeaderLeft}>
+                        <View style={styles.refCardHeaderIconBox}>
+                          <MaterialIcons name={getActivityTypeIcon(item.type, item.title)} size={20} color="#FFFFFF" />
+                        </View>
+                        <View style={{ flex: 1, marginRight: 8, justifyContent: 'center' }}>
+                          <Text style={styles.refCardHeaderTitle} numberOfLines={2}>{getTypeLabel(item.type, item.title)}</Text>
+                          <Text style={styles.refCardHeaderSubtitle} numberOfLines={1}>
+                            {item.class}  •  {item.course}
+                          </Text>
                         </View>
                       </View>
-                      <View style={styles.bandRight}>
-                        <View style={styles.typePillBand}>
-                          <Text style={[styles.typePillBandText, { color: accent }]}>{getTypeLabel(item.type).toUpperCase()}</Text>
+
+                      {/* Right: Crisp Compact White Date Pill */}
+                      <View style={styles.refCardDatePill}>
+                        <View style={styles.refCardDateIconSquare}>
+                          <MaterialIcons name="calendar-today" size={11} color="#005953" />
                         </View>
-                        <View style={styles.refPillBand}>
-                          <Text style={styles.refTextBand}>#{item.sNo}</Text>
-                        </View>
+                        <Text style={styles.refCardDatePillText}>
+                          {item.startDateTime ? item.startDateTime.split(',')[0].trim() : 'Aug 6, 2026'}
+                        </Text>
                       </View>
                     </View>
                   </LinearGradient>
 
-                  {/* â”€â”€ Body â”€â”€ */}
-                  <View style={styles.cardBody}>
+                  {/* ── CARD BODY (Clean Grid Capsules + Timeline + Buttons) ── */}
+                  <View style={styles.refCardBody}>
 
-                    {/* Chapter & Topic capsules */}
-                    <View style={styles.infoRowPair}>
-                      <View style={[styles.infoCapsule, { flex: 1, borderLeftColor: accent, borderLeftWidth: 3 }]}>
-                        <View style={[styles.infoCapsuleIcon, { backgroundColor: accent + '15' }]}>
-                          <MaterialIcons name="folder-open" size={13} color={accent} />
+                    {/* ROW 1: CHAPTER & TOPIC CAPSULES */}
+                    <View style={styles.refCardGridRow}>
+                      {/* Chapter */}
+                      <View style={styles.refCardGridCapsule}>
+                        <View style={[styles.refCardCapsuleIconCircle, { backgroundColor: '#EFF6FF' }]}>
+                          <MaterialIcons name="menu-book" size={16} color="#2563EB" />
                         </View>
-                        <View style={styles.infoCapsuleText}>
-                          <Text style={[styles.infoCapsuleLabel, { color: accent + 'CC' }]}>CHAPTER</Text>
-                          <Text style={styles.infoCapsuleValue} numberOfLines={1}>{item.chapter}</Text>
-                        </View>
-                      </View>
-
-                      <View style={{ width: 7 }} />
-
-                      <View style={[styles.infoCapsule, { flex: 1, borderLeftColor: accent, borderLeftWidth: 3 }]}>
-                        <View style={[styles.infoCapsuleIcon, { backgroundColor: accent + '15' }]}>
-                          <MaterialIcons name="book" size={13} color={accent} />
-                        </View>
-                        <View style={styles.infoCapsuleText}>
-                          <Text style={[styles.infoCapsuleLabel, { color: accent + 'CC' }]}>TOPIC</Text>
-                          <Text style={styles.infoCapsuleValue} numberOfLines={1}>{item.topic}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.refCardCapsuleLabel, { color: '#2563EB' }]}>CHAPTER</Text>
+                          <Text style={styles.refCardCapsuleValue} numberOfLines={1}>{item.chapter}</Text>
                         </View>
                       </View>
-                    </View>
 
-                    {/* Teacher + Start + Deadline row */}
-                    <View style={styles.teacherRowNew}>
-                      <View style={[styles.teacherAvatarNew, { backgroundColor: accent + '1E', borderWidth: 1.5, borderColor: accent + '40' }]}>
-                        <Text style={[styles.teacherAvatarTextNew, { color: accent }]}>
-                          {item.teacher.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                      <View style={styles.teacherTextNew}>
-                        <Text style={styles.teacherLabelNew}>Assigned by</Text>
-                        <Text style={styles.teacherNameNew}>{item.teacher}</Text>
-                      </View>
-                      <View style={styles.spacer} />
-                      <View style={styles.deadlineChip}>
-                        <MaterialIcons name="alarm" size={10} color="#BE2F2F" style={{ marginRight: 4 }} />
-                        <View>
-                          <Text style={styles.deadlineChipSubLabel}>DUE</Text>
-                          <Text style={styles.deadlineChipText} numberOfLines={1}>{item.deadline}</Text>
+                      {/* Topic */}
+                      <View style={styles.refCardGridCapsule}>
+                        <View style={[styles.refCardCapsuleIconCircle, { backgroundColor: '#F5F3FF' }]}>
+                          <MaterialIcons name="topic" size={16} color="#7C3AED" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.refCardCapsuleLabel, { color: '#7C3AED' }]}>TOPIC</Text>
+                          <Text style={styles.refCardCapsuleValue} numberOfLines={1}>{item.topic}</Text>
                         </View>
                       </View>
                     </View>
 
-                    {/* Compact date row */}
-                    <View style={styles.compactDateRow}>
-                      <View style={[styles.compactDateDot, { backgroundColor: accent }]} />
-                      <Text style={styles.compactDateStart}>{item.startDateTime}</Text>
-                      <MaterialIcons name="trending-flat" size={13} color="#CBD5E1" style={{ marginHorizontal: 6 }} />
-                      <Text style={styles.compactDateDeadline}>{item.deadline}</Text>
-                      <View style={[styles.compactDateDot, { backgroundColor: '#BE2F2F' }]} />
+                    {/* ROW 2: ASSIGNED BY & DUE CAPSULES */}
+                    <View style={styles.refCardGridRow}>
+                      {/* Assigned By */}
+                      <View style={styles.refCardGridCapsule}>
+                        <View style={[styles.refCardCapsuleIconCircle, { backgroundColor: '#F0FDF4' }]}>
+                          <MaterialIcons name="person" size={17} color="#059669" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.refCardCapsuleLabel, { color: '#059669' }]}>ASSIGNED BY</Text>
+                          <Text style={styles.refCardCapsuleValue} numberOfLines={1}>{item.teacher}</Text>
+                        </View>
+                      </View>
+
+                      {/* Due */}
+                      <View style={styles.refCardDueCapsule}>
+                        <View style={styles.refCardDueIconCircle}>
+                          <MaterialIcons name="event" size={15} color="#DC2626" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.refCardDueLabel}>DUE</Text>
+                          <Text style={styles.refCardDueValue} numberOfLines={1}>{item.deadline}</Text>
+                        </View>
+                      </View>
                     </View>
 
-                    {/* Actions */}
-                    <View style={styles.cardActionsNew}>
+                    {/* ROW 3: COMPACT TIMELINE BAR */}
+                    <View style={styles.refCardTimelineRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.refCardTimelineTealDot} />
+                        <Text style={styles.refCardTimelineStartText}>{item.startDateTime}</Text>
+                      </View>
+
+                      <MaterialIcons name="arrow-forward" size={14} color="#94A3B8" />
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.refCardTimelineDueText}>{item.deadline}</Text>
+                        <View style={styles.refCardTimelineRedDot} />
+                      </View>
+                    </View>
+
+                    {/* ROW 4: ACTION BUTTONS (Edit & View Details) */}
+                    <View style={styles.refCardActionsRow}>
                       <TouchableOpacity
-                        style={[styles.editBtnNew, { borderColor: accent + '60' }]}
+                        style={styles.refCardEditBtn}
                         onPress={() => handleEdit(item)}
+                        activeOpacity={0.8}
                       >
-                        <MaterialIcons name="edit" size={13} color={accent} style={{ marginRight: 5 }} />
-                        <Text style={[styles.editBtnTextNew, { color: accent }]}>Edit</Text>
+                        <MaterialIcons name="edit" size={15} color="#005953" />
+                        <Text style={styles.refCardEditBtnText}>Edit</Text>
                       </TouchableOpacity>
 
-                      <LinearGradient
-                        colors={[accent, accent + 'CC']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.detailBtnGradient}
+                      <TouchableOpacity
+                        style={styles.refCardViewBtn}
+                        onPress={() => openDetails(item)}
+                        activeOpacity={0.85}
                       >
-                        <TouchableOpacity
-                          style={styles.detailBtnNew}
-                          onPress={() => openDetails(item)}
-                        >
-                          <Text style={styles.detailBtnTextNew}>View Details</Text>
-                          <MaterialIcons name="arrow-forward" size={13} color="#fff" style={{ marginLeft: 6 }} />
-                        </TouchableOpacity>
-                      </LinearGradient>
+                        <Text style={styles.refCardViewBtnText}>View Details</Text>
+                        <MaterialIcons name="arrow-forward" size={15} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                      </TouchableOpacity>
                     </View>
 
                   </View>
+
                 </View>
               );
             })
           )}
         </View>
 
-        {/* 7. PAGINATION / LOAD MORE */}
+        {/* 7. MOBILE LOAD MORE PAGINATION */}
         <View style={styles.paginationSection}>
-          <Text style={styles.paginationInfo}>
-            Showing {filteredAssignments.length} of {assignments.length} assignments
-          </Text>
-          <View style={styles.paginationControls}>
-            <TouchableOpacity style={[styles.pageBtn, styles.pageBtnDisabled]}>
-              <Text style={styles.pageBtnTextDisabled}>Previous</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.pageBtn, styles.pageBtnActive]}>
-              <Text style={styles.pageBtnTextActive}>1</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.pageBtn}>
-              <Text style={styles.pageBtnText}>2</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.pageBtn}>
-              <Text style={styles.pageBtnText}>Next</Text>
-            </TouchableOpacity>
-          </View>
+          {totalAssignmentsCount === 0 ? null : hasMoreAssignments ? (
+            <View style={styles.loadMoreContainer}>
+              {loadMoreError ? (
+                <TouchableOpacity
+                  style={styles.retryBtn}
+                  onPress={handleLoadMore}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="refresh" size={16} color="#DC2626" style={{ marginRight: 6 }} />
+                  <Text style={styles.retryText}>Failed to load. Tap to Retry</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.loadMoreBtn, isLoadingMore && styles.loadMoreBtnDisabled]}
+                  onPress={handleLoadMore}
+                  disabled={isLoadingMore}
+                  activeOpacity={0.85}
+                >
+                  {isLoadingMore ? (
+                    <View style={styles.loadingRow}>
+                      <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text style={styles.loadMoreBtnText}>Loading...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.loadMoreBtnText}>Load More</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <Text style={styles.loadMoreStatusText}>
+                Showing {currentlyLoadedCount} of {totalAssignmentsCount} assignments
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.allLoadedContainer}>
+              <Text style={styles.allLoadedText}>
+                All {totalAssignmentsCount} assignments loaded
+              </Text>
+            </View>
+          )}
         </View>
 
       </ScrollView>
 
-      {/* 6. ASSIGNMENT DETAILS BOTTOM SHEET */}
+      {/* 6. MODALS & SHEETS */}
 
 
 
@@ -12293,729 +12774,205 @@ export const ActivityScreen = ({ navigation, route }: any) => {
       )}
 
 
-      {/* â”€â”€ TRUE / FALSE QUIZ PLAYER MODAL (LIGHT BRIGHT PREMIUM UI) â”€â”€ */}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      {/* ===== EDIT DATE & TIME MODAL ===== */}
+      <ViewportModal
+        visible={editingAssignment !== null}
+        onClose={() => setEditingAssignment(null)}
+      >
+        {/* Modal Card */}
+        <View style={{
+          backgroundColor: '#ffffff',
+          width: '100%',
+          maxWidth: 420,
+          borderRadius: 22,
+          overflow: 'hidden',
+          shadowColor: '#041B3C',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.18,
+          shadowRadius: 20,
+          elevation: 10,
+        }}>
+          {/* Header Band */}
+          <LinearGradient
+            colors={['#041B3C', '#003D9B', '#0052CC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingHorizontal: 18,
+              paddingVertical: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+              }}>
+                <MaterialIcons name="edit-calendar" size={18} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.3 }} numberOfLines={1}>
+                  Edit Schedule
+                </Text>
+                <Text style={{ fontSize: 11.5, fontWeight: '700', color: 'rgba(255, 255, 255, 0.85)', marginTop: 1 }} numberOfLines={1}>
+                  {getTypeLabel(editingAssignment?.type, editingAssignment?.title)} ({editingAssignment?.class})
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => setEditingAssignment(null)}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MaterialIcons name="close" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+          </LinearGradient>
+
+          {/* Form Fields Body */}
+          <View style={{ padding: 18, gap: 14 }}>
+            {/* Start Date & Time Field */}
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialIcons name="access-time" size={15} color="#0052CC" />
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Start Date & Time
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#F8FAFC',
+                  borderWidth: 1.5,
+                  borderColor: '#CBD5E1',
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  height: 48,
+                }}
+                onPress={() => {
+                  playSound('click');
+                  setDatePickerTarget('editStart' as any);
+                  setDatePickerValue(editStartDateTime);
+                  setDatePickerTitle('Select Start Date & Time');
+                  setIsDatePickerVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#0F172A' }}>
+                  {editStartDateTime}
+                </Text>
+                <MaterialIcons name="calendar-today" size={17} color="#0052CC" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Due / Deadline Date & Time Field */}
+            <View style={{ gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialIcons name="event-busy" size={15} color="#C62828" />
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#991B1B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Due / Deadline Date & Time
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#FFF5F5',
+                  borderWidth: 1.5,
+                  borderColor: '#FECACA',
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  height: 48,
+                }}
+                onPress={() => {
+                  playSound('click');
+                  setDatePickerTarget('editDeadline' as any);
+                  setDatePickerValue(editDeadlineDateTime);
+                  setDatePickerTitle('Select Due Date & Time');
+                  setIsDatePickerVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#C62828' }}>
+                  {editDeadlineDateTime}
+                </Text>
+                <MaterialIcons name="calendar-today" size={17} color="#C62828" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  height: 46,
+                  borderRadius: 12,
+                  backgroundColor: '#F1F5F9',
+                  borderWidth: 1.5,
+                  borderColor: '#CBD5E1',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => setEditingAssignment(null)}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#475569' }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1.4,
+                  height: 46,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  shadowColor: '#0052CC',
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 3,
+                }}
+                onPress={handleSaveEditedDateTime}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['#0066FF', '#003D9B']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 6,
+                  }}
+                >
+                  <MaterialIcons name="check-circle" size={18} color="#FFFFFF" />
+                  <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#FFFFFF' }}>Save Schedule</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ViewportModal>
 
       <PremiumDateTimePicker
         visible={isDatePickerVisible}
@@ -13027,6 +12984,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
             setFormStart(val);
           } else if (datePickerTarget === 'deadline') {
             setFormDeadline(val);
+          } else if ((datePickerTarget as any) === 'editStart') {
+            setEditStartDateTime(val);
+          } else if ((datePickerTarget as any) === 'editDeadline') {
+            setEditDeadlineDateTime(val);
           }
         }}
       />
@@ -13232,55 +13193,55 @@ const styles = StyleSheet.create({
   // ===== CONTAINER =====
   scrollContainer: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: Platform.OS === 'ios' ? 150 : 140,
   },
   // ===== PREMIUM HERO CARD =====
   heroCard: {
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 20,
-    marginBottom: 20,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    marginBottom: 14,
     overflow: 'hidden',
     position: 'relative',
     shadowColor: '#003d9b',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   heroTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 10,
   },
   heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
   heroBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '900',
-    color: '#93C5FD',
-    letterSpacing: 1,
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#DBEAFE',
+    letterSpacing: 0.8,
   },
   heroDate: {
     fontSize: 11,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.5)',
+    color: '#FFFFFF',
   },
   heroStatsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   heroStat: {
     flex: 1,
@@ -13288,33 +13249,33 @@ const styles = StyleSheet.create({
   },
   heroStatDivider: {
     width: 1,
-    height: 36,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    height: 26,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   heroStatNum: {
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#ffffff',
     letterSpacing: -0.5,
   },
   heroStatLabel: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.55)',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 3,
+    marginTop: 1,
   },
   heroProgressRow: {
     flexDirection: 'row',
-    height: 5,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     overflow: 'hidden',
     gap: 2,
   },
   heroProgressSegment: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
     opacity: 0.85,
   },
   // Old stat card styles kept for compatibility
@@ -13353,53 +13314,53 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: '#64748B',
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   statValue: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   // ===== FILTERS =====
   filterSection: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionHeading: {
     fontSize: 10.5,
-    fontWeight: '900',
-    color: '#94A3B8',
+    fontWeight: '800',
+    color: '#334155',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   filterScroll: {
-    gap: 8,
+    gap: 6,
     paddingBottom: 2,
   },
   filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 22,
-    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 18,
+    borderWidth: 1,
   },
   filterChipActive: {
     backgroundColor: '#003d9b',
     borderColor: '#003d9b',
     shadowColor: '#003d9b',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   filterChipInactive: {
     backgroundColor: '#ffffff',
-    borderColor: 'rgba(0,0,0,0.07)',
+    borderColor: '#E2E8F0',
   },
   filterChipText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
@@ -13411,7 +13372,7 @@ const styles = StyleSheet.create({
   },
   // ===== SEARCH =====
   searchSection: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   searchBar: {
     flexDirection: 'row',
@@ -13437,6 +13398,257 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
+  },
+  // ===== EXACT REFERENCE ASSIGNMENT CARDS (Image Match) =====
+  referenceCardShell: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#002C8A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  refCardHeaderBand: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  refCardHeaderCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: -40,
+    right: -20,
+  },
+  refCardHeaderCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    bottom: -30,
+    right: 70,
+  },
+  refCardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 3,
+  },
+  refCardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  refCardHeaderIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 9,
+  },
+  refCardHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+    lineHeight: 21,
+  },
+  refCardHeaderSubtitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.85)',
+    textTransform: 'uppercase',
+    marginTop: 1,
+  },
+  refCardDatePill: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    alignSelf: 'center',
+  },
+  refCardDateIconSquare: {
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    backgroundColor: '#E0F2F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refCardDatePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  refCardBody: {
+    padding: 11,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  refCardGridRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  refCardGridCapsule: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refCardCapsuleIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refCardCapsuleLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  refCardCapsuleValue: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 1,
+  },
+  refCardDueCapsule: {
+    flex: 1,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refCardDueIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFEBEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refCardDueLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#C62828',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  refCardDueValue: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#C62828',
+    marginTop: 1,
+  },
+  refCardTimelineRow: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 1,
+  },
+  refCardTimelineTealDot: {
+    width: 6.5,
+    height: 6.5,
+    borderRadius: 3.25,
+    backgroundColor: '#005953',
+    marginRight: 5,
+  },
+  refCardTimelineRedDot: {
+    width: 6.5,
+    height: 6.5,
+    borderRadius: 3.25,
+    backgroundColor: '#C62828',
+    marginLeft: 5,
+  },
+  refCardTimelineStartText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  refCardTimelineDueText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#C62828',
+  },
+  refCardActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 2,
+  },
+  refCardEditBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refCardEditBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#005953',
+    marginLeft: 6,
+  },
+  refCardViewBtn: {
+    flex: 1.2,
+    backgroundColor: '#005953',
+    borderRadius: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#003D37',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  refCardViewBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   searchIcon: {
     marginRight: 8,
@@ -13956,53 +14168,81 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#0f172a',
   },
-  // ===== PAGINATION =====
+  // ===== MOBILE LOAD MORE STYLES =====
   paginationSection: {
+    marginVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
-    gap: 10,
   },
-  paginationInfo: {
+  loadMoreContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  loadMoreBtn: {
+    backgroundColor: '#0052cc',
+    paddingVertical: 11,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    minWidth: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0052cc',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  loadMoreBtnDisabled: {
+    opacity: 0.8,
+  },
+  loadMoreBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadMoreStatusText: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: '#737685',
+    color: '#64748B',
+    marginTop: 2,
   },
-  paginationControls: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pageBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: '#ffffff',
+  allLoadedContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(0, 82, 204, 0.08)',
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
   },
-  pageBtnActive: {
-    backgroundColor: '#003d9b',
-    borderColor: '#003d9b',
+  allLoadedText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#64748B',
   },
-  pageBtnDisabled: {
-    backgroundColor: '#f1f5f9',
-    borderColor: 'rgba(0, 82, 204, 0.04)',
-    opacity: 0.6,
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
-  pageBtnText: {
-    fontSize: 11,
+  retryText: {
+    fontSize: 12.5,
     fontWeight: '800',
-    color: '#003d9b',
-  },
-  pageBtnTextActive: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-  pageBtnTextDisabled: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#94a3b8',
+    color: '#DC2626',
   },
   // ===== FAB FLOATING ACTION BUTTON =====
   fab: {
@@ -14344,10 +14584,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-  // ===== FORM CREATION REDESIGNED =====
+  // ===== FORM CREATION REDESIGNED (ACCESSIBLE, MINIMAL & PREMIUM) =====
   createModalBand: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: 'hidden',
@@ -14361,102 +14601,101 @@ const styles = StyleSheet.create({
   createModalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     flex: 1,
     minWidth: 0,
     marginRight: 10,
   },
   createModalIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   createModalTitle: {
-    fontSize: 14,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '800',
     color: '#ffffff',
     letterSpacing: -0.3,
   },
   createModalSubtitle: {
-    fontSize: 10,
+    fontSize: 11.5,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
     marginTop: 1,
   },
   createModalCloseBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   formContainer: {
-    gap: 14,
-    paddingBottom: 24,
+    gap: 16,
+    paddingBottom: 28,
     paddingHorizontal: 0,
-    paddingTop: 2,
+    paddingTop: 6,
   },
   formCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderLeftWidth: 4,
-    borderColor: '#E9F1FB',
-    padding: 20,
-    gap: 18,
-    shadowColor: '#1E40AF',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 3,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 22,
+    gap: 20,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   formCardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F4EFE6', // soft warm line
-    paddingBottom: 12,
-    marginBottom: 4,
+    gap: 12,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#F1F5F9',
+    paddingBottom: 14,
+    marginBottom: 2,
   },
   formHeaderIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   formCardHeader: {
-    fontSize: 15.5,
-    fontWeight: '900',
-    color: '#1E293B', // dark slate
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   formField: {
-    gap: 7,
+    gap: 8,
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   formLabel: {
-    fontSize: 11.5,
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#64748B',
+    color: '#1E293B',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   requiredStar: {
     color: '#EF4444',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '900',
   },
   formSelectBox: {
@@ -14467,43 +14706,44 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#CBD5E1',
     borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 52,
+    paddingHorizontal: 16,
+    height: 54,
   },
   selectTextRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   formSelectText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 15.5,
+    fontWeight: '800',
     color: '#0F172A',
   },
   formSelectPlaceholder: {
-    color: '#94A3B8',
-    fontWeight: '500',
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 15,
   },
   formDropdownOptions: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    borderWidth: 1.2,
-    borderColor: '#E4DEC6',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
     marginTop: 6,
     shadowColor: '#1e293b',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
-    elevation: 4,
+    elevation: 5,
   },
   formDropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#F8F6F0',
+    borderBottomColor: '#F1F5F9',
   },
   formDropdownItemActive: {
     backgroundColor: '#FAF8F0',
@@ -15205,79 +15445,82 @@ const styles = StyleSheet.create({
   /* Theme Selection Step */
   themeStepContent: {
     padding: 16,
-    backgroundColor: 'rgba(239,246,255,0.4)',
+    backgroundColor: '#ffffff',
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(191,219,254,0.4)',
-    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    marginBottom: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   addThemeRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 18,
+    marginBottom: 16,
     alignItems: 'center',
   },
   addThemeInput: {
     flex: 1,
-    height: 42,
-    backgroundColor: '#ffffff',
+    height: 44,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     fontSize: 13,
     color: '#0F172A',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 3,
   },
   addThemeButton: {
     backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    height: 42,
+    borderRadius: 12,
+    paddingHorizontal: 22,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 2,
   },
   addThemeButtonText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
   themeSectionTitle: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '900',
-    color: '#475569',
+    color: '#334155',
     textTransform: 'uppercase',
-    marginBottom: 10,
+    marginBottom: 12,
     letterSpacing: 1.2,
   },
   themesGrid: {
+    width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'flex-start',
-    paddingBottom: 12,
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingBottom: 8,
   },
   themeCard: {
-    width: (width - 64 - 16) / 3, // fits 3 cards per row inside modal container
-    height: 72,
-    borderRadius: 12,
+    width: '48%',
+    height: 96,
+    borderRadius: 14,
     overflow: 'hidden',
-    borderWidth: 2.5,
+    borderWidth: 2,
     borderColor: '#E2E8F0',
     position: 'relative',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F1F5F9',
   },
   themeCardActive: {
     borderColor: '#2563EB',
+    borderWidth: 2.5,
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -15290,15 +15533,15 @@ const styles = StyleSheet.create({
   },
   themeCheckBadge: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#ffffff',
   },
   /* Generate Step View */
@@ -15625,37 +15868,38 @@ const styles = StyleSheet.create({
   },
   playerMainCard: {
     backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
     borderWidth: 1.5,
     borderColor: '#ffffff',
   },
   playerParagraphText: {
-    lineHeight: 38,
+    fontSize: 14.5,
+    lineHeight: 28,
     color: '#1E293B',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   playerBlankSlot: {
-    height: 32,
-    minWidth: 90,
-    marginHorizontal: 4,
-    marginVertical: 4,
-    paddingHorizontal: 12,
+    height: 26,
+    minWidth: 62,
+    marginHorizontal: 3,
+    marginVertical: 2,
+    paddingHorizontal: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 8,
     alignSelf: 'center',
   },
   playerBlankSlotEmpty: {
-    borderWidth: 1.5,
+    borderWidth: 1.2,
     borderStyle: 'dashed',
     borderColor: '#3B82F6',
-    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    backgroundColor: 'rgba(59, 130, 246, 0.06)',
   },
   playerBlankSlotFilled: {
     backgroundColor: '#0D9488',
@@ -15679,61 +15923,136 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   playerBlankSlotTextEmpty: {
+    fontSize: 12,
     color: '#3B82F6',
+    fontWeight: '700',
+    letterSpacing: -1,
   },
   playerBlankSlotTextFilled: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#ffffff',
   },
   playerBlankSlotTextSubmitted: {
     color: '#ffffff',
   },
-  playerOptionsTitle: {
+  playerWordBankCard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 14,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  playerWordBankHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  playerWordBankIconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerWordBankTitle: {
     fontSize: 12,
     fontWeight: '900',
     color: '#ffffff',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 10,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    letterSpacing: 1,
+  },
+  playerRemainingBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  playerRemainingBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  playerClearAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  playerClearAllText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   playerOptionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 24,
+  },
+  playerOptionWrapper: {
+    borderRadius: 12,
+    shadowColor: '#0F766E',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    elevation: 3,
   },
   playerOptionPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#0D9488',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderTopColor: 'rgba(255, 255, 255, 0.5)',
   },
   playerOptionPillSelected: {
-    backgroundColor: '#0F766E',
-    borderWidth: 2,
-    borderColor: '#F59E0B',
+    borderColor: '#FEF08A',
+    borderWidth: 1.5,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 5,
   },
   playerOptionPillUsed: {
-    backgroundColor: '#94A3B8',
-    opacity: 0.4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   playerOptionPillText: {
     fontSize: 13,
     fontWeight: '800',
     color: '#ffffff',
+    letterSpacing: 0.2,
   },
   playerOptionPillTextSelected: {
     color: '#ffffff',
   },
   playerOptionPillTextUsed: {
-    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.35)',
+    textDecorationLine: 'line-through',
   },
   playerSubmitBtn: {
     width: '100%',
@@ -15835,40 +16154,50 @@ const styles = StyleSheet.create({
   /* Step Footer Navigation Buttons */
   stepFooterButtons: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
+    gap: 12,
+    marginTop: 14,
+    alignItems: 'center',
+    width: '100%',
   },
   stepFooterBtn: {
     flex: 1,
-    height: 54,
+    height: 48,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  stepFooterGradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   stepFooterBtnPrev: {
     borderWidth: 1.5,
     borderColor: '#CBD5E1',
     backgroundColor: '#ffffff',
     shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   stepFooterBtnNext: {
     borderWidth: 0,
     shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 7,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   stepFooterTextPrev: {
     color: '#475569',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.2,
   },
   stepFooterTextNext: {
@@ -16001,22 +16330,27 @@ const styles = StyleSheet.create({
     flex: 1.2,
   },
   matchInputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1E293B',
     marginBottom: 6,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   matchTextInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: '#94A3B8',
     borderRadius: 12,
-    height: 52,
+    height: 50,
     paddingHorizontal: 14,
     fontSize: 15,
     color: '#0F172A',
     fontWeight: '500',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   matchInputRightWrapper: {
     position: 'relative',
@@ -16232,33 +16566,33 @@ const styles = StyleSheet.create({
   matchPlayerCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 14,
-    marginVertical: 8,
+    height: 48,
+    paddingHorizontal: 12,
+    marginVertical: 6,
     justifyContent: 'center',
     position: 'relative',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 3,
-    elevation: 1,
+    elevation: 2,
   },
   matchPlayerCardSelected: {
     borderColor: '#F59E0B',
-    borderWidth: 2.5,
+    borderWidth: 2,
     backgroundColor: '#FFFBEB',
   },
   matchPlayerCardMatched: {
     borderColor: '#10B981',
+    borderWidth: 1.5,
     backgroundColor: '#ECFDF5',
   },
   matchPlayerCardText: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#1E293B',
-    paddingLeft: 12,
   },
   matchConnectorDot: {
     position: 'absolute',
@@ -16272,7 +16606,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
   /* ---- Generate Step Premium Header ---- */
   generateTopRow: {

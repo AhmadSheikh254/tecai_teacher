@@ -217,19 +217,7 @@ export const ComplainScreen = ({ navigation }: any) => {
             <MaterialIcons name="feedback" size={18} color={theme.colors.onSurface} />
             <Text style={styles.recordsSectionTitle}>Complain List</Text>
           </View>
-          {filteredComplains.length > 0 && (
-            <View style={styles.exportBadgeRow}>
-              <TouchableOpacity style={styles.exportIconBtn} onPress={() => alert('Copied to clipboard')}>
-                <MaterialIcons name="content-copy" size={16} color={theme.colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.exportIconBtn} onPress={() => alert('Exported to Excel')}>
-                <MaterialIcons name="grid-on" size={16} color={theme.colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.exportIconBtn} onPress={() => alert('Exported to PDF')}>
-                <MaterialIcons name="picture-as-pdf" size={16} color={theme.colors.primary} />
-              </TouchableOpacity>
-            </View>
-          )}
+
         </View>
 
         {/* Search input field */}

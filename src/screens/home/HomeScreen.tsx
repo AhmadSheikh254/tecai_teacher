@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 
 interface HomeScreenProps {
   navigation: any;
@@ -324,25 +325,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         {/* Days grid */}
         <View style={styles.calGrid}>{daysGrid}</View>
-
-        {/* Event strip */}
-        <TouchableOpacity
-          style={[styles.calEventStrip, { backgroundColor: activeEvt.bg, borderColor: activeEvt.color + '33' }]}
-          activeOpacity={0.85}
-          onPress={() => Alert.alert(`${monthNames[calMonthIndex]} ${selectedCalendarDay}, ${calYear}`, `${activeEvt.title}\n\n${activeEvt.details}`)}
-        >
-          <View style={[styles.calEventIconOrb, { backgroundColor: activeEvt.color + '1F' }]}>
-            <MaterialIcons name={activeEvt.icon as any} size={14} color={activeEvt.color} />
-          </View>
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={[styles.calEventDate, { color: activeEvt.color }]}>{monthNames[calMonthIndex]} {selectedCalendarDay}, {calYear}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '800', color: activeEvt.color, opacity: 0.8 }}>Tap to view</Text>
-            </View>
-            <Text style={styles.calEventTitle} numberOfLines={1}>{activeEvt.title}</Text>
-            <Text style={styles.calEventMsg} numberOfLines={1}>{activeEvt.details}</Text>
-          </View>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -392,93 +374,72 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         {/* ====== ULTRA-PREMIUM HERO DASHBOARD CARD ====== */}
-        <View style={styles.welcomeBanner}>
-
-          {/* ── Premium Aurora Glow System ── */}
+        <ExpoLinearGradient
+          colors={['#0A1F5C', '#003D9B', '#0052CC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.welcomeBanner}
+        >
+          {/* ── Premium Ambient Accents ── */}
           <View style={styles.auroraGlow1} pointerEvents="none" />
           <View style={styles.auroraGlow2} pointerEvents="none" />
-          <View style={styles.auroraGlow3} pointerEvents="none" />
-          {/* ── Diagonal premium light streak ── */}
-          <View style={styles.lightStreak} pointerEvents="none" />
 
-          {/* ── TOP ROW ── */}
+          {/* ── TOP HEADER ROW ── */}
           <View style={styles.welcomeTopRow}>
+            <View style={{ flex: 1, marginRight: 8, justifyContent: 'center' }}>
+              <Text style={styles.welcomeTitle} numberOfLines={1}>Suman Iqbal</Text>
+            </View>
             <View style={styles.datePill}>
               <View style={styles.datePillIconBox}>
-                <MaterialIcons name="calendar-today" size={13} color="#fff" />
+                <MaterialIcons name="calendar-today" size={13} color="#2563EB" />
               </View>
               <Text style={styles.datePillText}>Thursday, August 6, 2026</Text>
             </View>
-            <View style={styles.liveIndicator}>
-              <View style={styles.liveDotWrapper}>
-                <Animated.View
-                  style={[
-                    styles.livePulseRing,
-                    { transform: [{ scale: livePulse }], opacity: livePulse.interpolate({ inputRange: [1, 1.8], outputRange: [0.7, 0] }) },
-                  ]}
-                />
-                <View style={styles.liveDot} />
-              </View>
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
           </View>
 
-          {/* ── GREETING & NAME ── */}
-          <Text style={styles.welcomeGreeting}>Good Morning 👋</Text>
-          <Text style={styles.welcomeTitle}>Suman Iqbal</Text>
-          <Text style={styles.welcomeSubtitle}>Here's your school dashboard for today.</Text>
-
-          {/* ── DIVIDER ── */}
-          <View style={styles.bannerSeparator} />
-
-          {/* ── PREMIUM STAT CARDS ROW ── */}
+          {/* ── ULTRA-PREMIUM STAT CARDS ROW INSIDE BANNER ── */}
           <View style={styles.heroStatsRow}>
 
             {/* Students */}
-            <View style={styles.heroStatCard}>
-              <View style={styles.glassCardShine} />
-              <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(147,197,253,0.2)' }]}>
-                <MaterialIcons name="school" size={15} color="#93c5fd" />
+            <View style={[styles.statCardRef, { borderTopColor: '#2563EB' }]}>
+              <View style={styles.statHeaderRow}>
+                <View style={[styles.statIconSquare, { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }]}>
+                  <MaterialIcons name="school" size={16} color="#2563EB" />
+                </View>
+                <View style={styles.statPercentBadge}>
+                  <MaterialIcons name="trending-up" size={12} color="#059669" style={{ marginRight: 2 }} />
+                  <Text style={styles.statPercentText}>+1.8%</Text>
+                </View>
               </View>
-              <Text style={styles.heroStatValue}>148</Text>
-              <Text style={styles.heroStatLabel}>Students</Text>
-              <View style={styles.heroStatBarTrack}>
-                <View style={[styles.heroStatBarFill, { width: '74%', backgroundColor: '#93c5fd' }]} />
+              <View style={styles.statContentBlock}>
+                <Text style={styles.statCountText}>31</Text>
+                <Text style={styles.statLabelText}>Students</Text>
               </View>
             </View>
 
-            {/* Attendance */}
+            {/* Guardians */}
             <TouchableOpacity 
-              style={[styles.heroStatCard, styles.heroStatCardCenter]}
+              style={[styles.statCardRef, { borderTopColor: '#00A8CC' }]} 
               activeOpacity={0.8}
               onPress={() => navigation.navigate('More', { screen: 'Attendance' })}
             >
-              <View style={styles.glassCardShine} />
-              <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
-                <MaterialIcons name="how-to-reg" size={15} color="#34d399" />
+              <View style={styles.statHeaderRow}>
+                <View style={[styles.statIconSquare, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+                  <MaterialIcons name="groups" size={16} color="#059669" />
+                </View>
+                <View style={styles.statPercentBadge}>
+                  <MaterialIcons name="trending-up" size={12} color="#059669" style={{ marginRight: 2 }} />
+                  <Text style={styles.statPercentText}>+1.8%</Text>
+                </View>
               </View>
-              <Text style={[styles.heroStatValue, { color: '#34d399' }]}>94%</Text>
-              <Text style={[styles.heroStatLabel, { fontWeight: '700' }]}>Attendance</Text>
-              <View style={styles.heroStatBarTrack}>
-                <View style={[styles.heroStatBarFill, { width: '94%', backgroundColor: '#34d399' }]} />
+              <View style={styles.statContentBlock}>
+                <Text style={styles.statCountText}>30</Text>
+                <Text style={styles.statLabelText}>Guardians</Text>
               </View>
             </TouchableOpacity>
 
-            {/* Teachers */}
-            <View style={styles.heroStatCard}>
-              <View style={styles.glassCardShine} />
-              <View style={[styles.heroStatIconBadge, { backgroundColor: 'rgba(196,181,253,0.2)' }]}>
-                <MaterialIcons name="groups" size={15} color="#c4b5fd" />
-              </View>
-              <Text style={styles.heroStatValue}>182</Text>
-              <Text style={styles.heroStatLabel}>Teachers</Text>
-              <View style={styles.heroStatBarTrack}>
-                <View style={[styles.heroStatBarFill, { width: '91%', backgroundColor: '#a78bfa' }]} />
-              </View>
-            </View>
-
           </View>
-        </View>
+        </ExpoLinearGradient>
 
         {/* Premium Segmented Tab Bar */}
         <View style={styles.tabContainer}>
@@ -1070,11 +1031,85 @@ const styles = StyleSheet.create({
     marginHorizontal: 'auto',
   },
 
+  // ===== ULTRA-PREMIUM EXECUTIVE STAT CARDS =====
+  statsGridRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginVertical: 4,
+  },
+  statCardRef: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingHorizontal: 14,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#002C8A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    borderTopWidth: 3.5,
+  },
+  statCardTopAccent: {
+    display: 'none',
+  },
+  statHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statIconSquare: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statPercentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  statPercentText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  statContentBlock: {
+    marginTop: 2,
+  },
+  statCountText: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+    marginBottom: 1,
+  },
+  statLabelText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+
   // ===== ULTRA-PREMIUM HERO DASHBOARD CARD =====
   welcomeBanner: {
     backgroundColor: '#0C3090',
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 12,
+    paddingBottom: 12,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#071E6E',
@@ -1090,16 +1125,6 @@ const styles = StyleSheet.create({
     borderLeftColor: 'rgba(255,255,255,0.18)',
     borderRightColor: 'rgba(255,255,255,0.07)',
     borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-
-  // ── Glass rim highlight — top bright strip ──
-  glassTopShine: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 50,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
   },
 
   // ── AURORA GLOW 1: main bright circle top-right ──
@@ -1124,46 +1149,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,55,190,0.55)',
   },
 
-  // ── AURORA GLOW 3: subtle electric mid-right ──
-  auroraGlow3: {
-    position: 'absolute',
-    right: 20,
-    top: 40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(80,180,255,0.13)',
-  },
-
-  // ── Diagonal premium light sweep ──
-  lightStreak: {
-    position: 'absolute',
-    top: -60,
-    right: -30,
-    width: 80,
-    height: 400,
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    transform: [{ rotate: '-38deg' }],
-  },
-
-  // ── Dot mesh — subtle corner accent ──
-  meshGrid: {
-    position: 'absolute',
-    top: 8, right: 8,
-    width: 130,
-    height: 100,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 14,
-    padding: 10,
-    opacity: 0.15,
-  },
-  meshDot: {
-    width: 2.5,
-    height: 2.5,
-    borderRadius: 1.5,
-    backgroundColor: '#c8deff',
-  },
   welcomeTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1171,95 +1156,44 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     zIndex: 3,
   },
-  // Date pill — glassmorphism dark blue
+  // Date pill — crisp white container
   datePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,10,80,0.6)',
-    paddingRight: 11,
+    backgroundColor: '#FFFFFF',
+    paddingRight: 12,
     paddingLeft: 5,
     paddingVertical: 5,
-    borderRadius: 30,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 0.5,
-    borderBottomWidth: 0.5,
-    borderTopColor: 'rgba(255,255,255,0.35)',
-    borderLeftColor: 'rgba(255,255,255,0.2)',
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
     gap: 7,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     zIndex: 3,
   },
   datePillIconBox: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   datePillText: {
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.92)',
-    fontWeight: '600',
+    color: '#334155',
+    fontWeight: '700',
     letterSpacing: 0.1,
   },
-  // LIVE badge — green gradient capsule
-  liveIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#14A363',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(52,211,153,0.5)',
-    gap: 7,
-    zIndex: 3,
-  },
-  liveDotWrapper: {
-    width: 10,
-    height: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  livePulseRing: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(52,211,153,0.5)',
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#fff',
-  },
-  liveText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  // Greeting — gold amber
-  welcomeGreeting: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#FBD076',
-    marginBottom: 1,
-    letterSpacing: 0.1,
-    zIndex: 3,
-  },
+
   // Name — hero typography
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#ffffff',
-    marginBottom: 2,
-    letterSpacing: -0.6,
-    lineHeight: 28,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
     zIndex: 3,
   },
   welcomeSubtitle: {
@@ -1280,38 +1214,36 @@ const styles = StyleSheet.create({
   heroStatsRow: {
     flexDirection: 'row',
     gap: 6,
-    zIndex: 3,
+    zIndex: 5,
   },
   heroStatCard: {
     flex: 1,
-    // Liquid glass base
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    paddingTop: 6,
-    paddingBottom: 6,
-    paddingHorizontal: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 5,
     alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
-    // Multi-directional glass border
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 0.5,
-    borderBottomWidth: 0.5,
-    borderTopColor: 'rgba(255,255,255,0.38)',
-    borderLeftColor: 'rgba(255,255,255,0.2)',
-    borderRightColor: 'rgba(255,255,255,0.07)',
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    zIndex: 5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   heroStatCardCenter: {
-    borderTopColor: 'rgba(52,211,153,0.45)',
-    borderLeftColor: 'rgba(52,211,153,0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   // Inner top glass shine strip
   glassCardShine: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 16,
+    height: 14,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -1319,43 +1251,36 @@ const styles = StyleSheet.create({
   heroStatIconBadge: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 3,
-    borderTopWidth: 1,
-    borderLeftWidth: 0.5,
-    borderTopColor: 'rgba(255,255,255,0.3)',
-    borderLeftColor: 'rgba(255,255,255,0.15)',
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
   },
   heroStatValue: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '900',
-    color: '#fff',
-    letterSpacing: -0.5,
-    lineHeight: 20,
+    letterSpacing: -0.4,
+    lineHeight: 19,
     marginBottom: 1,
   },
   heroStatLabel: {
-    fontSize: 10,
-    color: 'rgba(220,238,255,0.92)',
+    fontSize: 9.5,
+    color: '#64748B',
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
     letterSpacing: 0.1,
   },
   heroStatBarTrack: {
-    width: '100%',
-    height: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 2,
+    width: '92%',
+    height: 3,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 1.5,
     overflow: 'hidden',
   },
   heroStatBarFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 1.5,
   },
 
   // ===== PREMIUM SEGMENTED TAB BAR =====

@@ -798,7 +798,6 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
           </TouchableOpacity>
           <View>
             <Text style={styles.headerTitle}>Teacher Toolkit</Text>
-            <Text style={styles.headerSubtitle}>AI curriculum builders</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
@@ -946,13 +945,7 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                 {/* Metadata Content */}
                 <View style={styles.toolMeta}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.toolName} numberOfLines={1}>{tool.title}</Text>
-                    <View style={[styles.cardMetaBadge, { backgroundColor: tool.color + '10', borderColor: tool.color + '20' }]}>
-                      <Text style={[styles.cardMetaBadgeText, { color: tool.color }]}>{tool.tag}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.toolDesc} numberOfLines={1}>{tool.desc}</Text>
+                  <Text style={styles.toolName} numberOfLines={1}>{tool.title}</Text>
                 </View>
 
                 {/* Navigation arrow badge */}
@@ -1456,7 +1449,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 16,
     paddingHorizontal: 14,
-    height: 72,
+    height: 64,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1470,8 +1463,8 @@ const styles = StyleSheet.create({
   leftAccentBar: {
     position: 'absolute',
     left: 0,
-    top: 10,
-    bottom: 10,
+    top: 8,
+    bottom: 8,
     width: 4,
     borderTopRightRadius: 3,
     borderBottomRightRadius: 3,
@@ -1519,7 +1512,7 @@ const styles = StyleSheet.create({
   },
   toolMeta: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
     marginRight: 10,
     justifyContent: 'center',
   },
@@ -1528,13 +1521,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 4,
-    marginBottom: 2,
   },
   toolName: {
-    flex: 1,
-    fontSize: 14.5,
-    fontWeight: '900',
+    fontSize: 15.5,
+    fontWeight: '800',
     color: '#0A1F5C',
+    letterSpacing: 0.1,
   },
   toolDesc: {
     fontSize: 12,

@@ -10,6 +10,7 @@ import {
 import { createBottomTabNavigator }   from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BottomTabBarProps }          from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons }     from '@expo/vector-icons';
 import Svg, { Rect, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
@@ -160,38 +161,53 @@ const TabItem = React.memo(({
 });
 
 // ─── Premium Tab Bar Container ────────────────────────────────────────────────
-const PremiumTabBar = React.memo(({ state, navigation }: BottomTabBarProps) => (
-  <View style={{ backgroundColor: '#FFFFFF', width: '100%', alignItems: 'center' }}>
-    <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
-      {TABS.map((tab, i) => {
-        const focused = state.index === i;
-        return (
-          <TabItem
-            key={tab.name}
-            tab={tab}
-            focused={focused}
-            onPress={() => {
-              const event = navigation.emit({
-                type:              'tabPress',
-                target:            state.routes[i].key,
-                canPreventDefault: true,
-              });
-              if (tab.name === 'More') {
-                navigation.navigate('More', { screen: 'MoreHub' });
-              } else if (tab.name === 'Assignment') {
-                navigation.navigate('Assignment', { screen: 'AssignmentHub' });
-              } else {
-                if (!focused && !event.defaultPrevented) {
-                  navigation.navigate(tab.name);
+const PremiumTabBar = React.memo(({ state, navigation, descriptors }: BottomTabBarProps) => {
+  const currentRoute = state.routes[state.index];
+  const focusedRouteName = getFocusedRouteNameFromRoute(currentRoute);
+
+  // Hide the global bottom tab bar when on AISpeakingBuddy screen
+  if (focusedRouteName === 'AISpeakingBuddy') {
+    return null;
+  }
+
+  const currentDescriptor = descriptors[currentRoute.key];
+  if (currentDescriptor?.options?.tabBarStyle && (currentDescriptor.options.tabBarStyle as any).display === 'none') {
+    return null;
+  }
+
+  return (
+    <View style={{ backgroundColor: '#F1F5F9', width: '100%', alignItems: 'center' }}>
+      <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
+        {TABS.map((tab, i) => {
+          const focused = state.index === i;
+          return (
+            <TabItem
+              key={tab.name}
+              tab={tab}
+              focused={focused}
+              onPress={() => {
+                const event = navigation.emit({
+                  type:              'tabPress',
+                  target:            state.routes[i].key,
+                  canPreventDefault: true,
+                });
+                if (tab.name === 'More') {
+                  navigation.navigate('More', { screen: 'MoreHub' });
+                } else if (tab.name === 'Assignment') {
+                  navigation.navigate('Assignment', { screen: 'AssignmentHub' });
+                } else {
+                  if (!focused && !event.defaultPrevented) {
+                    navigation.navigate(tab.name);
+                  }
                 }
-              }
-            }}
-          />
-        );
-      })}
+              }}
+            />
+          );
+        })}
+      </View>
     </View>
-  </View>
-));
+  );
+});
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 export const TabNavigator = () => (

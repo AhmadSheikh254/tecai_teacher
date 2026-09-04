@@ -165,52 +165,7 @@ export const ExamScreen = ({ navigation }: any) => {
           contentContainerStyle={styles.scrollContent} 
           showsVerticalScrollIndicator={false}
         >
-          
-          {/* EXAM OVERVIEW HERO BANNER */}
-          <View style={styles.heroCard}>
-            <LinearGradient
-              colors={['#0284C7', '#0369A1']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            {/* Glass Sheen Overlay */}
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.35)', 'rgba(255, 255, 255, 0)']}
-              start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
 
-            <View style={styles.heroHeaderRow}>
-              <View style={styles.heroBadgeBox}>
-                <MaterialIcons name="auto-awesome" size={20} color="#FFFFFF" />
-              </View>
-              <Text style={styles.heroBadgeText}>Examination Portal 2026</Text>
-            </View>
-
-            <Text style={styles.heroTitle}>Manage Examinations & Results</Text>
-            <Text style={styles.heroSubtitle}>
-              Select any sub-module below to manage schedules, student attendance, marks entry, term exams & report cards.
-            </Text>
-
-            {/* Quick Metrics Bar */}
-            <View style={styles.heroMetricsGrid}>
-              <View style={styles.heroMetricItem}>
-                <Text style={styles.heroMetricValue}>6</Text>
-                <Text style={styles.heroMetricLabel}>Sub-Modules</Text>
-              </View>
-              <View style={styles.heroMetricDivider} />
-              <View style={styles.heroMetricItem}>
-                <Text style={styles.heroMetricValue}>GRADE II-A</Text>
-                <Text style={styles.heroMetricLabel}>Active Class</Text>
-              </View>
-              <View style={styles.heroMetricDivider} />
-              <View style={styles.heroMetricItem}>
-                <Text style={styles.heroMetricValue}>100%</Text>
-                <Text style={styles.heroMetricLabel}>System Ready</Text>
-              </View>
-            </View>
-          </View>
 
           {/* SEARCH BAR FOR SUB-MODULES */}
           <View style={styles.searchWrapper}>
@@ -282,7 +237,7 @@ export const ExamScreen = ({ navigation }: any) => {
                   <MaterialIcons name={item.icon} size={84} color={`${item.accentColor}0D`} />
                 </View>
 
-                {/* Top Row: Double-Layered 3D Icon Tile + Status Badge */}
+                {/* Top Row: Double-Layered 3D Icon Tile + Action Arrow */}
                 <View style={styles.moduleTopRow}>
                   <View style={[styles.iconHaloRing, { borderColor: `${item.accentColor}35`, backgroundColor: `${item.accentColor}18` }]}>
                     <View style={[styles.iconTile, { shadowColor: item.accentColor }]}>
@@ -302,19 +257,6 @@ export const ExamScreen = ({ navigation }: any) => {
                     </View>
                   </View>
 
-                  <View style={[styles.badgePill, { backgroundColor: '#FFFFFF', borderColor: `${item.accentColor}35` }]}>
-                    <View style={[styles.badgeDot, { backgroundColor: item.accentColor }]} />
-                    <Text style={[styles.badgePillText, { color: item.accentColor }]}>{item.badge}</Text>
-                  </View>
-                </View>
-
-                {/* Content Row: Title + Subtitle + 3D Halo Arrow Button */}
-                <View style={styles.moduleContentRow}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.moduleTitle}>{item.title}</Text>
-                    <Text style={styles.moduleSubtitle}>{item.subtitle}</Text>
-                  </View>
-
                   <View style={[styles.arrowHaloContainer, { borderColor: `${item.accentColor}30` }]}>
                     <View style={[styles.arrowBtnPill, { shadowColor: item.accentColor }]}>
                       <LinearGradient
@@ -331,6 +273,11 @@ export const ExamScreen = ({ navigation }: any) => {
                       <MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />
                     </View>
                   </View>
+                </View>
+
+                {/* Content Row: Title */}
+                <View style={styles.moduleContentRow}>
+                  <Text style={styles.moduleTitle}>{item.title}</Text>
                 </View>
               </TouchableOpacity>
             ))}

@@ -59,10 +59,10 @@ function generateSampleMcqs(title: string, slos: string[]): MCQItem[] {
 }
 
 const INITIAL_ASSESSMENTS: Assessment[] = [
-  { id: 'mcq-1', title: "Nurse's Song", docName: 'english_ch3.pdf', slosCount: 3, status: 'Published', class: 'Grade 2', course: 'English', mcqs: [], completions: 18, total: 20 },
-  { id: 'mcq-2', title: 'Organism & Life Processes', docName: 'bio_ch1.pdf', slosCount: 4, status: 'Published', class: 'Grade 5', course: 'Biology', mcqs: [], completions: 14, total: 22 },
-  { id: 'mcq-3', title: 'Am I Alive?', docName: 'sci_ch2.pdf', slosCount: 2, status: 'Draft', class: 'Grade 3', course: 'Science', mcqs: [], completions: 0, total: 25 },
-  { id: 'mcq-4', title: 'States of Matter', docName: 'chem_ch4.pdf', slosCount: 5, status: 'Published', class: 'Grade 6', course: 'Chemistry', mcqs: [], completions: 21, total: 30 },
+  { id: 'mcq-1', title: "Nurse's Song", docName: 'english_ch3.pdf', slosCount: 3, status: 'Published', class: 'Grade 2', course: 'English', mcqs: generateSampleMcqs("Nurse's Song", ['Identify rhyming words', 'Understand poem theme', 'Express poetic emotion']), completions: 18, total: 20 },
+  { id: 'mcq-2', title: 'Organism & Life Processes', docName: 'bio_ch1.pdf', slosCount: 4, status: 'Published', class: 'Grade 5', course: 'Biology', mcqs: generateSampleMcqs("Organism & Life Processes", ['Understand cell structure', 'Classify organisms', 'Describe respiration']), completions: 14, total: 22 },
+  { id: 'mcq-3', title: 'Am I Alive?', docName: 'sci_ch2.pdf', slosCount: 2, status: 'Draft', class: 'Grade 3', course: 'Science', mcqs: generateSampleMcqs("Am I Alive?", ['Differentiate living and non-living', 'Identify basic survival needs']), completions: 0, total: 25 },
+  { id: 'mcq-4', title: 'States of Matter', docName: 'chem_ch4.pdf', slosCount: 5, status: 'Published', class: 'Grade 6', course: 'Chemistry', mcqs: generateSampleMcqs("States of Matter", ['Differentiate solid liquid gas', 'Explain melting and boiling', 'Analyze particle arrangement']), completions: 21, total: 30 },
 ];
 
 export const MCQBuilderScreen = ({ navigation }: any) => {
@@ -158,7 +158,61 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
   const addMcq = () => setMcqs(prev => [...prev, { id: `mcq-m-${Date.now()}`, question: 'New Question?', options: ['Option A', 'Option B', 'Option C', 'Option D'], correctAnswer: 0, bloom: 'EASY', sloTag: 'SLO 1', explanation: '' }]);
   const updateMcq = (id: string, field: string, value: any) => setMcqs(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
   const updateMcqOption = (id: string, idx: number, value: string) => setMcqs(prev => prev.map(m => { if (m.id !== id) return m; const opts = [...m.options]; opts[idx] = value; return { ...m, options: opts }; }));
-  const deleteMcq = (id: string) => setMcqs(prev => prev.filter(m => m.id !== id));
+  
+  const handleDeleteMcq = (id: string, idx: number) => {
+    Alert.alert(
+      'Delete Question',
+      `Are you sure you want to delete Question ${idx + 1}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => setMcqs(prev => prev.filter(m => m.id !== id))
+        }
+      ]
+    );
+  };
+
+  const handleDeleteSlo = (idx: number) => {
+    Alert.alert(
+      'Remove SLO',
+      `Are you sure you want to remove Learning Outcome #${idx + 1}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => setSlos(prev => prev.filter((_, j) => j !== idx))
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAssessment = (id: string, aTitle: string) => {
+    Alert.alert(
+      'Delete Assessment',
+      `Are you sure you want to delete "${aTitle}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => setAssessments(prev => prev.filter(x => x.id !== id))
+        }
+      ]
+    );
+  };
+
+  const handleViewAssessment = (a: Assessment) => {
+    const questions = (a.mcqs && a.mcqs.length > 0)
+      ? a.mcqs
+      : generateSampleMcqs(a.title, ['Core Concept Understanding', 'Practical Application', 'Analysis & Reasoning']);
+    setActivePlayer({ ...a, mcqs: questions });
+    setPlayerIndex(0);
+    setPlayerAnswers({});
+  };
+
   const filteredAssessments = assessments.filter(a => filterTab === 'All' || a.status === filterTab);
   const bloomColor = (b: string) => b === 'EASY' ? '#10B981' : b === 'MEDIUM' ? '#F59E0B' : '#EF4444';
   const bloomBg = (b: string) => b === 'EASY' ? '#ECFDF5' : b === 'MEDIUM' ? '#FFFBEB' : '#FEF2F2';
@@ -166,45 +220,23 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
   const steps = ['Upload Doc', 'Define SLOs', 'Review MCQs', 'Publish'];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#EAF5EC' }}>
-      {/* Premium green/mint background design with glowing spheres & mesh waves */}
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+      {/* Light, airy, minimal ambient background */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
           <Defs>
-            <SvgLinearGradient id="greenGlow1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#10B981" stopOpacity={0.24} />
-              <Stop offset="50%" stopColor="#34D399" stopOpacity={0.16} />
-              <Stop offset="100%" stopColor="#059669" stopOpacity={0.03} />
+            <SvgLinearGradient id="softMintGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#10B981" stopOpacity={0.06} />
+              <Stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
             </SvgLinearGradient>
-            <SvgLinearGradient id="greenGlow2" x1="100%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor="#6EE7B7" stopOpacity={0.22} />
+            <SvgLinearGradient id="softBlueGlow" x1="100%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0%" stopColor="#6366F1" stopOpacity={0.05} />
               <Stop offset="100%" stopColor="#10B981" stopOpacity={0.01} />
             </SvgLinearGradient>
-            <SvgLinearGradient id="greenSphereGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#34D399" stopOpacity={0.35} />
-              <Stop offset="100%" stopColor="#10B981" stopOpacity={0.1} />
-            </SvgLinearGradient>
-            <SvgLinearGradient id="softMintSphere" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#A7F3D0" stopOpacity={0.3} />
-              <Stop offset="100%" stopColor="#34D399" stopOpacity={0.05} />
-            </SvgLinearGradient>
           </Defs>
-          {/* Glowing Premium Spheres */}
-          <Circle cx="15%" cy="18%" r="130" fill="url(#greenGlow1)" />
-          <Circle cx="88%" cy="45%" r="180" fill="url(#greenGlow2)" />
-          <Circle cx="35%" cy="75%" r="160" fill="url(#greenGlow1)" />
-          
-          {/* Floating kid-friendly glass spheres */}
-          <Circle cx="82%" cy="15%" r="48" fill="url(#greenSphereGrad)" />
-          <Circle cx="12%" cy="52%" r="64" fill="url(#softMintSphere)" />
-          <Circle cx="85%" cy="82%" r="55" fill="url(#greenSphereGrad)" />
-          <Circle cx="45%" cy="30%" r="30" fill="url(#greenSphereGrad)" />
-
-          {/* Elegant flowing wave vectors */}
-          <Path d="M -20,150 Q 80,100 160,220 T 360,180 T 560,220" stroke="#10B981" strokeWidth={1.8} fill="none" opacity={0.22} />
-          <Path d="M -40,165 Q 60,115 140,235 T 340,195 T 540,235" stroke="#34D399" strokeWidth={1.2} fill="none" opacity={0.18} />
-          <Path d="M 60,320 Q 210,280 230,440 T 430,340" stroke="#6EE7B7" strokeWidth={1.5} fill="none" opacity={0.2} />
-          <Path d="M 40,335 Q 190,295 210,455 T 410,355" stroke="#A7F3D0" strokeWidth={1.2} fill="none" opacity={0.16} />
+          <Circle cx="15%" cy="18%" r="140" fill="url(#softMintGlow)" />
+          <Circle cx="88%" cy="45%" r="180" fill="url(#softBlueGlow)" />
+          <Circle cx="35%" cy="80%" r="160" fill="url(#softMintGlow)" />
         </Svg>
       </View>
       <SafeAreaView style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 }} edges={['top']}>
@@ -254,16 +286,16 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       </LinearGradient>
                     ) : (
                       <View style={[S.stepDot, { 
-                        backgroundColor: 'rgba(241, 245, 249, 0.75)', 
+                        backgroundColor: '#F1F5F9', 
                         borderWidth: 1.5, 
-                        borderColor: 'rgba(226, 232, 240, 0.8)',
-                        shadowOpacity: 0.05, 
+                        borderColor: '#CBD5E1',
+                        shadowOpacity: 0.03, 
                         elevation: 1 
                       }]}>
                         <MaterialIcons 
                           name={step === 1 ? "cloud-upload" : step === 2 ? "track-changes" : step === 3 ? "quiz" : "publish"} 
                           size={15} 
-                          color="#94A3B8" 
+                          color="#64748B" 
                         />
                       </View>
                     )}
@@ -283,42 +315,38 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
 
           {/* ═══════════ STEP 1 ═══════════ */}
           {wizardStep === 1 && (
             <>
               {/* Hero MCQ Builder Banner Card */}
               <View style={S.heroBanner}>
-                <LinearGradient colors={['#D1FAE5', '#A7F3D0', '#BAE6FD']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.heroGrad}>
-                  {/* BG decorative circles */}
-                  <View style={{ position: 'absolute', top: -30, right: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(16,185,129,0.12)' }} />
-                  <View style={{ position: 'absolute', bottom: -20, left: -20, width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(14,165,233,0.1)' }} />
-
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                    <LinearGradient colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.75)']} style={S.heroIconBox}>
-                      <MaterialIcons name="quiz" size={32} color="#0EA5E9" />
+                <LinearGradient colors={['#ECFDF5', '#F0FDF4', '#EFF6FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.heroGrad}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                    <LinearGradient colors={['#FFFFFF', '#F0FDF4']} style={S.heroIconBox}>
+                      <MaterialIcons name="quiz" size={28} color="#059669" />
                     </LinearGradient>
-                    <LinearGradient colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)']} style={S.heroTag}>
+                    <View style={S.heroTag}>
                       <View style={S.heroTagDot} />
                       <Text style={S.heroTagText}>GENERATOR</Text>
-                    </LinearGradient>
+                    </View>
                   </View>
 
                   <Text style={S.heroTitle}>MCQ Builder</Text>
                   <Text style={S.heroSub}>Smart quiz &amp; paper generator tool</Text>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
-                    <LinearGradient colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)']} style={S.activeChip}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                    <View style={S.activeChip}>
                       <View style={S.activeDot} />
                       <Text style={S.activeText}>{assessments.length} Active Assessments</Text>
-                    </LinearGradient>
+                    </View>
                   </View>
 
                   {/* Decorative SVG doc */}
-                  <View style={{ position: 'absolute', right: 18, bottom: 14, opacity: 0.2 }}>
-                    <Svg width={80} height={80} viewBox="0 0 64 64">
-                      <Rect x="8" y="4" width="40" height="52" rx="7" fill="#10B981" />
+                  <View style={{ position: 'absolute', right: 18, bottom: 14, opacity: 0.18 }}>
+                    <Svg width={74} height={74} viewBox="0 0 64 64">
+                      <Rect x="8" y="4" width="40" height="52" rx="7" fill="#059669" />
                       <Rect x="14" y="14" width="28" height="4" rx="2" fill="white" />
                       <Rect x="14" y="24" width="22" height="4" rx="2" fill="white" />
                       <Rect x="14" y="34" width="26" height="4" rx="2" fill="white" />
@@ -332,7 +360,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               <View style={S.card}>
                 <View style={S.cardHeader}>
                   <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={S.cardHeaderIcon}>
-                    <MaterialIcons name="description" size={20} color="#6366F1" />
+                    <MaterialIcons name="description" size={20} color="#4F46E5" />
                   </LinearGradient>
                   <View>
                     <Text style={S.cardTitle}>Study Material Info</Text>
@@ -352,16 +380,16 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MaterialIcons name="school" size={17} color="#6366F1" style={{ marginRight: 8 }} />
-                      <Text style={[S.input, !cls && { color: '#CBD5E1' }]}>{cls || 'Select Class'}</Text>
-                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#6366F1" />
+                      <MaterialIcons name="school" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                      <Text style={[S.input, !cls && { color: '#64748B' }]} numberOfLines={1}>{cls || 'Select Class'}</Text>
+                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
                     </TouchableOpacity>
                     {showClassDropdown && (
                       <View style={S.dropdownContainer}>
                         {classesList.map(c => (
                           <TouchableOpacity key={c} style={[S.dropdownItem, cls === c && S.dropdownItemActive]} onPress={() => { setCls(c); setShowClassDropdown(false); }}>
                             <Text style={[S.dropdownItemText, cls === c && S.dropdownItemTextActive]}>{c}</Text>
-                            {cls === c && <MaterialIcons name="check" size={16} color="#6366F1" />}
+                            {cls === c && <MaterialIcons name="check" size={16} color="#4F46E5" />}
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -379,18 +407,71 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MaterialIcons name="people" size={17} color="#6366F1" style={{ marginRight: 8 }} />
-                      <Text style={[S.input, !section && { color: '#CBD5E1' }]}>{section || 'Select Section'}</Text>
-                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#6366F1" />
+                      <MaterialIcons name="people" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                      <Text style={[S.input, !section && { color: '#64748B' }]} numberOfLines={1}>{section || 'Select Section'}</Text>
+                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
                     </TouchableOpacity>
                     {showSectionDropdown && (
                       <View style={S.dropdownContainer}>
-                        {sectionsList.map(s => (
-                          <TouchableOpacity key={s} style={[S.dropdownItem, section === s && S.dropdownItemActive]} onPress={() => { setSection(s); setShowSectionDropdown(false); }}>
-                            <Text style={[S.dropdownItemText, section === s && S.dropdownItemTextActive]}>{s}</Text>
-                            {section === s && <MaterialIcons name="check" size={16} color="#6366F1" />}
-                          </TouchableOpacity>
-                        ))}
+                        {/* Select All Option */}
+                        <TouchableOpacity
+                          style={[
+                            S.dropdownItem,
+                            { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                          ]}
+                          onPress={() => {
+                            const currentList = section ? section.split(',').map(s => s.trim()).filter(Boolean) : [];
+                            if (currentList.length === sectionsList.length) {
+                              setSection('');
+                            } else {
+                              setSection(sectionsList.join(', '));
+                            }
+                          }}
+                        >
+                          <Text style={[S.dropdownItemText, { fontWeight: '900', color: '#4F46E5' }]}>
+                            {section && section.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {sectionsList.map(s => {
+                          const currentList = section ? section.split(',').map(item => item.trim()).filter(Boolean) : [];
+                          const isSelected = currentList.includes(s);
+                          return (
+                            <TouchableOpacity 
+                              key={s} 
+                              style={[S.dropdownItem, isSelected && S.dropdownItemActive]} 
+                              onPress={() => {
+                                let updated: string[];
+                                if (isSelected) {
+                                  updated = currentList.filter(item => item !== s);
+                                } else {
+                                  updated = [...currentList, s];
+                                }
+                                setSection(updated.join(', '));
+                              }}
+                            >
+                              <Text style={[S.dropdownItemText, isSelected && S.dropdownItemTextActive]}>{s}</Text>
+                              <MaterialIcons 
+                                name={isSelected ? "check-box" : "check-box-outline-blank"} 
+                                size={18} 
+                                color={isSelected ? "#4F46E5" : "#94A3B8"} 
+                              />
+                            </TouchableOpacity>
+                          );
+                        })}
+
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#4F46E5',
+                            paddingVertical: 9,
+                            alignItems: 'center',
+                            marginTop: 6,
+                            borderRadius: 10
+                          }}
+                          onPress={() => setShowSectionDropdown(false)}
+                        >
+                          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13 }}>Done Selecting</Text>
+                        </TouchableOpacity>
                       </View>
                     )}
                   </View>
@@ -406,42 +487,50 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   }}
                   activeOpacity={0.8}
                 >
-                  <MaterialIcons name="book" size={17} color="#6366F1" style={{ marginRight: 8 }} />
-                  <Text style={[S.input, !course && { color: '#CBD5E1' }]}>{course || 'Select Course'}</Text>
-                  <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#6366F1" />
+                  <MaterialIcons name="book" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                  <Text style={[S.input, !course && { color: '#64748B' }]}>{course || 'Select Course'}</Text>
+                  <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
                 </TouchableOpacity>
                 {showCourseDropdown && (
                   <View style={S.dropdownContainer}>
                     {coursesList.map(c => (
                       <TouchableOpacity key={c} style={[S.dropdownItem, course === c && S.dropdownItemActive]} onPress={() => { setCourse(c); setShowCourseDropdown(false); }}>
                         <Text style={[S.dropdownItemText, course === c && S.dropdownItemTextActive]}>{c}</Text>
-                        {course === c && <MaterialIcons name="check" size={16} color="#6366F1" />}
+                        {course === c && <MaterialIcons name="check" size={16} color="#4F46E5" />}
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
 
                 <Text style={S.label}>Assessment Title <Text style={{ color: '#EF4444' }}>*</Text></Text>
-                <View style={[S.inputWrap, { borderColor: title ? '#6366F1' : '#E2E8F0' }]}>
-                  <MaterialIcons name="title" size={17} color="#6366F1" style={{ marginRight: 8 }} />
-                  <TextInput style={S.input} value={title} onChangeText={setTitle} placeholder="e.g. States of Matter Quiz" placeholderTextColor="#CBD5E1" />
+                <View style={[S.inputWrap, { borderColor: title ? '#4F46E5' : '#CBD5E1' }]}>
+                  <MaterialIcons name="title" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                  <TextInput 
+                    style={S.input} 
+                    value={title} 
+                    onChangeText={setTitle} 
+                    placeholder="e.g. States of Matter Quiz" 
+                    placeholderTextColor="#94A3B8" 
+                  />
                 </View>
 
                 {/* Upload Zone */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, marginBottom: 6 }}>
                   <Text style={S.label}>Upload Study Material</Text>
-                  <Text style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>PDF, JPG, PNG • Max 10MB</Text>
+                  <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>PDF, JPG, PNG • Max 10MB</Text>
                 </View>
 
                 <TouchableOpacity style={S.uploadZone} onPress={handlePickDocument} activeOpacity={0.85}>
-                  <LinearGradient colors={['#EFF6FF', '#F0FDFA', '#F0F9FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.uploadGrad}>
-                    <LinearGradient colors={['#DBEAFE', '#E0F2FE']} style={S.uploadIconCircle}>
-                      <MaterialIcons name="cloud-upload" size={30} color="#0EA5E9" />
-                    </LinearGradient>
+                  <LinearGradient colors={['#F8FAFC', '#F0F9FF', '#F1F5F9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.uploadGrad}>
+                    <View style={S.uploadIconCircle}>
+                      <MaterialIcons name="cloud-upload" size={32} color="#0284C7" />
+                    </View>
                     {docName ? (
-                      <View style={{ alignItems: 'center', gap: 6 }}>
-                        <MaterialIcons name="insert-drive-file" size={22} color="#10B981" />
-                        <Text style={{ fontSize: 15, fontWeight: '800', color: '#059669' }}>{docName}</Text>
+                      <View style={{ alignItems: 'center', gap: 4 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <MaterialIcons name="insert-drive-file" size={20} color="#059669" />
+                          <Text style={{ fontSize: 14, fontWeight: '800', color: '#059669' }}>{docName}</Text>
+                        </View>
                         <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Tap to change file</Text>
                       </View>
                     ) : (
@@ -463,26 +552,26 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               </View>
 
               {/* Premium Analyze Document Button */}
-              <View style={{ marginBottom: 20, alignItems: 'flex-end' }}>
+              <View style={{ marginBottom: 16, alignItems: 'flex-end' }}>
                 <TouchableOpacity onPress={handleNext} activeOpacity={0.88}>
                   <LinearGradient
-                    colors={['#4F46E5', '#4338CA']}
+                    colors={['#4F46E5', '#3730A3']}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 8,
-                      paddingVertical: 14,
-                      paddingHorizontal: 28,
-                      borderRadius: 16,
+                      paddingVertical: 13,
+                      paddingHorizontal: 26,
+                      borderRadius: 14,
                       shadowColor: '#4F46E5',
-                      shadowOffset: { width: 0, height: 6 },
+                      shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.25,
-                      shadowRadius: 10,
-                      elevation: 5,
+                      shadowRadius: 8,
+                      elevation: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#ffffff' }}>
+                    <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#ffffff', letterSpacing: 0.2 }}>
                       Analyze Document
                     </Text>
                     <MaterialIcons name="arrow-forward" size={18} color="#ffffff" />
@@ -505,10 +594,10 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                 {/* Metric Cards */}
                 <View style={S.metricsRow}>
                   {[
-                    { label: 'TOTAL', value: assessments.length, color: '#6366F1', bg: ['#EEF2FF', '#E0E7FF'] as [string, string] },
-                    { label: 'PUBLISHED', value: assessments.filter(a => a.status === 'Published').length, color: '#10B981', bg: ['#ECFDF5', '#D1FAE5'] as [string, string] },
-                    { label: 'SUBMITTED', value: 3, color: '#F59E0B', bg: ['#FFFBEB', '#FEF3C7'] as [string, string] },
-                    { label: 'AVG SCORE', value: '78%', color: '#0EA5E9', bg: ['#E0F2FE', '#BAE6FD'] as [string, string] },
+                    { label: 'TOTAL', value: assessments.length, color: '#4F46E5', bg: ['#EEF2FF', '#E0E7FF'] as [string, string] },
+                    { label: 'PUBLISHED', value: assessments.filter(a => a.status === 'Published').length, color: '#059669', bg: ['#ECFDF5', '#D1FAE5'] as [string, string] },
+                    { label: 'SUBMITTED', value: 3, color: '#D97706', bg: ['#FFFBEB', '#FEF3C7'] as [string, string] },
+                    { label: 'AVG SCORE', value: '78%', color: '#0284C7', bg: ['#E0F2FE', '#BAE6FD'] as [string, string] },
                   ].map(m => (
                     <LinearGradient key={m.label} colors={m.bg} style={S.metricCard}>
                       <Text style={[S.metricValue, { color: m.color }]}>{m.value}</Text>
@@ -525,7 +614,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       return (
                         <TouchableOpacity key={t} onPress={() => setFilterTab(t)} activeOpacity={0.9}>
                           <LinearGradient 
-                            colors={['#4F46E5', '#4338CA']} 
+                            colors={['#4F46E5', '#3730A3']} 
                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                             style={S.filterTabActiveGrad}
                           >
@@ -546,21 +635,29 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                 {filteredAssessments.map((a, idx) => (
                   <View key={a.id} style={[S.assessRow, idx === 0 && { borderTopWidth: 0 }]}>
                     <LinearGradient colors={a.status === 'Published' ? ['#ECFDF5', '#D1FAE5'] : ['#FFFBEB', '#FEF3C7']} style={S.assessIconBox}>
-                      <MaterialIcons name="quiz" size={18} color={a.status === 'Published' ? '#10B981' : '#F59E0B'} />
+                      <MaterialIcons name="quiz" size={18} color={a.status === 'Published' ? '#059669' : '#D97706'} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={S.assessTitle} numberOfLines={1}>{a.title}</Text>
                       <Text style={S.assessMeta}>{a.class} • {a.course} • {a.slosCount} SLOs</Text>
                     </View>
                     <View style={[S.statusPill, { backgroundColor: a.status === 'Published' ? '#ECFDF5' : '#FEF3C7', borderColor: a.status === 'Published' ? '#6EE7B7' : '#FDE68A' }]}>
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: a.status === 'Published' ? '#10B981' : '#F59E0B', marginRight: 4 }} />
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: a.status === 'Published' ? '#059669' : '#D97706', marginRight: 4 }} />
                       <Text style={[S.statusText, { color: a.status === 'Published' ? '#059669' : '#92400E' }]}>{a.status}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', gap: 6, marginLeft: 8 }}>
-                      <TouchableOpacity style={S.assessAction} onPress={() => { setActivePlayer(a); setPlayerIndex(0); setPlayerAnswers({}); }}>
-                        <MaterialIcons name="visibility" size={17} color="#6366F1" />
+                      <TouchableOpacity 
+                        style={S.assessAction} 
+                        onPress={() => handleViewAssessment(a)}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialIcons name="visibility" size={17} color="#4F46E5" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={[S.assessAction, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]} onPress={() => setAssessments(prev => prev.filter(x => x.id !== a.id))}>
+                      <TouchableOpacity 
+                        style={[S.assessAction, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]} 
+                        onPress={() => handleDeleteAssessment(a.id, a.title)}
+                        activeOpacity={0.7}
+                      >
                         <MaterialIcons name="delete-outline" size={17} color="#EF4444" />
                       </TouchableOpacity>
                     </View>
@@ -585,9 +682,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
               {slos.map((slo, i) => (
                 <View key={i} style={S.sloRow}>
-                  <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={S.sloIndex}>
+                  <View style={S.sloIndex}>
                     <Text style={S.sloIndexText}>{i + 1}</Text>
-                  </LinearGradient>
+                  </View>
                   <TextInput
                     style={S.sloInput}
                     value={slo}
@@ -600,9 +697,12 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                           ? "e.g. Explain solubility and factors affecting it"
                           : "Enter learning outcome..."
                     }
-                    placeholderTextColor="#CBD5E1"
+                    placeholderTextColor="#94A3B8"
                   />
-                  <TouchableOpacity style={S.sloDelete} onPress={() => setSlos(prev => prev.filter((_, j) => j !== i))}>
+                  <TouchableOpacity 
+                    style={S.sloDelete} 
+                    onPress={() => handleDeleteSlo(i)}
+                  >
                     <MaterialIcons name="close" size={17} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
@@ -610,12 +710,19 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
               {slos.length < 6 && (
                 <View style={S.addSloRow}>
-                  <View style={[S.inputWrap, { flex: 1, borderColor: '#C7D2FE', marginBottom: 0 }]}>
-                    <MaterialIcons name="add" size={17} color="#6366F1" style={{ marginRight: 8 }} />
-                    <TextInput style={S.input} value={newSloText} onChangeText={setNewSloText} placeholder="Type new SLO..." placeholderTextColor="#CBD5E1" onSubmitEditing={addSlo} />
+                  <View style={[S.inputWrap, { flex: 1, borderColor: '#CBD5E1', marginBottom: 0 }]}>
+                    <MaterialIcons name="add" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                    <TextInput 
+                      style={S.input} 
+                      value={newSloText} 
+                      onChangeText={setNewSloText} 
+                      placeholder="Type new SLO..." 
+                      placeholderTextColor="#94A3B8" 
+                      onSubmitEditing={addSlo} 
+                    />
                   </View>
-                  <TouchableOpacity onPress={addSlo}>
-                    <LinearGradient colors={['#6366F1', '#4F46E5']} style={S.addSloBtn}>
+                  <TouchableOpacity onPress={addSlo} activeOpacity={0.8}>
+                    <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.addSloBtn}>
                       <MaterialIcons name="add" size={22} color="#fff" />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -623,31 +730,31 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               )}
 
               {/* Info tip box */}
-              <LinearGradient colors={['#EFF6FF', '#F0F9FF']} style={{ borderRadius: 14, padding: 14, marginTop: 16, flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderWidth: 1, borderColor: '#BFDBFE' }}>
-                <MaterialIcons name="lightbulb" size={18} color="#2563EB" />
+              <View style={{ borderRadius: 14, padding: 14, marginTop: 16, flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: '#EFF6FF', borderWidth: 1.2, borderColor: '#BFDBFE' }}>
+                <MaterialIcons name="lightbulb" size={20} color="#2563EB" />
                 <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: '#1E40AF', lineHeight: 20 }}>
                   Well-defined SLOs help the AI generate more targeted and relevant MCQ questions for your students.
                 </Text>
-              </LinearGradient>
+              </View>
             </View>
           )}
 
           {/* ═══════════ STEP 3: REVIEW MCQs ═══════════ */}
           {wizardStep === 3 && (
             <View style={S.card}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <View style={S.cardHeader}>
                   <LinearGradient colors={['#ECFDF5', '#D1FAE5']} style={S.cardHeaderIcon}>
-                    <MaterialIcons name="auto-awesome" size={20} color="#10B981" />
+                    <MaterialIcons name="auto-awesome" size={20} color="#059669" />
                   </LinearGradient>
                   <View>
                     <Text style={S.cardTitle}>Review Questions</Text>
                     <Text style={S.cardSub}>{mcqs.length} MCQs generated • Edit freely</Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={addMcq}>
-                  <LinearGradient colors={['#6366F1', '#4F46E5']} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 14 }}>
-                    <MaterialIcons name="add" size={15} color="#fff" />
+                <TouchableOpacity onPress={addMcq} activeOpacity={0.85}>
+                  <LinearGradient colors={['#4F46E5', '#3730A3']} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12 }}>
+                    <MaterialIcons name="add" size={16} color="#fff" />
                     <Text style={{ fontSize: 13, fontWeight: '900', color: '#fff' }}>Add MCQ</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -658,15 +765,18 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   {/* MCQ Header */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                      <LinearGradient colors={['#6366F1', '#4F46E5']} style={S.qBadge}>
+                      <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.qBadge}>
                         <Text style={S.qBadgeText}>Q{qi + 1}</Text>
                       </LinearGradient>
                       <View style={[S.bloomBadge, { backgroundColor: bloomBg(mcq.bloom), borderColor: bloomColor(mcq.bloom) + '50' }]}>
                         <Text style={[S.bloomText, { color: bloomColor(mcq.bloom) }]}>{mcq.bloom}</Text>
                       </View>
                     </View>
-                    <TouchableOpacity style={S.deleteBtn} onPress={() => deleteMcq(mcq.id)}>
-                      <MaterialIcons name="delete-outline" size={17} color="#EF4444" />
+                    <TouchableOpacity 
+                      style={S.deleteBtn} 
+                      onPress={() => handleDeleteMcq(mcq.id, qi)}
+                    >
+                      <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
 
@@ -677,7 +787,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                     onChangeText={v => updateMcq(mcq.id, 'question', v)}
                     multiline
                     placeholder="Question text..."
-                    placeholderTextColor="#CBD5E1"
+                    placeholderTextColor="#94A3B8"
                   />
 
                   {/* Options */}
@@ -688,9 +798,15 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                         <View style={[S.optionRadio, isCorrect && S.optionRadioCorrect]}>
                           {isCorrect && <View style={S.optionRadioInner} />}
                         </View>
-                        <Text style={[S.optionLetter, { color: isCorrect ? '#10B981' : '#6366F1' }]}>{String.fromCharCode(65 + oi)})</Text>
-                        <TextInput style={S.optionInput} value={opt} onChangeText={v => updateMcqOption(mcq.id, oi, v)} placeholder={`Option ${String.fromCharCode(65 + oi)}`} placeholderTextColor="#CBD5E1" />
-                        {isCorrect && <MaterialIcons name="check-circle" size={18} color="#10B981" />}
+                        <Text style={[S.optionLetter, { color: isCorrect ? '#059669' : '#4F46E5' }]}>{String.fromCharCode(65 + oi)})</Text>
+                        <TextInput 
+                          style={S.optionInput} 
+                          value={opt} 
+                          onChangeText={v => updateMcqOption(mcq.id, oi, v)} 
+                          placeholder={`Option ${String.fromCharCode(65 + oi)}`} 
+                          placeholderTextColor="#94A3B8" 
+                        />
+                        {isCorrect && <MaterialIcons name="check-circle" size={18} color="#059669" />}
                       </TouchableOpacity>
                     );
                   })}
@@ -715,17 +831,17 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               {/* Summary Grid */}
               <View style={{ gap: 10 }}>
                 {[
-                  { label: 'Assessment Title', value: title, icon: 'title', color: '#6366F1' },
-                  { label: 'Class', value: cls, icon: 'school', color: '#0EA5E9' },
-                  { label: 'Section', value: section, icon: 'people', color: '#10B981' },
-                  { label: 'Subject', value: course, icon: 'book', color: '#F59E0B' },
-                  { label: 'Total Questions', value: `${mcqs.length} MCQs`, icon: 'quiz', color: '#8B5CF6' },
-                  { label: 'Learning Outcomes', value: `${slos.filter(s => s.trim()).length} SLOs`, icon: 'flag', color: '#EC4899' },
+                  { label: 'Assessment Title', value: title, icon: 'title', color: '#4F46E5' },
+                  { label: 'Class', value: cls, icon: 'school', color: '#0284C7' },
+                  { label: 'Section', value: section, icon: 'people', color: '#059669' },
+                  { label: 'Subject', value: course, icon: 'book', color: '#D97706' },
+                  { label: 'Total Questions', value: `${mcqs.length} MCQs`, icon: 'quiz', color: '#7C3AED' },
+                  { label: 'Learning Outcomes', value: `${slos.filter(s => s.trim()).length} SLOs`, icon: 'flag', color: '#DB2777' },
                 ].map(row => (
                   <View key={row.label} style={S.summaryItem}>
-                    <LinearGradient colors={[row.color + '22', row.color + '11']} style={S.summaryIcon}>
+                    <View style={[S.summaryIcon, { backgroundColor: row.color + '18' }]}>
                       <MaterialIcons name={row.icon as any} size={18} color={row.color} />
-                    </LinearGradient>
+                    </View>
                     <View style={{ flex: 1 }}>
                       <Text style={S.summaryLabel}>{row.label}</Text>
                       <Text style={S.summaryValue} numberOfLines={1}>{row.value || '—'}</Text>
@@ -735,17 +851,17 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               </View>
 
               {/* Publish Status */}
-              <Text style={[S.label, { marginTop: 20, marginBottom: 10 }]}>Publish Status</Text>
+              <Text style={[S.label, { marginTop: 18, marginBottom: 8 }]}>Publish Status</Text>
               {(['Published', 'Draft'] as const).map(s => (
-                <TouchableOpacity key={s} style={[S.publishOption, publishStatus === s && S.publishOptionActive]} onPress={() => setPublishStatus(s)}>
+                <TouchableOpacity key={s} style={[S.publishOption, publishStatus === s && S.publishOptionActive]} onPress={() => setPublishStatus(s)} activeOpacity={0.8}>
                   <View style={[S.publishRadio, publishStatus === s && S.publishRadioActive]}>
                     {publishStatus === s && <View style={S.publishRadioInner} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[S.publishLabel, publishStatus === s && { color: '#6366F1' }]}>{s}</Text>
+                    <Text style={[S.publishLabel, publishStatus === s && { color: '#4F46E5' }]}>{s}</Text>
                     <Text style={S.publishSub}>{s === 'Published' ? 'Students can see and take the quiz now' : 'Only you can view this draft'}</Text>
                   </View>
-                  {publishStatus === s && <MaterialIcons name="check-circle" size={20} color="#6366F1" />}
+                  {publishStatus === s && <MaterialIcons name="check-circle" size={20} color="#4F46E5" />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -755,12 +871,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {isAnalyzing && (
             <View style={S.loaderOverlay}>
               <View style={S.loaderCard}>
-                <LinearGradient 
-                  colors={['#EEF2FF', '#E0E7FF']} 
-                  style={S.loaderIconCircle}
-                >
-                  <ActivityIndicator size="large" color="#4F46E5" style={{ transform: [{ scale: 1.1 }] }} />
-                </LinearGradient>
+                <View style={S.loaderIconCircle}>
+                  <ActivityIndicator size="large" color="#4F46E5" />
+                </View>
                 <Text style={S.loaderTitle}>Analyzing Document...</Text>
                 <Text style={S.loaderSub}>Extracting learning objectives and key concepts from your study material</Text>
               </View>
@@ -769,12 +882,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {isGenerating && (
             <View style={S.loaderOverlay}>
               <View style={S.loaderCard}>
-                <LinearGradient 
-                  colors={['#F5F3FF', '#EDE9FE']} 
-                  style={S.loaderIconCircle}
-                >
-                  <ActivityIndicator size="large" color="#7C3AED" style={{ transform: [{ scale: 1.1 }] }} />
-                </LinearGradient>
+                <View style={S.loaderIconCircle}>
+                  <ActivityIndicator size="large" color="#7C3AED" />
+                </View>
                 <Text style={S.loaderTitle}>Generating 10 MCQs...</Text>
                 <Text style={S.loaderSub}>AI is crafting targeted questions based on your learning outcomes</Text>
               </View>
@@ -784,14 +894,14 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {/* ── Nav Buttons ── */}
           {wizardStep > 1 && (
             <View style={S.navRow}>
-              <TouchableOpacity style={S.prevBtn} onPress={handlePrev}>
+              <TouchableOpacity style={S.prevBtn} onPress={handlePrev} activeOpacity={0.8}>
                 <MaterialIcons name="arrow-back" size={18} color="#475569" />
                 <Text style={S.prevBtnText}>Back</Text>
               </TouchableOpacity>
               <View style={{ flex: 1 }} />
               <TouchableOpacity onPress={handleNext} activeOpacity={0.88}>
                 <LinearGradient
-                  colors={wizardStep === 4 ? ['#10B981', '#059669'] : ['#6366F1', '#4F46E5']}
+                  colors={wizardStep === 4 ? ['#10B981', '#059669'] : ['#4F46E5', '#3730A3']}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={S.nextBtn}
                 >
@@ -807,92 +917,145 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
         </ScrollView>
       </SafeAreaView>
 
-      {/* ── MCQ Player Modal ── */}
+      {/* ── MCQ Player Modal (Full Screen Overlay) ── */}
       {activePlayer && (
-        <Modal visible animationType="slide" transparent={false} onRequestClose={() => setActivePlayer(null)}>
-          <View style={{ flex: 1 }}>
-            <LinearGradient colors={['#EEF2FF', '#F0F9FF', '#F0FDF4']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-              <LinearGradient colors={['#ffffff', '#F8FAFF']} style={S.playerHeader}>
-                <TouchableOpacity style={S.backBtn} onPress={() => setActivePlayer(null)}>
-                  <MaterialIcons name="close" size={22} color="#0F172A" />
+        <Modal
+          visible={!!activePlayer}
+          animationType="slide"
+          transparent={true}
+          statusBarTranslucent={true}
+          onRequestClose={() => setActivePlayer(null)}
+        >
+          <View style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: '#F8FAFC',
+              zIndex: 999999,
+              elevation: 999999,
+              ...Platform.select({
+                web: {
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 999999,
+                  height: '100vh',
+                  width: '100vw',
+                } as any
+              })
+            }
+          ]}>
+            <LinearGradient colors={['#EEF2FF', '#F0F9FF', '#F8FAFC']} style={StyleSheet.absoluteFill} />
+            <SafeAreaView style={{ flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' }} edges={['top', 'bottom']}>
+              <View style={S.playerHeader}>
+                <TouchableOpacity style={S.backBtn} onPress={() => setActivePlayer(null)} activeOpacity={0.7}>
+                  <MaterialIcons name="close" size={20} color="#0F172A" />
                 </TouchableOpacity>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={S.headerTitle} numberOfLines={1}>{activePlayer.title}</Text>
                   <Text style={S.headerSub}>MCQ Interactive Quiz</Text>
                 </View>
-                <LinearGradient colors={['#E0F2FE', '#BAE6FD']} style={S.generatorBadge}>
-                  <Text style={{ fontSize: 13, fontWeight: '900', color: '#0369A1' }}>{Object.keys(playerAnswers).length} Answered</Text>
-                </LinearGradient>
-              </LinearGradient>
+                <View style={[S.generatorBadge, { borderColor: '#BAE6FD', backgroundColor: '#E0F2FE' }]}>
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#0369A1' }}>
+                    {Object.keys(playerAnswers).length} / {activePlayer.mcqs?.length || 0} Answered
+                  </Text>
+                </View>
+              </View>
 
-              <ScrollView contentContainerStyle={{ padding: 20, alignItems: 'center' }}>
+              <ScrollView
+                contentContainerStyle={{ padding: 18, alignItems: 'center', paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+              >
                 {activePlayer.mcqs && activePlayer.mcqs.length > 0 ? (
                   <View style={[S.card, { width: '100%', maxWidth: 620 }]}>
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#6366F1', marginBottom: 10 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5', marginBottom: 8 }}>
                       Question {playerIndex + 1} of {activePlayer.mcqs.length}
                     </Text>
 
                     {/* Progress bar */}
-                    <View style={{ height: 5, borderRadius: 3, backgroundColor: '#E2E8F0', marginBottom: 20 }}>
-                      <LinearGradient colors={['#6366F1', '#0EA5E9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                        style={{ height: 5, borderRadius: 3, width: `${((playerIndex + 1) / activePlayer.mcqs.length) * 100}%` as any }} />
+                    <View style={{ height: 6, borderRadius: 3, backgroundColor: '#E2E8F0', marginBottom: 16 }}>
+                      <LinearGradient
+                        colors={['#4F46E5', '#0284C7']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ height: 6, borderRadius: 3, width: `${((playerIndex + 1) / activePlayer.mcqs.length) * 100}%` as any }}
+                      />
                     </View>
 
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', lineHeight: 28, marginBottom: 18 }}>
+                    <Text style={{ fontSize: 16.5, fontWeight: '800', color: '#0F172A', lineHeight: 24, marginBottom: 16 }}>
                       {activePlayer.mcqs[playerIndex]?.question}
                     </Text>
 
-                    <View style={{ gap: 10 }}>
+                    <View style={{ gap: 8 }}>
                       {activePlayer.mcqs[playerIndex]?.options.map((opt: string, idx: number) => {
                         const isSelected = playerAnswers[playerIndex] === idx;
                         const isCorrect = activePlayer.mcqs[playerIndex].correctAnswer === idx;
                         return (
-                          <TouchableOpacity key={idx}
-                            style={[S.optionRow, isSelected && (isCorrect ? S.optionRowCorrect : { borderColor: '#F43F5E', backgroundColor: '#FFF1F2' })]}
+                          <TouchableOpacity
+                            key={idx}
+                            style={[
+                              S.optionRow,
+                              isSelected && (isCorrect ? S.optionRowCorrect : { borderColor: '#F43F5E', backgroundColor: '#FFF1F2' })
+                            ]}
                             onPress={() => setPlayerAnswers(prev => ({ ...prev, [playerIndex]: idx }))}
+                            activeOpacity={0.8}
                           >
                             <View style={[S.optionRadio, isSelected && (isCorrect ? S.optionRadioCorrect : { borderColor: '#F43F5E' })]}>
                               {isSelected && <View style={[S.optionRadioInner, { backgroundColor: isCorrect ? '#10B981' : '#F43F5E' }]} />}
                             </View>
-                            <Text style={[S.optionLetter, { color: isSelected ? (isCorrect ? '#10B981' : '#F43F5E') : '#6366F1' }]}>{String.fromCharCode(65 + idx)})</Text>
-                            <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: '#0F172A' }}>{opt}</Text>
-                            {isSelected && <MaterialIcons name={isCorrect ? 'check-circle' : 'cancel'} size={20} color={isCorrect ? '#10B981' : '#F43F5E'} />}
+                            <Text style={[S.optionLetter, { color: isSelected ? (isCorrect ? '#10B981' : '#F43F5E') : '#4F46E5' }]}>
+                              {String.fromCharCode(65 + idx)})
+                            </Text>
+                            <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}>{opt}</Text>
+                            {isSelected && (
+                              <MaterialIcons name={isCorrect ? 'check-circle' : 'cancel'} size={18} color={isCorrect ? '#10B981' : '#F43F5E'} />
+                            )}
                           </TouchableOpacity>
                         );
                       })}
                     </View>
 
-                    <View style={[S.navRow, { marginTop: 20 }]}>
-                      <TouchableOpacity disabled={playerIndex === 0}
+                    <View style={[S.navRow, { marginTop: 18 }]}>
+                      <TouchableOpacity
+                        disabled={playerIndex === 0}
                         style={[S.prevBtn, playerIndex === 0 && { opacity: 0.4 }]}
-                        onPress={() => setPlayerIndex(p => Math.max(0, p - 1))}>
-                        <MaterialIcons name="arrow-back" size={18} color="#475569" />
+                        onPress={() => setPlayerIndex(p => Math.max(0, p - 1))}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons name="arrow-back" size={16} color="#475569" />
                         <Text style={S.prevBtnText}>Prev</Text>
                       </TouchableOpacity>
                       <View style={{ flex: 1 }} />
-                      <TouchableOpacity onPress={() => {
-                        if (playerIndex < activePlayer.mcqs.length - 1) setPlayerIndex(p => p + 1);
-                        else { Alert.alert('🎉 Quiz Complete!', `You answered ${Object.keys(playerAnswers).length} of ${activePlayer.mcqs.length} questions.`); setActivePlayer(null); }
-                      }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (playerIndex < activePlayer.mcqs.length - 1) {
+                            setPlayerIndex(p => p + 1);
+                          } else {
+                            Alert.alert('🎉 Quiz Complete!', `You answered ${Object.keys(playerAnswers).length} of ${activePlayer.mcqs.length} questions.`);
+                            setActivePlayer(null);
+                          }
+                        }}
+                        activeOpacity={0.88}
+                      >
                         <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.nextBtn}>
                           <Text style={S.nextBtnText}>{playerIndex < activePlayer.mcqs.length - 1 ? 'Next' : 'Finish Quiz'}</Text>
-                          <MaterialIcons name={playerIndex < activePlayer.mcqs.length - 1 ? 'arrow-forward' : 'check'} size={18} color="#fff" />
+                          <MaterialIcons name={playerIndex < activePlayer.mcqs.length - 1 ? 'arrow-forward' : 'check'} size={16} color="#fff" />
                         </LinearGradient>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ) : (
-                  <View style={[S.card, { alignItems: 'center', gap: 14, paddingVertical: 40 }]}>
-                    <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={{ width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialIcons name="quiz" size={40} color="#6366F1" />
-                    </LinearGradient>
-                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A' }}>No Questions Yet</Text>
-                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 22 }}>Generate MCQs using the 4-step wizard first.</Text>
-                    <TouchableOpacity onPress={() => setActivePlayer(null)}>
-                      <LinearGradient colors={['#6366F1', '#4F46E5']} style={S.nextBtn}>
+                  <View style={[S.card, { alignItems: 'center', gap: 12, paddingVertical: 36 }]}>
+                    <View style={{ width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderWidth: 1.5, borderColor: '#C7D2FE' }}>
+                      <MaterialIcons name="quiz" size={34} color="#4F46E5" />
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>No Questions Yet</Text>
+                    <Text style={{ fontSize: 13, color: '#64748B', textAlign: 'center', lineHeight: 20 }}>Generate MCQs using the 4-step wizard first.</Text>
+                    <TouchableOpacity onPress={() => setActivePlayer(null)} activeOpacity={0.88}>
+                      <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.nextBtn}>
                         <Text style={S.nextBtnText}>Close</Text>
-                        <MaterialIcons name="close" size={18} color="#fff" />
+                        <MaterialIcons name="close" size={16} color="#fff" />
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
@@ -906,33 +1069,78 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
   );
 };
 
-// ─── Premium Styles ──────────────────────────────────────────────────────────
+// ─── Premium Modern Styles ──────────────────────────────────────────────────────────
 const S = StyleSheet.create({
   // Header
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', backgroundColor: '#ffffff' },
-  playerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', backgroundColor: '#ffffff' },
-  backBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderBottomWidth: 1.5, 
+    borderBottomColor: '#E2E8F0', 
+    backgroundColor: '#ffffff' 
+  },
+  playerHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderBottomWidth: 1.5, 
+    borderBottomColor: '#E2E8F0', 
+    backgroundColor: '#ffffff' 
+  },
+  backBtn: { 
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    backgroundColor: '#F8FAFC', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1, 
+    borderColor: '#E2E8F0' 
+  },
   headerTitle: { 
-    fontSize: 15, 
-    fontWeight: '900', 
+    fontSize: 16, 
+    fontWeight: '800', 
     color: '#0F172A', 
-    letterSpacing: -0.3
+    letterSpacing: -0.2
   },
   headerSub: { 
-    fontSize: 9.5, 
+    fontSize: 11, 
     color: '#64748B', 
     fontWeight: '600', 
     marginTop: 1
   },
-  generatorBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 12, borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ffffff' },
-  generatorDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10B981' },
-  generatorBadgeText: { fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.4 },
+  generatorBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4, 
+    paddingVertical: 3.5, 
+    paddingHorizontal: 8, 
+    borderRadius: 12, 
+    borderWidth: 1.2, 
+    borderColor: '#A7F3D0', 
+    backgroundColor: '#ECFDF5' 
+  },
+  generatorDot: { 
+    width: 5, 
+    height: 5, 
+    borderRadius: 2.5, 
+    backgroundColor: '#059669' 
+  },
+  generatorBadgeText: { 
+    fontSize: 9.5, 
+    fontWeight: '900', 
+    color: '#059669', 
+    letterSpacing: 0.4 
+  },
 
   // Progress
   progressContainer: { 
-    borderBottomWidth: 1, 
-    borderBottomColor: 'rgba(226, 232, 240, 0.6)', 
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderBottomWidth: 1.5, 
+    borderBottomColor: '#E2E8F0', 
+    backgroundColor: '#ffffff',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
@@ -942,14 +1150,14 @@ const S = StyleSheet.create({
   progressInner: { 
     flexDirection: 'row', 
     alignItems: 'flex-start', 
-    paddingHorizontal: 10, 
-    paddingVertical: 6, 
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
     backgroundColor: 'transparent' 
   },
   stepDot: { 
-    width: 26, 
-    height: 26, 
-    borderRadius: 13, 
+    width: 28, 
+    height: 28, 
+    borderRadius: 14, 
     alignItems: 'center', 
     justifyContent: 'center', 
     marginBottom: 2, 
@@ -960,82 +1168,143 @@ const S = StyleSheet.create({
     elevation: 2 
   },
   stepNum: { 
-    fontSize: 11, 
+    fontSize: 11.5, 
     fontWeight: '900'
   },
   stepLabel: { 
-    fontSize: 9.5, 
-    fontWeight: '800', 
+    fontSize: 10, 
+    fontWeight: '700', 
     textAlign: 'center', 
-    maxWidth: 65, 
+    maxWidth: 70, 
     marginTop: 2, 
-    lineHeight: 12,
+    lineHeight: 13,
     letterSpacing: 0.1
   },
   stepLabelActive: { color: '#4F46E5' },
-  stepLabelDone: { color: '#10B981' },
-  stepLabelInactive: { color: '#94A3B8' },
-  stepLine: { flex: 1, height: 2, marginTop: 11, marginHorizontal: 3, borderRadius: 1 },
+  stepLabelDone: { color: '#059669' },
+  stepLabelInactive: { color: '#64748B' },
+  stepLine: { flex: 1, height: 2, marginTop: 13, marginHorizontal: 4, borderRadius: 1 },
   stepLineDone: { backgroundColor: '#10B981' },
   stepLineInactive: { backgroundColor: '#E2E8F0' },
 
   // Hero Banner
-  heroBanner: { borderRadius: 12, overflow: 'hidden', marginBottom: 10, shadowColor: '#10B981', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
-  heroGrad: { padding: 10, minHeight: 70 },
-  heroIconBox: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)', shadowColor: '#10B981', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 4, elevation: 2 },
-  heroTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)' },
-  heroTagDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10B981' },
-  heroTagText: { fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.4 },
-  heroTitle: { fontSize: 14, fontWeight: '900', color: '#064E3B', letterSpacing: -0.3, marginBottom: 1 },
-  heroSub: { fontSize: 10, fontWeight: '600', color: '#065F46', opacity: 0.8 },
-  activeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)' },
-  activeDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10B981' },
-  activeText: { fontSize: 10, fontWeight: '800', color: '#047857' },
+  heroBanner: { 
+    borderRadius: 16, 
+    overflow: 'hidden', 
+    marginBottom: 12, 
+    borderWidth: 1.5, 
+    borderColor: '#A7F3D0',
+    shadowColor: '#059669', 
+    shadowOffset: { width: 0, height: 3 }, 
+    shadowOpacity: 0.06, 
+    shadowRadius: 8, 
+    elevation: 2 
+  },
+  heroGrad: { padding: 14, minHeight: 80 },
+  heroIconBox: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 10, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1.2, 
+    borderColor: '#A7F3D0', 
+    shadowColor: '#059669', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.08, 
+    shadowRadius: 4, 
+    elevation: 1 
+  },
+  heroTag: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4, 
+    paddingVertical: 3.5, 
+    paddingHorizontal: 8, 
+    borderRadius: 12, 
+    borderWidth: 1.2, 
+    borderColor: '#A7F3D0',
+    backgroundColor: '#FFFFFF'
+  },
+  heroTagDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#059669' },
+  heroTagText: { fontSize: 9.5, fontWeight: '900', color: '#059669', letterSpacing: 0.4 },
+  heroTitle: { fontSize: 16, fontWeight: '800', color: '#064E3B', letterSpacing: -0.2, marginBottom: 2 },
+  heroSub: { fontSize: 11.5, fontWeight: '600', color: '#065F46' },
+  activeChip: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4, 
+    paddingVertical: 3.5, 
+    paddingHorizontal: 8, 
+    borderRadius: 12, 
+    borderWidth: 1.2, 
+    borderColor: '#A7F3D0',
+    backgroundColor: '#FFFFFF'
+  },
+  activeDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#059669' },
+  activeText: { fontSize: 11, fontWeight: '800', color: '#047857' },
 
   // Card
   card: { 
     backgroundColor: '#ffffff', 
-    borderRadius: 12, 
-    padding: 10, 
-    marginBottom: 10, 
-    borderWidth: 1, 
+    borderRadius: 16, 
+    padding: 14, 
+    marginBottom: 12, 
+    borderWidth: 1.5, 
     borderColor: '#E2E8F0', 
-    shadowColor: '#4F46E5', 
+    shadowColor: '#0F172A', 
     shadowOffset: { width: 0, height: 3 }, 
     shadowOpacity: 0.04, 
     shadowRadius: 8, 
     elevation: 2 
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  cardHeaderIcon: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  cardTitle: { fontSize: 13, fontWeight: '900', color: '#0F172A' },
-  cardSub: { fontSize: 10, color: '#64748B', fontWeight: '600', marginTop: 1 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  cardHeaderIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontSize: 14.5, fontWeight: '800', color: '#0F172A' },
+  cardSub: { fontSize: 11, color: '#64748B', fontWeight: '600', marginTop: 1 },
 
   // Form
-  formRow: { flexDirection: 'row', marginBottom: 6 },
-  label: { fontSize: 10, fontWeight: '800', color: '#374151', marginBottom: 2, letterSpacing: 0.1 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: '#F8FAFC', marginBottom: 6 },
-  input: { flex: 1, fontSize: 11.5, fontWeight: '700', color: '#0F172A', padding: 0, ...Platform.select({ web: { outlineStyle: 'none' } as any }) },
+  formRow: { flexDirection: 'row', marginBottom: 8 },
+  label: { fontSize: 12, fontWeight: '700', color: '#334155', marginBottom: 4, letterSpacing: 0.1 },
+  inputWrap: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
+    borderRadius: 12, 
+    paddingHorizontal: 10, 
+    paddingVertical: 8, 
+    backgroundColor: '#F8FAFC', 
+    marginBottom: 8 
+  },
+  input: { 
+    flex: 1, 
+    fontSize: 13, 
+    fontWeight: '700', 
+    color: '#0F172A', 
+    padding: 0, 
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }) 
+  },
   dropdownContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
-    marginTop: -8,
-    marginBottom: 14,
+    marginTop: -4,
+    marginBottom: 12,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -1043,7 +1312,7 @@ const S = StyleSheet.create({
     backgroundColor: '#EEF2FF',
   },
   dropdownItemText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#475569',
   },
@@ -1053,33 +1322,67 @@ const S = StyleSheet.create({
   },
 
   // Upload
-  uploadZone: { borderRadius: 18, overflow: 'hidden', borderWidth: 1.5, borderColor: '#BAE6FD', borderStyle: 'dashed' },
-  uploadGrad: { padding: 26, alignItems: 'center', gap: 10 },
-  uploadIconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  uploadTitle: { fontSize: 17, fontWeight: '900', color: '#0369A1' },
-  uploadSub: { fontSize: 13, color: '#64748B', fontWeight: '600' },
-  sampleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10, justifyContent: 'center' },
-  sampleChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#EFF6FF', borderWidth: 1.2, borderColor: '#BFDBFE' },
+  uploadZone: { 
+    borderRadius: 16, 
+    overflow: 'hidden', 
+    borderWidth: 1.5, 
+    borderColor: '#93C5FD', 
+    borderStyle: 'dashed',
+    backgroundColor: '#F8FAFC' 
+  },
+  uploadGrad: { padding: 20, alignItems: 'center', gap: 8 },
+  uploadIconCircle: { 
+    width: 52, 
+    height: 52, 
+    borderRadius: 26, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#E0F2FE',
+    marginBottom: 4 
+  },
+  uploadTitle: { fontSize: 15, fontWeight: '800', color: '#0369A1' },
+  uploadSub: { fontSize: 12, color: '#64748B', fontWeight: '600' },
+  sampleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, justifyContent: 'center' },
+  sampleChip: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4, 
+    paddingVertical: 5, 
+    paddingHorizontal: 10, 
+    borderRadius: 10, 
+    backgroundColor: '#EFF6FF', 
+    borderWidth: 1.2, 
+    borderColor: '#BFDBFE' 
+  },
   sampleChipText: { fontSize: 11, fontWeight: '800', color: '#2563EB' },
 
   // Dashboard
   metricsRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
-  metricCard: { flex: 1, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 10, alignItems: 'center', gap: 2, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
-  metricValue: { fontSize: 16, fontWeight: '900' },
-  metricLabel: { fontSize: 8.5, fontWeight: '900', letterSpacing: 0.3, textAlign: 'center' },
+  metricCard: { 
+    flex: 1, 
+    paddingVertical: 9, 
+    paddingHorizontal: 6, 
+    borderRadius: 12, 
+    alignItems: 'center', 
+    gap: 2, 
+    borderWidth: 1.2, 
+    borderColor: 'rgba(0,0,0,0.06)' 
+  },
+  metricValue: { fontSize: 17, fontWeight: '900' },
+  metricLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 0.3, textAlign: 'center' },
   filterTabRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   filterTabInactive: { 
     paddingVertical: 6, 
-    paddingHorizontal: 16, 
-    borderRadius: 14, 
+    paddingHorizontal: 14, 
+    borderRadius: 12, 
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   filterTabActiveGrad: { 
     paddingVertical: 6, 
-    paddingHorizontal: 16, 
-    borderRadius: 14,
+    paddingHorizontal: 14, 
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#4F46E5',
@@ -1089,85 +1392,173 @@ const S = StyleSheet.create({
     elevation: 3,
   },
   filterTabText: { 
-    fontSize: 11, 
+    fontSize: 11.5, 
     fontWeight: '700', 
     color: '#64748B',
   },
   filterTabTextActive: { 
-    fontSize: 11, 
+    fontSize: 11.5, 
     fontWeight: '900', 
     color: '#ffffff',
   },
-  assessRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
-  assessIconBox: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  assessTitle: { fontSize: 13, fontWeight: '800', color: '#0F172A' },
-  assessMeta: { fontSize: 10.5, color: '#64748B', fontWeight: '600', marginTop: 1 },
-  statusPill: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, borderWidth: 1 },
-  statusText: { fontSize: 9.5, fontWeight: '800' },
-  assessAction: { width: 30, height: 30, borderRadius: 9, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#C7D2FE' },
+  assessRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    paddingVertical: 9, 
+    borderTopWidth: 1, 
+    borderTopColor: '#F1F5F9' 
+  },
+  assessIconBox: { 
+    width: 34, 
+    height: 34, 
+    borderRadius: 9, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  assessTitle: { fontSize: 13.5, fontWeight: '800', color: '#0F172A' },
+  assessMeta: { fontSize: 11, color: '#64748B', fontWeight: '600', marginTop: 1 },
+  statusPill: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 3, 
+    paddingHorizontal: 8, 
+    borderRadius: 10, 
+    borderWidth: 1.2 
+  },
+  statusText: { fontSize: 10, fontWeight: '800' },
+  assessAction: { 
+    width: 30, 
+    height: 30, 
+    borderRadius: 9, 
+    backgroundColor: '#EEF2FF', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1.2, 
+    borderColor: '#C7D2FE' 
+  },
 
   // SLOs
   sloRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  sloIndex: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderWidth: 1.2, borderColor: '#C7D2FE' },
-  sloIndexText: { fontSize: 12, fontWeight: '900', color: '#4F46E5' },
-  sloInput: { flex: 1, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 12.5, fontWeight: '700', color: '#0F172A', backgroundColor: '#F8FAFC', minHeight: 38, ...Platform.select({ web: { outlineStyle: 'none' } as any }) },
-  sloDelete: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FECDD3' },
+  sloIndex: { 
+    width: 30, 
+    height: 30, 
+    borderRadius: 15, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#EEF2FF', 
+    borderWidth: 1.5, 
+    borderColor: '#C7D2FE' 
+  },
+  sloIndexText: { fontSize: 13, fontWeight: '900', color: '#4F46E5' },
+  sloInput: { 
+    flex: 1, 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
+    borderRadius: 12, 
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: '#0F172A', 
+    backgroundColor: '#FFFFFF', 
+    minHeight: 42, 
+    ...Platform.select({ web: { outlineStyle: 'none' } as any }) 
+  },
+  sloDelete: { 
+    width: 30, 
+    height: 30, 
+    borderRadius: 15, 
+    backgroundColor: '#FFF1F2', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1.2, 
+    borderColor: '#FECDD3' 
+  },
   addSloRow: { flexDirection: 'row', gap: 8, marginTop: 6, alignItems: 'center' },
-  addSloBtn: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 5, elevation: 3 },
+  addSloBtn: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    shadowColor: '#4F46E5', 
+    shadowOffset: { width: 0, height: 3 }, 
+    shadowOpacity: 0.15, 
+    shadowRadius: 5, 
+    elevation: 3 
+  },
 
   // MCQ Cards
   mcqCard: { 
-    borderWidth: 1, 
+    borderWidth: 1.5, 
     borderColor: '#E2E8F0', 
     borderRadius: 14, 
     padding: 12, 
-    marginBottom: 10, 
+    marginBottom: 12, 
     backgroundColor: '#ffffff', 
-    shadowColor: '#4F46E5', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.04, 
-    shadowRadius: 8, 
+    shadowColor: '#0F172A', 
+    shadowOffset: { width: 0, height: 3 }, 
+    shadowOpacity: 0.03, 
+    shadowRadius: 6, 
     elevation: 2 
   },
   qBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
-  qBadgeText: { fontSize: 11, fontWeight: '900', color: '#fff' },
-  bloomBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1 },
-  bloomText: { fontSize: 9.5, fontWeight: '900', letterSpacing: 0.4 },
-  deleteBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FECDD3' },
+  qBadgeText: { fontSize: 11.5, fontWeight: '900', color: '#fff' },
+  bloomBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1.2 },
+  bloomText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.4 },
+  deleteBtn: { 
+    width: 30, 
+    height: 30, 
+    borderRadius: 15, 
+    backgroundColor: '#FFF1F2', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1.2, 
+    borderColor: '#FECDD3' 
+  },
   mcqQuestionInput: { 
-    borderWidth: 1, 
-    borderColor: '#E2E8F0', 
-    borderRadius: 10, 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
+    borderRadius: 12, 
     padding: 10, 
-    fontSize: 13, 
-    fontWeight: '800', 
+    fontSize: 14, 
+    fontWeight: '700', 
     color: '#0F172A', 
     backgroundColor: '#F8FAFC', 
     marginBottom: 10, 
-    minHeight: 44, 
-    lineHeight: 18,
+    minHeight: 46, 
+    lineHeight: 20,
     ...Platform.select({ web: { outlineStyle: 'none' } as any }) 
   },
   optionRow: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     gap: 8, 
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 8, 
-    borderRadius: 10, 
-    borderWidth: 1, 
-    borderColor: '#E2E8F0', 
+    borderRadius: 12, 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
     backgroundColor: '#ffffff', 
     marginBottom: 6 
   },
   optionRowCorrect: { borderColor: '#10B981', backgroundColor: '#F0FDF4' },
-  optionRadio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' },
+  optionRadio: { 
+    width: 18, 
+    height: 18, 
+    borderRadius: 9, 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
   optionRadioCorrect: { borderColor: '#10B981' },
   optionRadioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#10B981' },
-  optionLetter: { fontSize: 13, fontWeight: '900', width: 22 },
+  optionLetter: { fontSize: 13.5, fontWeight: '900', width: 22 },
   optionInput: { 
     flex: 1, 
-    fontSize: 12, 
+    fontSize: 13, 
     fontWeight: '700', 
     color: '#334155', 
     padding: 0,
@@ -1175,31 +1566,81 @@ const S = StyleSheet.create({
   },
 
   // Summary
-  summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8FAFC', borderRadius: 10, padding: 8, borderWidth: 1, borderColor: '#E2E8F0' },
-  summaryIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  summaryLabel: { fontSize: 9.5, fontWeight: '800', color: '#64748B', letterSpacing: 0.3 },
-  summaryValue: { fontSize: 13, fontWeight: '900', color: '#0F172A', marginTop: 1 },
+  summaryItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 10, 
+    backgroundColor: '#F8FAFC', 
+    borderRadius: 12, 
+    padding: 10, 
+    borderWidth: 1.5, 
+    borderColor: '#E2E8F0' 
+  },
+  summaryIcon: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  summaryLabel: { fontSize: 10.5, fontWeight: '700', color: '#64748B', letterSpacing: 0.2 },
+  summaryValue: { fontSize: 13.5, fontWeight: '900', color: '#0F172A', marginTop: 1 },
 
   // Publish
-  publishOption: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 8, backgroundColor: '#F8FAFC' },
-  publishOptionActive: { borderColor: '#6366F1', backgroundColor: '#EEF2FF' },
-  publishRadio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' },
-  publishRadioActive: { borderColor: '#6366F1' },
-  publishRadioInner: { width: 9, height: 9, borderRadius: 4.5, backgroundColor: '#6366F1' },
-  publishLabel: { fontSize: 13, fontWeight: '900', color: '#0F172A' },
-  publishSub: { fontSize: 10.5, color: '#64748B', fontWeight: '600', marginTop: 1 },
+  publishOption: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 10, 
+    padding: 12, 
+    borderRadius: 14, 
+    borderWidth: 1.5, 
+    borderColor: '#E2E8F0', 
+    marginBottom: 8, 
+    backgroundColor: '#F8FAFC' 
+  },
+  publishOptionActive: { borderColor: '#4F46E5', backgroundColor: '#EEF2FF' },
+  publishRadio: { 
+    width: 18, 
+    height: 18, 
+    borderRadius: 9, 
+    borderWidth: 1.5, 
+    borderColor: '#CBD5E1', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  publishRadioActive: { borderColor: '#4F46E5' },
+  publishRadioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#4F46E5' },
+  publishLabel: { fontSize: 13.5, fontWeight: '900', color: '#0F172A' },
+  publishSub: { fontSize: 11, color: '#64748B', fontWeight: '600', marginTop: 1 },
 
   // Loader
   loaderOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', alignItems: 'center', justifyContent: 'center', zIndex: 99 },
-  loaderCard: { backgroundColor: '#ffffff', borderRadius: 20, padding: 22, alignItems: 'center', gap: 12, width: '80%', maxWidth: 300, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 8 },
-  loaderIconCircle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  loaderCard: { backgroundColor: '#ffffff', borderRadius: 20, padding: 22, alignItems: 'center', gap: 12, width: '80%', maxWidth: 300, borderWidth: 1.5, borderColor: '#E2E8F0', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 8 },
+  loaderIconCircle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', marginBottom: 2 },
   loaderTitle: { fontSize: 16, fontWeight: '900', color: '#0F172A', textAlign: 'center' },
-  loaderSub: { fontSize: 11.5, color: '#64748B', fontWeight: '600', textAlign: 'center', lineHeight: 16 },
+  loaderSub: { fontSize: 12, color: '#64748B', fontWeight: '600', textAlign: 'center', lineHeight: 17 },
 
   // Navigation
   navRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  prevBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 9, paddingHorizontal: 14, borderRadius: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
-  prevBtnText: { fontSize: 12, fontWeight: '800', color: '#475569' },
-  nextBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 18, borderRadius: 12, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
-  nextBtnText: { fontSize: 12.5, fontWeight: '900', color: '#fff' },
+  prevBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5, 
+    paddingVertical: 10, 
+    paddingHorizontal: 16, 
+    borderRadius: 12, 
+    backgroundColor: '#F1F5F9', 
+    borderWidth: 1.2, 
+    borderColor: '#CBD5E1' 
+  },
+  prevBtnText: { fontSize: 13, fontWeight: '800', color: '#475569' },
+  nextBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    paddingVertical: 11, 
+    paddingHorizontal: 20, 
+    borderRadius: 12, 
+    shadowColor: '#4F46E5', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.25, 
+    shadowRadius: 8, 
+    elevation: 4 
+  },
+  nextBtnText: { fontSize: 13, fontWeight: '900', color: '#fff' },
 });
+

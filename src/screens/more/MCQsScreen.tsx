@@ -252,15 +252,6 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* ── FEATURE PILLS ── */}
-        <View style={styles.pillRow}>
-          {['📝 Paragraph to MCQs', '🎯 4-Option Format', '🔑 Answer Key', '📋 Copy MCQs'].map((t, i) => (
-            <View key={i} style={styles.pill}>
-              <Text style={styles.pillText}>{t}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* ── FORM CARD ── */}
         <View style={styles.card}>
 
@@ -643,74 +634,122 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 9.5, color: 'rgba(255,255,255,0.88)', fontWeight: '600', marginTop: 1 },
   headerGlow: { height: 2 },
 
-  scroll: { padding: 12, paddingBottom: 60 },
-
-  pillRow: { flexDirection: 'row', gap: 5, marginBottom: 10, flexWrap: 'wrap' },
-  pill: {
-    backgroundColor: '#FEE2E2', borderRadius: 16, paddingHorizontal: 8, paddingVertical: 4,
-    borderWidth: 1, borderColor: 'rgba(217,83,79,0.22)',
-  },
-  pillText: { fontSize: 9.5, fontWeight: '800', color: '#B91C1C', letterSpacing: 0.1 },
+  scroll: { padding: 16, paddingBottom: 48 },
 
   // FORM CARD
   card: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 12,
-    borderWidth: 1, borderColor: 'rgba(217,83,79,0.1)',
-    shadowColor: '#D9534F', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05, shadowRadius: 10, elevation: 3, marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(217,83,79,0.12)',
+    shadowColor: '#D9534F',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 14,
   },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5, marginTop: 2 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
   fieldDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#D9534F', marginRight: 6 },
-  fieldLabel: { fontSize: 9.5, fontWeight: '900', color: '#334155', textTransform: 'uppercase', letterSpacing: 0.8 },
+  fieldLabel: { fontSize: 10.5, fontWeight: '900', color: '#334155', textTransform: 'uppercase', letterSpacing: 0.6 },
 
   textArea: {
-    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: 'rgba(217,83,79,0.16)',
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8,
-    fontSize: 12, color: '#0F172A', fontWeight: '600', height: 60, marginBottom: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(217,83,79,0.16)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
+    color: '#0F172A',
+    fontWeight: '600',
+    height: 60,
+    marginBottom: 10,
   },
 
   fileBox: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC',
-    borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(217,83,79,0.18)',
-    borderRadius: 10, paddingHorizontal: 10, height: 36, marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(217,83,79,0.18)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    marginBottom: 12,
   },
   fileBoxActive: { backgroundColor: '#FEE2E2', borderStyle: 'solid', borderColor: '#D9534F' },
-  fileOrb: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  fileOrb: { width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   fileText: { fontSize: 11.5, fontWeight: '600', color: '#94A3B8', flex: 1 },
   fileTextActive: { color: '#D9534F', fontWeight: '700' },
 
   // GENERATE BUTTON
   genBtnWrap: {
-    borderRadius: 12, shadowColor: '#B91C1C',
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
+    marginTop: 2,
+    borderRadius: 12,
+    shadowColor: '#B91C1C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
   },
   genBtn: {
-    flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 12,
-    overflow: 'hidden', position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   genBtnHighlight: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
   genBtnIconZone: {
-    width: 44, height: 48, alignItems: 'center', justifyContent: 'center',
+    width: 44,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
   genBtnDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)', marginRight: 8 },
   genBtnText: { color: '#fff', fontSize: 12.5, fontWeight: '900', letterSpacing: 0.2, lineHeight: 15 },
   genBtnSub: {
-    color: 'rgba(255,255,255,0.88)', fontSize: 8.5, fontWeight: '700',
-    letterSpacing: 0.4, textTransform: 'uppercase', marginTop: 1, lineHeight: 11,
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 8.5,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginTop: 1,
+    lineHeight: 11,
   },
   genBtnArrow: {
-    height: 28, paddingHorizontal: 8, borderRadius: 6,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)',
-    alignItems: 'center', justifyContent: 'center', marginRight: 8,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
   },
   generatingState: {
-    flexDirection: 'row', backgroundColor: '#FEE2E2', borderRadius: 12, height: 44,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(217,83,79,0.28)',
+    flexDirection: 'row',
+    backgroundColor: '#FEE2E2',
+    borderRadius: 12,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(217,83,79,0.28)',
   },
   generatingText: { fontSize: 12.5, fontWeight: '800', color: '#D9534F' },
 

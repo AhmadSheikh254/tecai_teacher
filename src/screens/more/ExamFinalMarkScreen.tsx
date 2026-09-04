@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+// @ts-ignore
+import ReactDOM from 'react-dom';
 import { 
   StyleSheet, 
   Text, 
@@ -7,14 +9,40 @@ import {
   TouchableOpacity, 
   TextInput, 
   Modal,
-  useWindowDimensions 
+  Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type StudentFinalMarkRecord = {
+// Universal Full-Viewport Modal for Web & Mobile
+const ViewportModal: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ visible, onClose, children }) => {
+  if (!visible) return null;
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && (ReactDOM as any)?.createPortal) {
+    return (ReactDOM as any).createPortal(
+      <View style={styles.webModalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
+      </View>,
+      document.body
+    );
+  }
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade" statusBarTranslucent={true} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
+      </View>
+    </Modal>
+  );
+};
+
+export type StudentFinalMarkRecord = {
   rollNo: string;
   name: string;
   termName: string;
@@ -28,9 +56,7 @@ type StudentFinalMarkRecord = {
 };
 
 export const ExamFinalMarkScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
-
-  // Search Filter Criteria States (from web image: Class, Section, Term)
+  // Search Filter Criteria States
   const [selectedClass, setSelectedClass] = useState('GRADE-V');
   const [selectedSection, setSelectedSection] = useState('A');
   const [selectedTerm, setSelectedTerm] = useState('1st Assessment');
@@ -40,10 +66,15 @@ export const ExamFinalMarkScreen = ({ navigation }: any) => {
   const [pickerModalType, setPickerModalType] = useState<'class' | 'section' | 'term' | 'grade' | 'remark' | null>(null);
   const [activeStudentRoll, setActiveStudentRoll] = useState<string | null>(null);
 
+  // Selected & Editing Records
+  const [selectedStudent, setSelectedStudent] = useState<StudentFinalMarkRecord | null>(null);
+  const [editingStudent, setEditingStudent] = useState<StudentFinalMarkRecord | null>(null);
+  const [deleteConfirmRoll, setDeleteConfirmRoll] = useState<string | null>(null);
+
   // Table Search Filter
   const [tableSearch, setTableSearch] = useState('');
 
-  // Student Final Marks Entry Roster (Exact data from user's web screenshot)
+  // Student Final Marks Entry Roster
   const [students, setStudents] = useState<StudentFinalMarkRecord[]>([
     { 
       rollNo: '3', 
@@ -67,7 +98,43 @@ export const ExamFinalMarkScreen = ({ navigation }: any) => {
       finalMarksMax: '100', 
       examGrade: 'B', 
       percentage: '72%', 
-      remark: 'select' 
+      remark: 'satisfactory' 
+    },
+    { 
+      rollNo: '55577', 
+      name: 'Janan Anees', 
+      termName: '1st Assessment',
+      termMarksObtained: '92', 
+      termMarksMax: '100', 
+      finalMarksObtained: '96', 
+      finalMarksMax: '100', 
+      examGrade: 'A+', 
+      percentage: '94%', 
+      remark: 'excellent' 
+    },
+    { 
+      rollNo: '55578', 
+      name: 'Maaz', 
+      termName: '1st Assessment',
+      termMarksObtained: '60', 
+      termMarksMax: '100', 
+      finalMarksObtained: '66', 
+      finalMarksMax: '100', 
+      examGrade: 'C', 
+      percentage: '63%', 
+      remark: 'needs improvement' 
+    },
+    { 
+      rollNo: '55579', 
+      name: 'Mahira Shah', 
+      termName: '1st Assessment',
+      termMarksObtained: '86', 
+      termMarksMax: '100', 
+      finalMarksObtained: '88', 
+      finalMarksMax: '100', 
+      examGrade: 'A', 
+      percentage: '87%', 
+      remark: 'good' 
     },
   ]);
 
@@ -92,119 +159,144 @@ export const ExamFinalMarkScreen = ({ navigation }: any) => {
     );
   });
 
+  const handleDeleteStudent = (rollNo: string) => {
+    setStudents(prev => prev.filter(item => item.rollNo !== rollNo));
+    setDeleteConfirmRoll(null);
+    if (selectedStudent?.rollNo === rollNo) setSelectedStudent(null);
+  };
+
+  const handleSaveStudentEdit = () => {
+    if (!editingStudent) return;
+    const termObt = parseFloat(editingStudent.termMarksObtained) || 0;
+    const termMax = parseFloat(editingStudent.termMarksMax) || 100;
+    const finalObt = parseFloat(editingStudent.finalMarksObtained) || 0;
+    const finalMax = parseFloat(editingStudent.finalMarksMax) || 100;
+
+    const totalObt = termObt + finalObt;
+    const totalMax = termMax + finalMax;
+    const pct = totalMax > 0 ? Math.round((totalObt / totalMax) * 100) + '%' : '0%';
+    const updated = { ...editingStudent, percentage: pct };
+
+    setStudents(prev => prev.map(item => item.rollNo === editingStudent.rollNo ? updated : item));
+    if (selectedStudent?.rollNo === editingStudent.rollNo) {
+      setSelectedStudent(updated);
+    }
+    setEditingStudent(null);
+  };
+
   const handlePostMarks = () => {
     alert('Final Exam Marks posted successfully for ' + selectedClass + ' - ' + selectedSection + ' (' + selectedTerm + ')');
   };
 
-  const handleExportAlert = (format: string) => {
-    alert(`Exported Final Exam Marks Sheet in ${format} format.`);
+  const getPickerOptions = () => {
+    switch (pickerModalType) {
+      case 'class': return { title: 'Select Class', options: classOptions, current: selectedClass, onSelect: setSelectedClass };
+      case 'section': return { title: 'Select Section', options: sectionOptions, current: selectedSection, onSelect: setSelectedSection };
+      case 'term': return { title: 'Select Exam Term', options: termOptions, current: selectedTerm, onSelect: setSelectedTerm };
+      case 'grade': {
+        const student = students.find(s => s.rollNo === activeStudentRoll);
+        return {
+          title: 'Select Exam Grade',
+          options: gradeOptions,
+          current: student ? student.examGrade : '',
+          onSelect: (val: string) => {
+            if (activeStudentRoll) {
+              setStudents(prev => prev.map(s => s.rollNo === activeStudentRoll ? { ...s, examGrade: val } : s));
+            }
+          }
+        };
+      }
+      case 'remark': {
+        const student = students.find(s => s.rollNo === activeStudentRoll);
+        return {
+          title: 'Select Student Remark',
+          options: remarkOptions,
+          current: student ? student.remark : '',
+          onSelect: (val: string) => {
+            if (activeStudentRoll) {
+              setStudents(prev => prev.map(s => s.rollNo === activeStudentRoll ? { ...s, remark: val } : s));
+            }
+          }
+        };
+      }
+      default: return null;
+    }
   };
+
+  const pickerData = getPickerOptions();
 
   return (
     <View style={styles.root}>
-      {/* ── UNIFIED PURE OFF-WHITE LIGHT BG ── */}
-      <LinearGradient
-        colors={['#FFFFFF', '#FAFAFA', '#FFFFFF']}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Faint Ambient Orbs */}
-      <View style={styles.orb1} pointerEvents="none" />
-      <View style={styles.orb2} pointerEvents="none" />
-
-      {/* Decorative SVG Wave Lines */}
-      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Circle cx="85%" cy="12%" r="180" fill="rgba(225, 29, 72, 0.04)" />
-        <Circle cx="15%" cy="88%" r="200" fill="rgba(2, 132, 199, 0.03)" />
-        <Path d="M-40,240 Q160,120 380,260 T820,220" fill="none" stroke="rgba(225,29,72,0.03)" strokeWidth={1.5} />
-      </Svg>
-
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* App Bar Header */}
         <View style={styles.appBar}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.98)', 'rgba(248,250,252,0.95)']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={26} color="#0F172A" />
+              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Final Exam Portal</Text>
+            <Text style={styles.headerTitle}>Final Exam Marks</Text>
           </View>
           <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="auto-awesome" size={28} color="#E11D48" />
+            <MaterialIcons name="assessment" size={20} color="#0284C7" />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* SEARCH CRITERIA CARD FORM (Class, Section, Term) */}
+          {/* SEARCH CRITERIA CARD FORM */}
           <View style={styles.filterCard}>
-            <LinearGradient
-              colors={['#FFFFFF', '#FAFAFA']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.topRoseStrip} />
-
-            <Text style={styles.filterCardTitle}>Select Final Exam Criteria</Text>
+            <View style={styles.filterCardHeader}>
+              <MaterialIcons name="tune" size={18} color="#0284C7" />
+              <Text style={styles.filterCardTitle}>Select Final Exam Criteria</Text>
+            </View>
 
             {/* Form Fields Grid */}
             <View style={styles.formGrid}>
               {/* 1. Class */}
               <View style={styles.fieldCol}>
                 <Text style={styles.fieldLabel}>Class <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={[styles.dropdownBtn, { borderColor: '#BAE6FD' }]} onPress={() => setPickerModalType('class')}>
+                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('class')} activeOpacity={0.75}>
                   <View style={[styles.dropdownLeftBox, { backgroundColor: '#EFF6FF' }]}>
-                    <MaterialIcons name="school" size={20} color="#0284C7" />
+                    <MaterialIcons name="school" size={16} color="#0284C7" />
                   </View>
                   <Text style={styles.dropdownValue}>{selectedClass}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
               {/* 2. Section */}
               <View style={styles.fieldCol}>
                 <Text style={styles.fieldLabel}>Section <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={[styles.dropdownBtn, { borderColor: '#E9D5FF' }]} onPress={() => setPickerModalType('section')}>
+                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('section')} activeOpacity={0.75}>
                   <View style={[styles.dropdownLeftBox, { backgroundColor: '#F3E8FF' }]}>
-                    <MaterialIcons name="grid-view" size={20} color="#7E22CE" />
+                    <MaterialIcons name="grid-view" size={16} color="#7E22CE" />
                   </View>
                   <Text style={styles.dropdownValue}>{selectedSection}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
               {/* 3. Term */}
               <View style={styles.fieldCol}>
                 <Text style={styles.fieldLabel}>Term <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={[styles.dropdownBtn, { borderColor: '#A7F3D0' }]} onPress={() => setPickerModalType('term')}>
+                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('term')} activeOpacity={0.75}>
                   <View style={[styles.dropdownLeftBox, { backgroundColor: '#ECFDF5' }]}>
-                    <MaterialIcons name="event" size={20} color="#059669" />
+                    <MaterialIcons name="event" size={16} color="#059669" />
                   </View>
                   <Text style={styles.dropdownValue}>{selectedTerm}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Green 3D Find Button */}
+            {/* Find Button */}
             <TouchableOpacity 
               style={styles.findButton} 
               onPress={() => setIsSearched(true)}
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={['#059669', '#047857']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <MaterialIcons name="search" size={20} color="#FFFFFF" />
-              <Text style={styles.findBtnText}>Find</Text>
+              <MaterialIcons name="search" size={18} color="#FFFFFF" />
+              <Text style={styles.findBtnText}>Find Records</Text>
             </TouchableOpacity>
 
           </View>
@@ -212,363 +304,499 @@ export const ExamFinalMarkScreen = ({ navigation }: any) => {
           {/* STUDENT FINAL MARKS TABLE LEDGER CARD */}
           {isSearched && (
             <View style={styles.ledgerCard}>
-              <LinearGradient
-                colors={['#FFFFFF', '#FAFAFA']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.topBlueStrip} />
-
-              {/* Portal Header Title Banner */}
               <View style={styles.portalTitleBox}>
-                <LinearGradient
-                  colors={['#0284C7', '#0369A1']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <MaterialIcons name="assessment" size={22} color="#FFFFFF" />
+                <MaterialIcons name="assignment" size={18} color="#0284C7" />
                 <Text style={styles.portalTitleText}>Student Final Exam Roster</Text>
-              </View>
-
-              {/* Toolbar & Search */}
-              <View style={styles.exportToolbar}>
-                <Text style={styles.exportLabel}>Export:</Text>
-                <View style={styles.exportBadgeRow}>
-                  <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Copy')}>
-                    <Text style={styles.exportText}>Copy</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('CSV')}>
-                    <Text style={styles.exportText}>CSV</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Excel')}>
-                    <Text style={styles.exportText}>Excel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('PDF')}>
-                    <Text style={styles.exportText}>PDF</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Print')}>
-                    <Text style={styles.exportText}>Print</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
 
               {/* Search Row */}
               <View style={styles.searchRow}>
                 <Text style={styles.searchLabel}>Search:</Text>
                 <View style={styles.searchWrapper}>
-                  <MaterialIcons name="search" size={20} color="#0284C7" style={{ marginRight: 6 }} />
+                  <MaterialIcons name="search" size={18} color="#64748B" style={{ marginRight: 6 }} />
                   <TextInput
                     style={styles.searchInput}
                     placeholder="Search student name, roll no..."
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#64748B"
                     value={tableSearch}
                     onChangeText={setTableSearch}
                   />
                   {tableSearch !== '' && (
                     <TouchableOpacity onPress={() => setTableSearch('')} style={{ padding: 4 }}>
-                      <MaterialIcons name="close" size={18} color="#64748B" />
+                      <MaterialIcons name="close" size={16} color="#64748B" />
                     </TouchableOpacity>
                   )}
                 </View>
               </View>
 
-              {/* Student Final Exam Roster Cards */}
+              {/* Student Final Mark Entry Cards */}
               <View style={styles.studentList}>
-                {filteredStudents.map((item) => (
-                  <View key={item.rollNo} style={styles.studentCard}>
-                    <LinearGradient
-                      colors={['#FFFFFF', '#F8FAFC']}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <View style={styles.leftBlueTag} />
+                {filteredStudents.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <MaterialIcons name="person-off" size={40} color="#94A3B8" />
+                    <Text style={styles.emptyTitle}>No Students Found</Text>
+                    <Text style={styles.emptyDesc}>Try adjusting the filter criteria or search query.</Text>
+                  </View>
+                ) : (
+                  filteredStudents.map((item) => (
+                    <View key={item.rollNo} style={styles.studentCard}>
+                      <View style={styles.leftAccentTag} />
 
-                    {/* Top Header: Student Name, Term Pill & Roll No Badge */}
-                    <View style={styles.studentCardHeader}>
-                      <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={styles.studentNameText}>{item.name}</Text>
-                        <View style={styles.termPill}>
-                          <MaterialIcons name="event" size={13} color="#E11D48" />
-                          <Text style={styles.termPillText}>{item.termName}</Text>
+                      {/* Header: Student Profile, Actions & Live Percentage Badge */}
+                      <View style={styles.studentCardHeader}>
+                        <View style={styles.studentProfileInfo}>
+                          <View style={styles.studentAvatar}>
+                            <MaterialIcons name="school" size={18} color="#0284C7" />
+                          </View>
+                          <View>
+                            <Text style={styles.studentNameText}>{item.name}</Text>
+                            <View style={styles.rollTagBox}>
+                              <Text style={styles.rollTagText}>Roll No: {item.rollNo}</Text>
+                            </View>
+                          </View>
                         </View>
-                      </View>
 
-                      <View style={styles.rollBadge}>
-                        <Text style={styles.rollBadgeText}>ROLL NO: {item.rollNo}</Text>
-                      </View>
-                    </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          {/* Live Percentage Badge */}
+                          <View style={styles.totalBadgeBox}>
+                            <Text style={styles.totalBadgeLabel}>PERCENTAGE</Text>
+                            <Text style={styles.totalScoreObtained}>{item.percentage}</Text>
+                          </View>
 
-                    {/* Term 1 & Final Exam Marks Dual Grid */}
-                    <View style={styles.dualMarksGrid}>
-                      {/* Term 1 Marks Box */}
-                      <View style={styles.marksCol}>
-                        <Text style={styles.entryLabel}>TERM 1 MARKS (OBT / MAX)</Text>
-                        <View style={styles.dualInputRow}>
-                          <TextInput 
-                            style={[styles.markInputText, { color: '#0284C7', backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}
-                            value={item.termMarksObtained}
-                            keyboardType="numeric"
-                            onChangeText={(text) => {
-                              setStudents(prev => prev.map(s => s.rollNo === item.rollNo ? { ...s, termMarksObtained: text } : s));
-                            }}
-                          />
-                          <Text style={styles.slashDivider}>/</Text>
-                          <TextInput 
-                            style={[styles.markInputText, { color: '#475569', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}
-                            value={item.termMarksMax}
-                            keyboardType="numeric"
-                            onChangeText={(text) => {
-                              setStudents(prev => prev.map(s => s.rollNo === item.rollNo ? { ...s, termMarksMax: text } : s));
-                            }}
-                          />
-                        </View>
-                      </View>
-
-                      {/* Final Exam Marks Box */}
-                      <View style={styles.marksCol}>
-                        <Text style={styles.entryLabel}>FINAL MARKS (OBT / MAX)</Text>
-                        <View style={styles.dualInputRow}>
-                          <TextInput 
-                            style={[styles.markInputText, { color: '#E11D48', backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}
-                            value={item.finalMarksObtained}
-                            keyboardType="numeric"
-                            onChangeText={(text) => {
-                              const fObt = parseFloat(text) || 0;
-                              const fMax = parseFloat(item.finalMarksMax) || 100;
-                              const tObt = parseFloat(item.termMarksObtained) || 0;
-                              const tMax = parseFloat(item.termMarksMax) || 100;
-
-                              const totObt = fObt + tObt;
-                              const totMax = fMax + tMax;
-                              const calcPct = totMax > 0 ? Math.round((totObt / totMax) * 100) + '%' : '0%';
-
-                              setStudents(prev => prev.map(s => s.rollNo === item.rollNo ? { 
-                                ...s, 
-                                finalMarksObtained: text,
-                                percentage: calcPct
-                              } : s));
-                            }}
-                          />
-                          <Text style={styles.slashDivider}>/</Text>
-                          <TextInput 
-                            style={[styles.markInputText, { color: '#475569', backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}
-                            value={item.finalMarksMax}
-                            keyboardType="numeric"
-                            onChangeText={(text) => {
-                              setStudents(prev => prev.map(s => s.rollNo === item.rollNo ? { ...s, finalMarksMax: text } : s));
-                            }}
-                          />
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Percentage & Interactive Entry Fields Grid */}
-                    <View style={styles.entryFieldsGrid}>
-                      {/* PERCENTAGE BADGE */}
-                      <View style={styles.percentageCol}>
-                        <Text style={styles.entryLabel}>OVERALL %</Text>
-                        <View style={styles.percentBadge}>
-                          <Text style={styles.percentBadgeText}>{item.percentage}</Text>
-                        </View>
-                      </View>
-
-                      {/* EXAM GRADE SELECTOR */}
-                      <View style={styles.entryCol}>
-                        <Text style={styles.entryLabel}>EXAM GRADE</Text>
-                        {(() => {
-                          const gStyle = 
-                            item.examGrade === 'A+' || item.examGrade === 'A' ? { bg: '#ECFDF5', border: '#6EE7B7', text: '#047857', iconBg: '#D1FAE5' } :
-                            item.examGrade === 'B' ? { bg: '#EFF6FF', border: '#93C5FD', text: '#1D4ED8', iconBg: '#DBEAFE' } :
-                            item.examGrade === 'C' ? { bg: '#FFFBEB', border: '#FDE68A', text: '#D97706', iconBg: '#FEF3C7' } :
-                            item.examGrade === 'D' || item.examGrade === 'F' ? { bg: '#FEF2F2', border: '#FCA5A5', text: '#DC2626', iconBg: '#FEE2E2' } :
-                            { bg: '#FFFFFF', border: '#E2E8F0', text: '#64748B', iconBg: '#F1F5F9' };
-
-                          return (
+                          {/* Action Buttons */}
+                          <View style={styles.headerActionBtns}>
                             <TouchableOpacity 
-                              style={[
-                                styles.entrySelectBtn, 
-                                { backgroundColor: gStyle.bg, borderColor: gStyle.border }
-                              ]}
-                              onPress={() => {
-                                setActiveStudentRoll(item.rollNo);
-                                setPickerModalType('grade');
-                              }}
+                              style={styles.actionIconBtn} 
+                              onPress={() => setSelectedStudent(item)}
                               activeOpacity={0.8}
                             >
-                              <View style={[styles.selectLeftIconBox, { backgroundColor: gStyle.iconBg }]}>
-                                <MaterialIcons name="grade" size={16} color={gStyle.text} />
-                              </View>
-                              <Text style={[styles.entrySelectText, { color: gStyle.text, fontWeight: item.examGrade !== 'select' ? '900' : '800' }]}>
-                                {item.examGrade === 'select' ? '--Select--' : `Grade ${item.examGrade}`}
-                              </Text>
-                              <MaterialIcons name="arrow-drop-down" size={22} color={gStyle.text} />
+                              <MaterialIcons name="visibility" size={15} color="#0284C7" />
                             </TouchableOpacity>
-                          );
-                        })()}
-                      </View>
 
-                      {/* REMARK SELECTOR */}
-                      <View style={styles.entryCol}>
-                        <Text style={styles.entryLabel}>REMARK</Text>
-                        {(() => {
-                          const rStyle = 
-                            item.remark === 'excellent' ? { bg: '#F3E8FF', border: '#C084FC', text: '#7E22CE', iconBg: '#E9D5FF' } :
-                            item.remark === 'good' ? { bg: '#ECFDF5', border: '#6EE7B7', text: '#047857', iconBg: '#D1FAE5' } :
-                            item.remark === 'satisfactory' ? { bg: '#EFF6FF', border: '#93C5FD', text: '#1D4ED8', iconBg: '#DBEAFE' } :
-                            item.remark === 'needs improvement' ? { bg: '#FFFBEB', border: '#FDE68A', text: '#D97706', iconBg: '#FEF3C7' } :
-                            { bg: '#FFFFFF', border: '#E2E8F0', text: '#64748B', iconBg: '#F1F5F9' };
-
-                          return (
                             <TouchableOpacity 
-                              style={[
-                                styles.entrySelectBtn, 
-                                { backgroundColor: rStyle.bg, borderColor: rStyle.border }
-                              ]}
-                              onPress={() => {
-                                setActiveStudentRoll(item.rollNo);
-                                setPickerModalType('remark');
-                              }}
+                              style={styles.actionIconBtn} 
+                              onPress={() => setEditingStudent({ ...item })}
                               activeOpacity={0.8}
                             >
-                              <View style={[styles.selectLeftIconBox, { backgroundColor: rStyle.iconBg }]}>
-                                <MaterialIcons name="comment" size={16} color={rStyle.text} />
-                              </View>
-                              <Text style={[styles.entrySelectText, { color: rStyle.text, fontWeight: item.remark !== 'select' ? '900' : '800' }]}>
-                                {item.remark === 'select' ? '--Select--' : item.remark}
-                              </Text>
-                              <MaterialIcons name="arrow-drop-down" size={22} color={rStyle.text} />
+                              <MaterialIcons name="edit" size={15} color="#D97706" />
                             </TouchableOpacity>
-                          );
-                        })()}
+
+                            <TouchableOpacity 
+                              style={styles.actionIconBtn} 
+                              onPress={() => setDeleteConfirmRoll(item.rollNo)}
+                              activeOpacity={0.8}
+                            >
+                              <MaterialIcons name="delete-outline" size={15} color="#EF4444" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </View>
+
+                      {/* SECTION 1: MARKS ROW (Term Marks & Final Marks) */}
+                      <View style={styles.marksEntrySection}>
+                        
+                        {/* 1. Term Marks */}
+                        <View style={styles.markInputCard}>
+                          <View style={styles.markCardHeader}>
+                            <Text style={styles.markSectionTitle}>TERM MARKS</Text>
+                            <View style={styles.lockedMaxBadge}>
+                              <MaterialIcons name="lock" size={11} color="#64748B" />
+                              <Text style={styles.lockedMaxText}>Max: {item.termMarksMax}</Text>
+                            </View>
+                          </View>
+
+                          <View style={[styles.inputContainerWithUnit, { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
+                            <Text style={[styles.largeMarksInput, { color: '#1D4ED8' }]}>
+                              {item.termMarksObtained} <Text style={{ fontSize: 13, color: '#64748B' }}>/ {item.termMarksMax}</Text>
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* 2. Final Marks */}
+                        <View style={styles.markInputCard}>
+                          <View style={styles.markCardHeader}>
+                            <Text style={styles.markSectionTitle}>FINAL MARKS</Text>
+                            <View style={styles.lockedMaxBadge}>
+                              <MaterialIcons name="lock" size={11} color="#64748B" />
+                              <Text style={styles.lockedMaxText}>Max: {item.finalMarksMax}</Text>
+                            </View>
+                          </View>
+
+                          <View style={[styles.inputContainerWithUnit, { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
+                            <Text style={[styles.largeMarksInput, { color: '#15803D' }]}>
+                              {item.finalMarksObtained} <Text style={{ fontSize: 13, color: '#64748B' }}>/ {item.finalMarksMax}</Text>
+                            </Text>
+                          </View>
+                        </View>
+
+                      </View>
+
+                      {/* SECTION 2: FINAL GRADE & REMARKS */}
+                      <View style={styles.gradeRemarkSection}>
+                        
+                        {/* Final Grade Selector */}
+                        <View style={styles.selectorCol}>
+                          <Text style={styles.fieldHeadingLabel}>FINAL GRADE</Text>
+                          <TouchableOpacity 
+                            style={styles.premiumDropdownBtn} 
+                            onPress={() => {
+                              setActiveStudentRoll(item.rollNo);
+                              setPickerModalType('grade');
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <View style={styles.gradeIconWrap}>
+                              <MaterialIcons name="military-tech" size={16} color="#D97706" />
+                            </View>
+                            <Text style={styles.premiumDropdownText}>
+                              {item.examGrade || 'Select'}
+                            </Text>
+                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* Remark Selector */}
+                        <View style={styles.selectorCol}>
+                          <Text style={styles.fieldHeadingLabel}>TEACHER REMARK</Text>
+                          <TouchableOpacity 
+                            style={styles.premiumDropdownBtn} 
+                            onPress={() => {
+                              setActiveStudentRoll(item.rollNo);
+                              setPickerModalType('remark');
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <View style={styles.remarkIconWrap}>
+                              <MaterialIcons name="rate-review" size={15} color="#0284C7" />
+                            </View>
+                            <Text style={styles.premiumDropdownText} numberOfLines={1}>
+                              {item.remark || 'Select'}
+                            </Text>
+                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                          </TouchableOpacity>
+                        </View>
+
+                      </View>
+
                     </View>
-
-                  </View>
-                ))}
+                  ))
+                )}
               </View>
 
-              {/* Pagination Controls */}
-              <View style={styles.paginationRow}>
-                <Text style={styles.entriesText}>Showing 1 to {filteredStudents.length} of {students.length} entries</Text>
-                <View style={styles.paginationBtns}>
-                  <TouchableOpacity style={styles.pageBtnDisabled} disabled={true}>
-                    <Text style={styles.pageBtnTextDisabled}>Previous</Text>
-                  </TouchableOpacity>
-                  <View style={styles.pageBtnActive}>
-                    <Text style={styles.pageBtnTextActive}>1</Text>
-                  </View>
-                  <TouchableOpacity style={styles.pageBtnDisabled} disabled={true}>
-                    <Text style={styles.pageBtnTextDisabled}>Next</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* BOTTOM ACTION BUTTONS */}
-              <View style={styles.bottomActionRow}>
-                <TouchableOpacity 
-                  style={styles.postMarksBtn} 
-                  onPress={handlePostMarks}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#059669', '#047857']}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <MaterialIcons name="check-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.postMarksBtnText}>Post Marks</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.cancelBtn} 
-                  onPress={() => navigation.goBack()}
-                  activeOpacity={0.8}
-                >
-                  <MaterialIcons name="cancel" size={20} color="#64748B" />
-                  <Text style={styles.cancelBtnText}>CANCEL</Text>
-                </TouchableOpacity>
-              </View>
+              {/* POST MARKS ACTION BUTTON */}
+              <TouchableOpacity 
+                style={styles.saveBtn} 
+                onPress={handlePostMarks}
+                activeOpacity={0.85}
+              >
+                <MaterialIcons name="check-circle" size={20} color="#FFFFFF" />
+                <Text style={styles.saveBtnText}>Save & Post Final Exam Marks</Text>
+              </TouchableOpacity>
 
             </View>
           )}
 
         </ScrollView>
 
-        {/* DROPDOWN PICKER MODAL SHEET */}
-        <Modal
+        {/* CRITERIA / GRADE / REMARK PICKER MODAL */}
+        <ViewportModal
           visible={pickerModalType !== null}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setPickerModalType(null)}
+          onClose={() => {
+            setPickerModalType(null);
+            setActiveStudentRoll(null);
+          }}
         >
-          <View style={styles.modalBackdrop}>
+          {pickerData && (
             <View style={styles.pickerModalContainer}>
-              {/* Modal Header */}
               <View style={styles.pickerModalHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={styles.pickerTitleIconBox}>
-                    <MaterialIcons 
-                      name={
-                        pickerModalType === 'class' ? 'school' : 
-                        pickerModalType === 'section' ? 'grid-view' : 
-                        pickerModalType === 'term' ? 'event' : 
-                        pickerModalType === 'grade' ? 'grade' : 'comment'
-                      } 
-                      size={22} 
-                      color="#0284C7" 
-                    />
-                  </View>
-                  <Text style={styles.pickerModalTitle}>
-                    Select {
-                      pickerModalType === 'class' ? 'Class' : 
-                      pickerModalType === 'section' ? 'Section' : 
-                      pickerModalType === 'term' ? 'Exam Term' : 
-                      pickerModalType === 'grade' ? 'Exam Grade' : 'Remark'
-                    }
-                  </Text>
-                </View>
-
-                <TouchableOpacity onPress={() => setPickerModalType(null)} style={styles.pickerCloseBtn}>
-                  <MaterialIcons name="close" size={22} color="#64748B" />
+                <Text style={styles.pickerModalTitle}>{pickerData.title}</Text>
+                <TouchableOpacity onPress={() => setPickerModalType(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={18} color="#64748B" />
                 </TouchableOpacity>
               </View>
-
-              {/* Options List */}
-              <ScrollView style={{ padding: 18 }} showsVerticalScrollIndicator={false}>
-                {(
-                  pickerModalType === 'class' ? classOptions :
-                  pickerModalType === 'section' ? sectionOptions : 
-                  pickerModalType === 'term' ? termOptions : 
-                  pickerModalType === 'grade' ? gradeOptions : remarkOptions
-                ).map((opt) => {
+              <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
+                {pickerData.options.map((opt) => {
+                  const isSelected = pickerData.current === opt;
                   return (
                     <TouchableOpacity
                       key={opt}
-                      style={styles.pickerOptionItem}
+                      style={[styles.pickerOptionItem, isSelected && styles.pickerOptionActive]}
                       onPress={() => {
-                        if (pickerModalType === 'class') setSelectedClass(opt);
-                        if (pickerModalType === 'section') setSelectedSection(opt);
-                        if (pickerModalType === 'term') setSelectedTerm(opt);
-
-                        if (pickerModalType === 'grade' && activeStudentRoll) {
-                          setStudents(prev => prev.map(s => s.rollNo === activeStudentRoll ? { ...s, examGrade: opt } : s));
-                        }
-                        if (pickerModalType === 'remark' && activeStudentRoll) {
-                          setStudents(prev => prev.map(s => s.rollNo === activeStudentRoll ? { ...s, remark: opt } : s));
-                        }
+                        pickerData.onSelect(opt);
                         setPickerModalType(null);
+                        setActiveStudentRoll(null);
                       }}
-                      activeOpacity={0.7}
                     >
-                      <Text style={styles.pickerOptionText}>{opt}</Text>
-                      <MaterialIcons name="chevron-right" size={22} color="#94A3B8" />
+                      <Text style={[styles.pickerOptionText, isSelected && styles.pickerOptionTextActive]}>{opt}</Text>
+                      {isSelected ? (
+                        <MaterialIcons name="check-circle" size={18} color="#0284C7" />
+                      ) : (
+                        <MaterialIcons name="radio-button-unchecked" size={18} color="#CBD5E1" />
+                      )}
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
             </View>
-          </View>
-        </Modal>
+          )}
+        </ViewportModal>
+
+        {/* VIEW STUDENT DETAILS MODAL */}
+        <ViewportModal
+          visible={selectedStudent !== null}
+          onClose={() => setSelectedStudent(null)}
+        >
+          {selectedStudent && (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={styles.modalIconBox}>
+                    <MaterialIcons name="person" size={20} color="#0284C7" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalTitle}>{selectedStudent.name}</Text>
+                    <Text style={styles.modalSubTitle}>Roll No: {selectedStudent.rollNo}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedStudent(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={18} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.breakdownTable}>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>STUDENT NAME</Text>
+                  <Text style={styles.tableRowValue}>{selectedStudent.name}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>ROLL NUMBER</Text>
+                  <Text style={styles.tableRowValue}>{selectedStudent.rollNo}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>CLASS & SECTION</Text>
+                  <Text style={styles.tableRowValue}>{selectedClass} - {selectedSection}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>EXAM TERM</Text>
+                  <Text style={styles.tableRowValue}>{selectedStudent.termName}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>TERM MARKS</Text>
+                  <Text style={[styles.tableRowValue, { color: '#0284C7', fontWeight: '800' }]}>
+                    {selectedStudent.termMarksObtained} / {selectedStudent.termMarksMax}
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>FINAL MARKS</Text>
+                  <Text style={[styles.tableRowValue, { color: '#059669', fontWeight: '800' }]}>
+                    {selectedStudent.finalMarksObtained} / {selectedStudent.finalMarksMax}
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>TOTAL PERCENTAGE</Text>
+                  <Text style={[styles.tableRowValue, { color: '#0284C7', fontWeight: '800' }]}>
+                    {selectedStudent.percentage}
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableRowLabel}>EXAM GRADE</Text>
+                  <Text style={[styles.tableRowValue, { color: '#D97706', fontWeight: '800' }]}>
+                    {selectedStudent.examGrade}
+                  </Text>
+                </View>
+                <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                  <Text style={styles.tableRowLabel}>REMARK</Text>
+                  <Text style={styles.tableRowValue}>{selectedStudent.remark}</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.modalCloseActionButton} 
+                onPress={() => setSelectedStudent(null)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCloseActionText}>Close Details</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ViewportModal>
+
+        {/* EDIT STUDENT MODAL */}
+        <ViewportModal
+          visible={editingStudent !== null}
+          onClose={() => setEditingStudent(null)}
+        >
+          {editingStudent && (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={[styles.modalIconBox, { backgroundColor: '#FEF3C7' }]}>
+                    <MaterialIcons name="edit" size={20} color="#D97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalTitle}>Edit Final Exam Marks</Text>
+                    <Text style={styles.modalSubTitle}>{editingStudent.name} (Roll #{editingStudent.rollNo})</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setEditingStudent(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={18} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+                <View style={{ gap: 12 }}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Student Name</Text>
+                    <TextInput 
+                      style={styles.modalInput} 
+                      value={editingStudent.name} 
+                      onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, name: val } : null)} 
+                    />
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                      <Text style={styles.inputLabel}>Term Marks (Obt)</Text>
+                      <TextInput 
+                        style={styles.modalInput} 
+                        value={editingStudent.termMarksObtained} 
+                        keyboardType="numeric"
+                        onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, termMarksObtained: val } : null)} 
+                      />
+                    </View>
+                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                      <Text style={styles.inputLabel}>Term Marks (Max)</Text>
+                      <TextInput 
+                        style={styles.modalInput} 
+                        value={editingStudent.termMarksMax} 
+                        keyboardType="numeric"
+                        onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, termMarksMax: val } : null)} 
+                      />
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                      <Text style={styles.inputLabel}>Final Marks (Obt)</Text>
+                      <TextInput 
+                        style={styles.modalInput} 
+                        value={editingStudent.finalMarksObtained} 
+                        keyboardType="numeric"
+                        onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, finalMarksObtained: val } : null)} 
+                      />
+                    </View>
+                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                      <Text style={styles.inputLabel}>Final Marks (Max)</Text>
+                      <TextInput 
+                        style={styles.modalInput} 
+                        value={editingStudent.finalMarksMax} 
+                        keyboardType="numeric"
+                        onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, finalMarksMax: val } : null)} 
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Exam Grade</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                      {gradeOptions.map(g => (
+                        <TouchableOpacity
+                          key={g}
+                          style={[
+                            styles.chipOption,
+                            editingStudent.examGrade === g && styles.chipOptionActive
+                          ]}
+                          onPress={() => setEditingStudent(prev => prev ? { ...prev, examGrade: g } : null)}
+                        >
+                          <Text style={[styles.chipText, editingStudent.examGrade === g && styles.chipTextActive]}>{g}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Remarks</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                      {remarkOptions.map(r => (
+                        <TouchableOpacity
+                          key={r}
+                          style={[
+                            styles.chipOption,
+                            editingStudent.remark === r && styles.chipOptionActive
+                          ]}
+                          onPress={() => setEditingStudent(prev => prev ? { ...prev, remark: r } : null)}
+                        >
+                          <Text style={[styles.chipText, editingStudent.remark === r && styles.chipTextActive]}>{r}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                <TouchableOpacity 
+                  style={[styles.modalActionBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' }]} 
+                  onPress={() => setEditingStudent(null)}
+                >
+                  <Text style={[styles.modalActionBtnText, { color: '#475569' }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.modalActionBtn, { backgroundColor: '#0284C7' }]} 
+                  onPress={handleSaveStudentEdit}
+                >
+                  <Text style={[styles.modalActionBtnText, { color: '#FFFFFF' }]}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </ViewportModal>
+
+        {/* DELETE CONFIRMATION MODAL */}
+        <ViewportModal
+          visible={deleteConfirmRoll !== null}
+          onClose={() => setDeleteConfirmRoll(null)}
+        >
+          {deleteConfirmRoll && (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
+                    <MaterialIcons name="delete" size={20} color="#EF4444" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalTitle}>Delete Record</Text>
+                    <Text style={styles.modalSubTitle}>Roll No: {deleteConfirmRoll}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setDeleteConfirmRoll(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={18} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 13.5, color: '#475569', lineHeight: 20, marginVertical: 12 }}>
+                Are you sure you want to delete the final exam marks record for Roll #{deleteConfirmRoll}? This action cannot be undone.
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                <TouchableOpacity 
+                  style={[styles.modalActionBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' }]} 
+                  onPress={() => setDeleteConfirmRoll(null)}
+                >
+                  <Text style={[styles.modalActionBtnText, { color: '#475569' }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.modalActionBtn, { backgroundColor: '#EF4444' }]} 
+                  onPress={() => handleDeleteStudent(deleteConfirmRoll)}
+                >
+                  <Text style={[styles.modalActionBtnText, { color: '#FFFFFF' }]}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </ViewportModal>
 
       </SafeAreaView>
     </View>
@@ -576,118 +804,88 @@ export const ExamFinalMarkScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  safeArea: { flex: 1 },
-
-  // Ambient Orbs
-  orb1: {
-    position: 'absolute', top: -140, right: -120,
-    width: 440, height: 440, borderRadius: 220,
-    backgroundColor: 'rgba(225, 29, 72, 0.04)',
-  },
-  orb2: {
-    position: 'absolute', bottom: -100, left: -120,
-    width: 400, height: 400, borderRadius: 200,
-    backgroundColor: 'rgba(2, 132, 199, 0.03)',
-  },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  safeArea: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 },
 
   // App Bar Header
   appBar: {
-    height: 76,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
-    position: 'relative',
-    overflow: 'hidden',
+    paddingHorizontal: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
     zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
   },
   backButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: -0.4,
-  },
-  appBarIconButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-  },
-
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
-    gap: 18,
-  },
-
-  // Search Filter Card Form
-  filterCard: {
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
-    position: 'relative',
-    overflow: 'hidden',
-    gap: 16,
-    elevation: 5,
-    shadowColor: '#E11D48',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-  },
-  topRoseStrip: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 5,
-    backgroundColor: '#E11D48',
-  },
-  filterCardTitle: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '900',
     color: '#0F172A',
     letterSpacing: -0.3,
   },
-  formGrid: {
+  appBarIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  scrollContent: {
+    padding: 12,
+    paddingBottom: 90,
     gap: 12,
   },
+
+  // Search Filter Card Form
+  filterCard: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    gap: 12,
+  },
+  filterCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterCardTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.2,
+  },
+  formGrid: {
+    gap: 10,
+  },
   fieldCol: {
-    gap: 6,
+    gap: 4,
   },
   fieldLabel: {
-    fontSize: 14.5,
-    fontWeight: '900',
+    fontSize: 12.5,
+    fontWeight: '800',
     color: '#475569',
   },
   reqStar: {
@@ -696,161 +894,91 @@ const styles = StyleSheet.create({
   dropdownBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    gap: 10,
+    paddingHorizontal: 10,
+    gap: 8,
   },
   dropdownLeftBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dropdownValue: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 13.5,
+    fontWeight: '800',
     color: '#0F172A',
   },
   findButton: {
-    height: 50,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#0284C7',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 4,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
     marginTop: 4,
   },
   findBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0.2,
+    fontSize: 14,
+    fontWeight: '800',
   },
 
   // Student Marks Table Ledger Card
   ledgerCard: {
-    borderRadius: 26,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
-    position: 'relative',
-    overflow: 'hidden',
-    gap: 16,
-    elevation: 6,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-  },
-  topBlueStrip: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 5,
-    backgroundColor: '#0284C7',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    gap: 12,
   },
   portalTitleBox: {
-    height: 48,
-    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 10,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 3,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    gap: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   portalTitleText: {
-    fontSize: 17.5,
+    fontSize: 15,
     fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-  },
-  exportToolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F0F9FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-  },
-  exportLabel: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#0369A1',
-  },
-  exportBadgeRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  exportIconBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-    elevation: 2,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-  },
-  exportText: {
-    fontSize: 12.5,
-    fontWeight: '900',
-    color: '#0284C7',
+    color: '#0F172A',
   },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   searchLabel: {
-    fontSize: 14.5,
-    fontWeight: '900',
-    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#475569',
   },
   searchWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    height: 46,
-    paddingHorizontal: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
-    backgroundColor: '#FFFFFF',
-    elevation: 2,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    borderRadius: 8,
+    height: 38,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
   },
   searchInput: {
     flex: 1,
     height: '100%',
     color: '#0F172A',
-    fontSize: 14.5,
+    fontSize: 13,
     fontWeight: '700',
   },
 
@@ -859,303 +987,450 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   studentCard: {
-    borderRadius: 20,
+    borderRadius: 14,
     padding: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     position: 'relative',
     overflow: 'hidden',
     gap: 14,
-    elevation: 4,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  leftBlueTag: {
+  leftAccentTag: {
     position: 'absolute',
     top: 0, bottom: 0, left: 0,
-    width: 5,
+    width: 4,
     backgroundColor: '#0284C7',
   },
   studentCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 10,
-  },
-  studentNameText: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: -0.3,
-  },
-  termPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  termPillText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  rollBadge: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-    borderColor: '#93C5FD',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  rollBadgeText: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#1D4ED8',
-  },
-
-  // Term 1 & Final Dual Grid
-  dualMarksGrid: {
     gap: 10,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  marksCol: {
-    gap: 6,
-  },
-  dualInputRow: {
+  studentProfileInfo: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  markInputText: {
-    flex: 1,
-    height: 46,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  slashDivider: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#94A3B8',
-  },
-
-  entryFieldsGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  percentageCol: {
-    width: 90,
-    gap: 6,
-  },
-  percentBadge: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1.5,
-    borderColor: '#6EE7B7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  percentBadgeText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#047857',
-  },
-  entryCol: {
-    flex: 1,
-    gap: 6,
-  },
-  entryLabel: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#475569',
-  },
-  entrySelectBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    gap: 4,
-  },
-  selectLeftIconBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  entrySelectText: {
-    flex: 1,
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#64748B',
-  },
-
-  // Pagination
-  paginationRow: {
-    flexDirection: 'column',
     alignItems: 'center',
     gap: 10,
-    marginTop: 6,
-    paddingTop: 14,
-    borderTopWidth: 1.5,
-    borderTopColor: '#E0F2FE',
+    flex: 1,
   },
-  entriesText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#64748B',
-  },
-  paginationBtns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pageBtnDisabled: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+  studentAvatar: {
+    width: 38,
+    height: 38,
     borderRadius: 10,
     backgroundColor: '#F0F9FF',
     borderWidth: 1,
     borderColor: '#BAE6FD',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pageBtnTextDisabled: {
+  studentNameText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.2,
+  },
+  rollTagBox: {
+    marginTop: 2,
+  },
+  rollTagText: {
     fontSize: 12.5,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: '#0284C7',
   },
-  pageBtnActive: {
-    paddingHorizontal: 14,
+  headerActionBtns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  actionIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  totalBadgeBox: {
+    alignItems: 'flex-end',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
-    backgroundColor: '#0284C7',
   },
-  pageBtnTextActive: {
-    fontSize: 12.5,
+  totalBadgeLabel: {
+    fontSize: 10,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: '#16A34A',
+    letterSpacing: 0.5,
+  },
+  totalScoreObtained: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#15803D',
   },
 
-  // Bottom Action Row
-  bottomActionRow: {
+  // Marks Entry Section (Term Marks & Final Marks)
+  marksEntrySection: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: 10,
   },
-  postMarksBtn: {
+  markInputCard: {
     flex: 1,
-    height: 52,
-    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8,
+  },
+  markCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 5,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 8,
+    justifyContent: 'space-between',
   },
-  postMarksBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+  markSectionTitle: {
+    fontSize: 11.5,
     fontWeight: '900',
-    letterSpacing: 0.2,
+    color: '#334155',
+    letterSpacing: 0.3,
   },
-  cancelBtn: {
-    flex: 1,
-    height: 52,
-    borderRadius: 16,
+  lockedMaxBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
+    gap: 3,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  lockedMaxText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+  },
+  inputContainerWithUnit: {
+    height: 44,
+    borderRadius: 8,
     borderWidth: 1.5,
     borderColor: '#CBD5E1',
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 6,
   },
-  cancelBtnText: {
-    color: '#475569',
-    fontSize: 16,
+  largeMarksInput: {
+    flex: 1,
+    fontSize: 15,
     fontWeight: '900',
-    letterSpacing: 0.2,
   },
 
-  // Modal Sheet
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-    justifyContent: 'flex-end',
+  // Final Grade & Remark Dropdowns Section
+  gradeRemarkSection: {
+    flexDirection: 'row',
+    gap: 10,
   },
-  pickerModalContainer: {
+  selectorCol: {
+    flex: 1,
+    gap: 5,
+  },
+  fieldHeadingLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.3,
+  },
+  premiumDropdownBtn: {
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    maxHeight: '60%',
-    paddingBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+  gradeIconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  remarkIconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#E0F2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumDropdownText: {
+    flex: 1,
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+
+  // Post Marks Action Button
+  saveBtn: {
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#0284C7',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 6,
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  saveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: -0.2,
+  },
+
+  // Empty State
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 6,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#334155',
+  },
+  emptyDesc: {
+    fontSize: 12.5,
+    color: '#64748B',
+    textAlign: 'center',
+  },
+
+  // Modal Dialogs Overlays
+  webModalOverlay: {
+    position: 'fixed' as any,
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    padding: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+
+  // Criteria Picker Modal
+  pickerModalContainer: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    elevation: 8,
+    zIndex: 10000,
   },
   pickerModalHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderBottomWidth: 1.5,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-  },
-  pickerTitleIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#F0F9FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 8,
   },
   pickerModalTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '900',
     color: '#0F172A',
   },
-  pickerCloseBtn: {
-    padding: 6,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-  },
   pickerOptionItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+    backgroundColor: '#F8FAFC',
+  },
+  pickerOptionActive: {
+    backgroundColor: '#EFF6FF',
   },
   pickerOptionText: {
-    fontSize: 16,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  pickerOptionTextActive: {
+    fontWeight: '900',
+    color: '#0284C7',
+  },
+
+  // Detail / Edit / Delete Modal
+  modalContainer: {
+    width: '100%',
+    maxWidth: 460,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    elevation: 8,
+    zIndex: 10000,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  modalIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  modalSubTitle: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '700',
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+
+  // Breakdown Table for View Modal
+  breakdownTable: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    marginVertical: 12,
+    overflow: 'hidden',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  tableRowLabel: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#64748B',
+  },
+  tableRowValue: {
+    fontSize: 13,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  modalCloseActionButton: {
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseActionText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#475569',
+  },
+
+  // Edit Modal Inputs
+  inputGroup: {
+    gap: 4,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  modalInput: {
+    height: 38,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  chipOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  chipOptionActive: {
+    borderColor: '#0284C7',
+    backgroundColor: '#EFF6FF',
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  chipTextActive: {
+    fontWeight: '900',
+    color: '#0284C7',
+  },
+  modalActionBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActionBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
   },
 });

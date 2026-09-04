@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, Dimensions, Animated, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
@@ -13,9 +12,10 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(25)).current;
-  const logoScale = useRef(new Animated.Value(0.9)).current;
-  const loaderProgress = useRef(new Animated.Value(-60)).current;
+  const translateYAnim = useRef(new Animated.Value(20)).current;
+  const logoScale = useRef(new Animated.Value(0.85)).current;
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -33,13 +33,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
       document.documentElement.style.height = '100%';
       (document.documentElement.style as any).touchAction = 'none';
 
-      const preventTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
-      };
-      window.addEventListener('touchmove', preventTouchMove, { passive: false });
-
       return () => {
-        window.removeEventListener('touchmove', preventTouchMove);
         document.body.style.overflow = origBodyOverflow;
         document.body.style.position = origBodyPos;
         document.body.style.height = origBodyHeight;
@@ -51,36 +45,52 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    // Fade up animations
+    // Fade up entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 900,
         useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(translateYAnim, {
         toValue: 0,
-        duration: 1000,
+        duration: 900,
         useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.spring(logoScale, {
         toValue: 1,
-        tension: 15,
-        friction: 5,
+        tension: 20,
+        friction: 6,
         useNativeDriver: Platform.OS !== 'web',
       })
     ]).start();
 
-    // Constant premium loading sweep animation
+    // Continuous smooth spinning for outer loader ring
     Animated.loop(
-      Animated.timing(loaderProgress, {
-        toValue: 160,
-        duration: 1500,
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 2000,
         useNativeDriver: Platform.OS !== 'web',
       })
     ).start();
 
-    // Auto-navigate to Login after 2.8 seconds
+    // Continuous pulse for inner logo
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.95,
+          duration: 1000,
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+      ])
+    ).start();
+
+    // Auto-navigate to Login screen
     const timer = setTimeout(() => {
       navigation.replace('Login');
     }, 2800);
@@ -88,89 +98,81 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const animatedContentStyle = {
-    opacity: fadeAnim,
-    transform: [{ translateY: translateYAnim }],
-  };
-
-  const animatedLogoStyle = {
-    opacity: fadeAnim,
-    transform: [{ scale: logoScale }],
-  };
-
-  const loaderTranslateX = loaderProgress.interpolate({
-    inputRange: [-60, 160],
-    outputRange: [-60, 160],
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Luminous Light Full-Screen Background Gradient */}
+      {/* Light Aesthetic Pastel Canvas Gradient */}
       <LinearGradient
-        colors={['#F5F7FF', '#FAECF5', '#E0F2FE']}
+        colors={['#F8FAFC', '#EFF6FF', '#E0F2FE']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Luminous Soft Pastel Mesh Glows */}
-      <View style={styles.glowTopLeft} pointerEvents="none" />
-      <View style={styles.glowBottomRight} pointerEvents="none" />
-      <View style={styles.glowCenter} pointerEvents="none" />
+      {/* Soft Ambient Light Glow Orbs */}
+      <View style={styles.glowOrbTop} pointerEvents="none" />
+      <View style={styles.glowOrbBottom} pointerEvents="none" />
 
-      {/* Connected Blueprint Constellation Particles */}
-      <View style={styles.blueprintContainer} pointerEvents="none">
-        <View style={[styles.blueprintDot, { top: height * 0.15, left: width * 0.2 }]} />
-        <View style={[styles.blueprintDot, { top: height * 0.25, right: width * 0.15 }]} />
-        <View style={[styles.blueprintDot, { bottom: height * 0.3, left: width * 0.1 }]} />
-        <View style={[styles.blueprintDot, { bottom: height * 0.2, right: width * 0.25 }]} />
-      </View>
-
-      {/* Main Content */}
-      <Animated.View style={[styles.content, animatedContentStyle]}>
-        {/* Logo Shield Wrapper */}
-        <Animated.View style={[styles.logoOutlineOuter, animatedLogoStyle]}>
-          <View style={styles.logoRingGlow} />
-          <View style={styles.logoGlassShield}>
-            {/* Luminous Inner Glass Gradient */}
+      {/* Main Glassmorphic Card Container */}
+      <Animated.View 
+        style={[
+          styles.content, 
+          { 
+            opacity: fadeAnim, 
+            transform: [{ translateY: translateYAnim }] 
+          }
+        ]}
+      >
+        {/* Animated Glass Logo Shield */}
+        <Animated.View style={[styles.logoWrapper, { transform: [{ scale: logoScale }] }]}>
+          {/* Animated Glowing Outer Ring */}
+          <Animated.View style={[styles.glowingRing, { transform: [{ rotate: spin }] }]}>
             <LinearGradient
-              colors={['#ffffff', 'rgba(255, 255, 255, 0.45)']}
+              colors={['#0284C7', 'transparent', '#0052cc', 'transparent']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
-            {/* Split Top Glass reflection sheen */}
-            <View style={styles.logoGlassSheen} />
-            
-            {/* Logo Icon */}
-            <MaterialIcons name="auto-stories" size={44} color="#0052cc" />
+          </Animated.View>
+
+          <View style={styles.logoGlassContainer}>
+            <LinearGradient
+              colors={['#ffffff', '#f0f7ff']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <MaterialIcons name="school" size={48} color="#0284C7" />
+            </Animated.View>
           </View>
         </Animated.View>
 
-        {/* Premium Title Stack */}
+        {/* Clean Typography */}
         <Text style={styles.title}>Teacher Hub</Text>
-        <Text style={styles.subtitle}>
-          Empowering education, simplifying management.
-        </Text>
+        <Text style={styles.subtitle}>Smart Academic Management</Text>
       </Animated.View>
 
-      {/* Loading area with futuristic progress sweep */}
-      <Animated.View style={[styles.loadingArea, animatedContentStyle]}>
-        <View style={styles.loaderBarTrack}>
-          <Animated.View 
-            style={[
-              styles.loaderBarProgress, 
-              { transform: [{ translateX: loaderTranslateX }] }
-            ]} 
-          />
+      {/* Premium Loader Ring */}
+      <Animated.View style={[styles.loaderContainer, { opacity: fadeAnim }]}>
+        <View style={styles.loaderTrack}>
+          <Animated.View style={[styles.loaderSpinner, { transform: [{ rotate: spin }] }]}>
+            <LinearGradient
+              colors={['#0284C7', '#0052cc', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
         </View>
-        <Text style={styles.loadingText}>Initializing workspace</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </Animated.View>
-
-      {/* Footer Version Details */}
-      <Text style={styles.version}>v2.5.0</Text>
     </View>
   );
 };
@@ -184,150 +186,107 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
+    backgroundColor: '#F8FAFC',
   },
-  // Soft, bright luminous glows
-  glowTopLeft: {
+  glowOrbTop: {
     position: 'absolute',
-    top: -120,
-    left: -120,
+    top: -100,
+    left: -80,
     width: 320,
     height: 320,
     borderRadius: 160,
-    backgroundColor: 'rgba(6, 182, 212, 0.22)',
-    opacity: 0.7,
+    backgroundColor: 'rgba(56, 189, 248, 0.18)',
   },
-  glowBottomRight: {
+  glowOrbBottom: {
     position: 'absolute',
-    bottom: -150,
-    right: -150,
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: 'rgba(244, 63, 94, 0.16)',
-    opacity: 0.6,
+    bottom: -120,
+    right: -80,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(99, 102, 241, 0.14)',
   },
-  glowCenter: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(124, 58, 237, 0.12)',
-    opacity: 0.5,
-  },
-  // Constellation guidelines
-  blueprintContainer: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 1,
-  },
-  blueprintDot: {
-    position: 'absolute',
-    width: 3.5,
-    height: 3.5,
-    borderRadius: 1.75,
-    backgroundColor: '#0052cc',
-    opacity: 0.15,
-  },
-  // Content Stack
   content: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 10,
   },
-  // Glassmorphic Logo Shield
-  logoOutlineOuter: {
-    width: 108,
-    height: 108,
+  logoWrapper: {
+    width: 110,
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     position: 'relative',
   },
-  logoRingGlow: {
+  glowingRing: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(0, 82, 204, 0.08)',
-    zIndex: -1,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    padding: 2,
+    overflow: 'hidden',
   },
-  logoGlassShield: {
+  logoGlassContainer: {
     width: 96,
     height: 96,
     borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: '#ffffff',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: '#0052cc',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#0284C7',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.14,
     shadowRadius: 20,
     elevation: 8,
-  },
-  logoGlassSheen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 36,
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    overflow: 'hidden',
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#0a0f2d',
-    letterSpacing: -0.8,
-    marginBottom: 8,
+    color: '#0F172A',
+    letterSpacing: -0.6,
+    marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#64748B',
     textAlign: 'center',
-    maxWidth: 260,
-    lineHeight: 20,
-    letterSpacing: 0.1,
+    letterSpacing: 0.2,
   },
-  // Loading Area & Custom Progress Sweep
-  loadingArea: {
+  loaderContainer: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    gap: 10,
   },
-  loaderBarTrack: {
-    width: 140,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(0, 82, 204, 0.08)',
+  loaderTrack: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 14,
+    position: 'relative',
   },
-  loaderBarProgress: {
-    width: 60,
-    height: '100%',
-    borderRadius: 1.5,
-    backgroundColor: '#0052cc',
+  loaderSpinner: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     position: 'absolute',
   },
   loadingText: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#475569',
+    color: '#64748B',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
-    letterSpacing: 2.5,
-    opacity: 0.9,
-  },
-  version: {
-    position: 'absolute',
-    bottom: 16,
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748b',
-    letterSpacing: 0.5,
   },
 });

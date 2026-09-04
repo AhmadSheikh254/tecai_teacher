@@ -234,13 +234,9 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
             <View style={styles.aiTopRightMeta} />
           </View>
 
-          {/* MIDDLE ROW: Main Title + Subtitle */}
+          {/* MIDDLE ROW: Main Title */}
           <View style={styles.aiTextContainer}>
             <Text style={styles.aiCardTitle}>AI Toolkit & Slides</Text>
-            <View style={styles.aiSubtitleRow}>
-              <MaterialIcons name="auto-awesome" size={13} color="#0052cc" />
-              <Text style={styles.aiCardSubtitle}>AI Copilot & Assets</Text>
-            </View>
           </View>
 
           {/* BOTTOM RIGHT: Glassmorphic Circular Action Button */}
@@ -373,7 +369,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
                           <Text style={styles.gridCardTitle} numberOfLines={1}>Exam Management</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Tests & Grading</Text>
                         </View>
 
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(0, 82, 204, 0.18)' }]}>
@@ -486,7 +481,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                        <View style={styles.gridCardBottomRow}>
                          <View style={styles.gridTitleBlock}>
                            <Text style={styles.gridCardTitle} numberOfLines={1}>Lesson Planner</Text>
-                           <Text style={styles.gridCardSubtitle} numberOfLines={1}>Syllabus & Schedules</Text>
                          </View>
                          <View style={[styles.gridActionHalo, { borderColor: 'rgba(217,119,6,0.18)' }]}>
                            <View style={styles.gridActionOrbGlass}>
@@ -606,7 +600,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
                           <Text style={styles.gridCardTitle} numberOfLines={1}>Students</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Class Directories</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(5,150,105,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -707,7 +700,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
                           <Text style={styles.gridCardTitle} numberOfLines={1}>Daily Attendance</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Roll Call Records</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(6,182,212,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -901,7 +893,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
                           <Text style={styles.gridCardTitle} numberOfLines={1}>Class Time Table</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Daily Period Slots</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(139,92,246,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -1024,7 +1015,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
                           <Text style={styles.gridCardTitle} numberOfLines={1}>Salary Payment</Text>
-                          <Text style={styles.gridCardSubtitle} numberOfLines={1}>Payroll & Slips</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(225,29,72,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -1110,13 +1100,10 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       )}
                     </View>
 
-                    {/* Bottom Area: Large Title + Subtitle Description */}
+                    {/* Bottom Area: Large Title */}
                     <View style={styles.cardInfo}>
                       <Text style={styles.cardText} numberOfLines={1}>
                         {item.title}
-                      </Text>
-                      <Text style={styles.cardMeta} numberOfLines={1}>
-                        {item.meta}
                       </Text>
                     </View>
 

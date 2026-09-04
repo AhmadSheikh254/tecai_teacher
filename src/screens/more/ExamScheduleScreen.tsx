@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+// @ts-ignore
+import ReactDOM from 'react-dom';
 import { 
   StyleSheet, 
   Text, 
@@ -7,14 +9,41 @@ import {
   TouchableOpacity, 
   TextInput, 
   Modal,
-  useWindowDimensions 
+  Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
 
-type ScheduleRecord = {
+// Universal Full-Viewport Modal for Web & Mobile
+const ViewportModal: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ visible, onClose, children }) => {
+  if (!visible) return null;
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && (ReactDOM as any)?.createPortal) {
+    return (ReactDOM as any).createPortal(
+      <View style={styles.webModalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
+      </View>,
+      document.body
+    );
+  }
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade" statusBarTranslucent={true} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
+      </View>
+    </Modal>
+  );
+};
+
+export type ScheduleRecord = {
   id: string;
   term: string;
   isGrade: 'Yes' | 'No';
@@ -32,14 +61,18 @@ type ScheduleRecord = {
 };
 
 export const ExamScheduleScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
-
   // Search & Modal States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<ScheduleRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<ScheduleRecord | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Exact Exam Schedule Data for Teacher View (matching desktop web image)
-  const [schedules] = useState<ScheduleRecord[]>([
+  // App's Standard Date & Time Picker Triggers
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [timePickerTarget, setTimePickerTarget] = useState<'start' | 'end' | null>(null);
+
+  // Exact Exam Schedule Data for Teacher View
+  const [schedules, setSchedules] = useState<ScheduleRecord[]>([
     {
       id: 'SCH-01',
       term: '1st Assessment',
@@ -102,47 +135,34 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
     );
   });
 
-  const handleExportAlert = (format: string) => {
-    alert(`Exported Exam Schedule Sheet in ${format} format.`);
+  const handleDeleteRecord = (id: string) => {
+    setSchedules(prev => prev.filter(item => item.id !== id));
+    setDeleteConfirmId(null);
+    if (selectedRecord?.id === id) setSelectedRecord(null);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingRecord) return;
+    setSchedules(prev => prev.map(item => item.id === editingRecord.id ? editingRecord : item));
+    if (selectedRecord?.id === editingRecord.id) {
+      setSelectedRecord(editingRecord);
+    }
+    setEditingRecord(null);
   };
 
   return (
     <View style={styles.root}>
-      {/* ── CLEAN LIGHT BG ── */}
-      <LinearGradient
-        colors={['#FAFAFA', '#F8FAFC', '#FFFFFF']}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Faint Ambient Background Orbs */}
-      <View style={styles.orb1} pointerEvents="none" />
-      <View style={styles.orb2} pointerEvents="none" />
-
-      {/* Decorative SVG Wave Lines */}
-      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Circle cx="85%" cy="12%" r="180" fill="rgba(56, 189, 248, 0.06)" />
-        <Circle cx="15%" cy="88%" r="200" fill="rgba(14, 165, 233, 0.04)" />
-        <Path d="M-40,240 Q160,120 380,260 T820,220" fill="none" stroke="rgba(2,132,199,0.04)" strokeWidth={1.5} />
-      </Svg>
-
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* App Bar Header */}
         <View style={styles.appBar}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.96)', 'rgba(248,250,252,0.90)']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={26} color="#0F172A" />
+              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exam Schedule View</Text>
+            <Text style={styles.headerTitle}>Exam Schedule</Text>
           </View>
           <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="event-note" size={28} color="#0284C7" />
+            <MaterialIcons name="event-note" size={20} color="#0284C7" />
           </TouchableOpacity>
         </View>
 
@@ -150,161 +170,149 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
           
           {/* MAIN EXAM SCHEDULE CONTAINER */}
           <View style={styles.ledgerCard}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.98)', 'rgba(240,249,255,0.92)']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.topBlueStrip} />
-
-            {/* Title & Export Bar */}
+            
+            {/* Header Title Banner */}
             <View style={styles.portalTitleBox}>
-              <LinearGradient
-                colors={['#0284C7', '#0369A1']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <MaterialIcons name="event" size={22} color="#FFFFFF" />
-              <Text style={styles.portalTitleText}>Exam Schedule Ledger</Text>
-            </View>
-
-            {/* Export Toolbar */}
-            <View style={styles.exportToolbar}>
-              <Text style={styles.exportLabel}>Export:</Text>
-              <View style={styles.exportBadgeRow}>
-                <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Copy')}>
-                  <Text style={styles.exportText}>Copy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('CSV')}>
-                  <Text style={styles.exportText}>CSV</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Excel')}>
-                  <Text style={styles.exportText}>Excel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('PDF')}>
-                  <Text style={styles.exportText}>PDF</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.exportIconBtn} onPress={() => handleExportAlert('Print')}>
-                  <Text style={styles.exportText}>Print</Text>
-                </TouchableOpacity>
-              </View>
+              <MaterialIcons name="calendar-today" size={18} color="#0284C7" />
+              <Text style={styles.portalTitleText}>Timetable & Exam Schedule</Text>
             </View>
 
             {/* Search Input */}
             <View style={styles.searchRow}>
               <Text style={styles.searchLabel}>Search:</Text>
               <View style={styles.searchWrapper}>
-                <MaterialIcons name="search" size={20} color="#0284C7" style={{ marginRight: 6 }} />
+                <MaterialIcons name="search" size={18} color="#64748B" style={{ marginRight: 6 }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search course, class, room..."
-                  placeholderTextColor="#94A3B8"
+                  placeholder="Search subject, class, room..."
+                  placeholderTextColor="#64748B"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
                 {searchQuery !== '' && (
                   <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                    <MaterialIcons name="close" size={18} color="#64748B" />
+                    <MaterialIcons name="close" size={16} color="#64748B" />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
 
-            {/* SLEEK, SHARP & EASY TO READ CARDS */}
+            {/* RECORD CARDS */}
             <View style={styles.recordsList}>
-              {filteredSchedules.map((item) => (
-                <View key={item.id} style={styles.sharpRecordCard}>
-                  <LinearGradient
-                    colors={['#FFFFFF', '#F8FAFC']}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View style={styles.leftBlueTag} />
+              {filteredSchedules.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <MaterialIcons name="event-busy" size={40} color="#94A3B8" />
+                  <Text style={styles.emptyTitle}>No Exam Schedules Found</Text>
+                  <Text style={styles.emptyDesc}>Try searching with a different subject or room.</Text>
+                </View>
+              ) : (
+                filteredSchedules.map((item) => (
+                  <View key={item.id} style={styles.sharpRecordCard}>
+                    {/* Left Accent indicator line */}
+                    <View style={styles.leftBlueTag} />
 
-                  {/* 1. Header: Course Title, Class Badge & View Action Button */}
-                  <View style={styles.sharpCardHeader}>
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <Text style={styles.courseTitleText}>{item.course}</Text>
-                        <View style={styles.classPill}>
-                          <Text style={styles.classPillText}>{item.className}</Text>
+                    {/* 1. Header: Course Title & Actions */}
+                    <View style={styles.sharpCardHeader}>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <Text style={styles.courseTitleText}>{item.course}</Text>
+                          <View style={styles.classPill}>
+                            <Text style={styles.classPillText}>{item.className}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.termSubText}>{item.term} • Grading: {item.isGrade}</Text>
+                      </View>
+
+                      {/* Action Button: View Only */}
+                      <View style={styles.cardActionsRow}>
+                        <TouchableOpacity 
+                          style={styles.actionBtnView} 
+                          onPress={() => setSelectedRecord(item)}
+                          activeOpacity={0.8}
+                        >
+                          <MaterialIcons name="visibility" size={15} color="#0284C7" />
+                          <Text style={styles.actionBtnViewText}>View</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* 2. Structured Info Grid (Date, Time, Room) */}
+                    <View style={styles.structuredInfoBox}>
+                      <View style={styles.infoRowItem}>
+                        <View style={styles.infoIconBox}>
+                          <MaterialIcons name="event" size={16} color="#0284C7" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.infoLabel}>EXAM DATE</Text>
+                          <Text style={styles.infoValueDark}>{item.examDate}</Text>
                         </View>
                       </View>
-                      <Text style={styles.termSubText}>{item.term} • Is Grade: {item.isGrade}</Text>
+
+                      <View style={styles.infoRowDivider} />
+
+                      <View style={styles.infoRowItem}>
+                        <View style={styles.infoIconBox}>
+                          <MaterialIcons name="schedule" size={16} color="#7E22CE" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.infoLabel}>TIMING</Text>
+                          <Text style={styles.infoValueDark}>{item.startTime} - {item.endTime}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRowDivider} />
+
+                      <View style={styles.infoRowItem}>
+                        <View style={styles.infoIconBox}>
+                          <MaterialIcons name="meeting-room" size={16} color="#059669" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.infoLabel}>ROOM</Text>
+                          <Text style={[styles.infoValueDark, { color: '#059669' }]}>Room {item.roomNo}</Text>
+                        </View>
+                      </View>
                     </View>
 
-                    <TouchableOpacity 
-                      style={styles.sharpViewBtn} 
-                      onPress={() => setSelectedRecord(item)}
-                      activeOpacity={0.8}
-                    >
-                      <LinearGradient
-                        colors={['#0284C7', '#0369A1']}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      <MaterialIcons name="visibility" size={18} color="#FFFFFF" />
-                      <Text style={styles.sharpViewBtnText}>View</Text>
-                    </TouchableOpacity>
+                    {/* 3. Clean Marks Summary Row */}
+                    <View style={styles.marksSummaryStrip}>
+                      <View style={styles.markCol}>
+                        <Text style={styles.markColLabel}>WRITTEN</Text>
+                        <Text style={[styles.markColValue, { color: '#0284C7' }]}>{item.writtenMark}</Text>
+                      </View>
+                      <View style={styles.markDivider} />
+                      <View style={styles.markCol}>
+                        <Text style={styles.markColLabel}>PRACTICAL</Text>
+                        <Text style={[styles.markColValue, { color: item.practicalMark !== '-' ? '#D97706' : '#64748B' }]}>
+                          {item.practicalMark}
+                        </Text>
+                      </View>
+                      <View style={styles.markDivider} />
+                      <View style={styles.markCol}>
+                        <Text style={styles.markColLabel}>THEORY</Text>
+                        <Text style={[styles.markColValue, { color: item.theoryMark !== '-' ? '#4F46E5' : '#64748B' }]}>
+                          {item.theoryMark}
+                        </Text>
+                      </View>
+                      <View style={styles.markDivider} />
+                      <View style={styles.markCol}>
+                        <Text style={styles.markColLabel}>VIVA</Text>
+                        <Text style={[styles.markColValue, { color: item.vivaMark !== '-' ? '#059669' : '#64748B' }]}>
+                          {item.vivaMark}
+                        </Text>
+                      </View>
+                    </View>
+
                   </View>
-
-                  {/* 2. Key Info Row: Colorful Date, Timing & Room Pills */}
-                  <View style={styles.keyInfoRow}>
-                    <View style={[styles.infoPill, { backgroundColor: '#EFF6FF', borderColor: '#93C5FD' }]}>
-                      <MaterialIcons name="event" size={17} color="#1D4ED8" />
-                      <Text style={[styles.infoPillText, { color: '#1D4ED8' }]}>{item.examDate}</Text>
-                    </View>
-
-                    <View style={[styles.infoPill, { backgroundColor: '#F3E8FF', borderColor: '#C084FC' }]}>
-                      <MaterialIcons name="schedule" size={17} color="#7E22CE" />
-                      <Text style={[styles.infoPillText, { color: '#7E22CE' }]}>{item.startTime} - {item.endTime}</Text>
-                    </View>
-
-                    <View style={[styles.infoPill, { backgroundColor: '#ECFDF5', borderColor: '#6EE7B7' }]}>
-                      <MaterialIcons name="meeting-room" size={17} color="#047857" />
-                      <Text style={[styles.infoPillText, { color: '#047857' }]}>Room {item.roomNo}</Text>
-                    </View>
-                  </View>
-
-                  {/* 3. Compact Horizontal Marks Strip with Colors */}
-                  <View style={styles.marksSummaryStrip}>
-                    <View style={styles.markCol}>
-                      <Text style={styles.markColLabel}>WRITTEN</Text>
-                      <Text style={[styles.markColValue, { color: '#0284C7' }]}>{item.writtenMark}</Text>
-                    </View>
-                    <View style={styles.markDivider} />
-                    <View style={styles.markCol}>
-                      <Text style={styles.markColLabel}>PRACTICAL</Text>
-                      <Text style={[styles.markColValue, { color: item.practicalMark !== '-' ? '#D97706' : '#94A3B8' }]}>
-                        {item.practicalMark}
-                      </Text>
-                    </View>
-                    <View style={styles.markDivider} />
-                    <View style={styles.markCol}>
-                      <Text style={styles.markColLabel}>THEORY</Text>
-                      <Text style={[styles.markColValue, { color: item.theoryMark !== '-' ? '#4F46E5' : '#94A3B8' }]}>
-                        {item.theoryMark}
-                      </Text>
-                    </View>
-                    <View style={styles.markDivider} />
-                    <View style={styles.markCol}>
-                      <Text style={styles.markColLabel}>VIVA</Text>
-                      <Text style={[styles.markColValue, { color: item.vivaMark !== '-' ? '#059669' : '#94A3B8' }]}>
-                        {item.vivaMark}
-                      </Text>
-                    </View>
-                  </View>
-
-                </View>
-              ))}
+                ))
+              )}
             </View>
 
-            {/* Pagination Controls Footer matching Desktop Image */}
+            {/* Pagination Controls Footer */}
             <View style={styles.paginationRow}>
               <Text style={styles.entriesText}>Showing 1 to {filteredSchedules.length} of {schedules.length} entries</Text>
               <View style={styles.paginationBtns}>
                 <TouchableOpacity style={styles.pageBtnDisabled} disabled={true}>
-                  <Text style={styles.pageBtnTextDisabled}>Previous</Text>
+                  <Text style={styles.pageBtnTextDisabled}>Prev</Text>
                 </TouchableOpacity>
                 <View style={styles.pageBtnActive}>
                   <Text style={styles.pageBtnTextActive}>1</Text>
@@ -319,100 +327,276 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
         </ScrollView>
 
         {/* DETAILED SCHEDULE PREVIEW MODAL */}
-        <Modal
+        <ViewportModal
           visible={selectedRecord !== null}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setSelectedRecord(null)}
+          onClose={() => setSelectedRecord(null)}
         >
-          <View style={styles.modalBackdrop}>
-            {selectedRecord && (
-              <View style={styles.modalContainer}>
-                <LinearGradient
-                  colors={['#FFFFFF', '#F0F9FF']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                
-                {/* Modal Header */}
-                <View style={styles.modalHeader}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={styles.modalIconBox}>
-                      <MaterialIcons name="event" size={26} color="#0284C7" />
-                    </View>
-                    <View>
-                      <Text style={styles.modalTitle}>{selectedRecord.course} Exam Schedule</Text>
-                      <Text style={styles.modalSubTitle}>{selectedRecord.className} | {selectedRecord.term}</Text>
-                    </View>
+          {selectedRecord && (
+            <View style={styles.modalContainer}>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={styles.modalIconBox}>
+                    <MaterialIcons name="event-available" size={22} color="#0284C7" />
                   </View>
-                  <TouchableOpacity onPress={() => setSelectedRecord(null)} style={styles.closeBtn}>
-                    <MaterialIcons name="close" size={26} color="#64748B" />
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalTitle}>{selectedRecord.course} Timetable</Text>
+                    <Text style={styles.modalSubTitle}>{selectedRecord.className} • {selectedRecord.term}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedRecord(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={20} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                <View style={styles.breakdownTable}>
+                  <View style={styles.tableHeaderRow}>
+                    <Text style={styles.tableHeaderTitle}>Schedule Information</Text>
+                  </View>
+                  
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableRowLabel}>EXAM DATE</Text>
+                    <Text style={[styles.tableRowValue, { color: '#0284C7', fontWeight: '900' }]}>{selectedRecord.examDate}</Text>
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableRowLabel}>SHIFT TIMING</Text>
+                    <Text style={[styles.tableRowValue, { fontWeight: '900' }]}>{selectedRecord.startTime} - {selectedRecord.endTime}</Text>
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableRowLabel}>ROOM NUMBER</Text>
+                    <Text style={[styles.tableRowValue, { color: '#059669', fontWeight: '900' }]}>Room {selectedRecord.roomNo}</Text>
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableRowLabel}>WRITTEN MARK</Text>
+                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.writtenMark} Marks</Text>
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableRowLabel}>PRACTICAL MARK</Text>
+                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.practicalMark}</Text>
+                  </View>
+
+                  <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.tableRowLabel}>IS GRADE APPLICABLE</Text>
+                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.isGrade}</Text>
+                  </View>
                 </View>
 
-                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                  <View style={styles.modalInfoBox}>
-                    <Text style={styles.modalCourseName}>{selectedRecord.course} Paper</Text>
-                    <Text style={styles.modalClassText}>Class: {selectedRecord.className} ({selectedRecord.term})</Text>
+                <Text style={styles.modalTimestampText}>Created: {selectedRecord.createdAt}</Text>
+              </ScrollView>
+
+              {/* Modal Footer Actions */}
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  style={styles.modalActionEditBtn} 
+                  onPress={() => {
+                    setEditingRecord({ ...selectedRecord });
+                    setSelectedRecord(null);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="edit" size={16} color="#FFFFFF" />
+                  <Text style={styles.modalActionEditBtnText}>Edit Schedule</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.downloadBtn} 
+                  onPress={() => {
+                    alert('Exported Exam Schedule & Syllabus PDF successfully.');
+                    setSelectedRecord(null);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="file-download" size={16} color="#FFFFFF" />
+                  <Text style={styles.downloadBtnText}>Export PDF</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </ViewportModal>
+
+        {/* EDIT SCHEDULE MODAL */}
+        <ViewportModal
+          visible={editingRecord !== null}
+          onClose={() => setEditingRecord(null)}
+        >
+          {editingRecord && (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={[styles.modalIconBox, { backgroundColor: '#FFFBEB' }]}>
+                    <MaterialIcons name="edit" size={20} color="#D97706" />
                   </View>
+                  <Text style={styles.modalTitle}>Edit {editingRecord.course} Schedule</Text>
+                </View>
+                <TouchableOpacity onPress={() => setEditingRecord(null)} style={styles.modalCloseBtn}>
+                  <MaterialIcons name="close" size={18} color="#64748B" />
+                </TouchableOpacity>
+              </View>
 
-                  <View style={styles.breakdownTable}>
-                    <Text style={styles.tableTitle}>Exam Timetable & Allocation</Text>
-                    
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableRowLabel}>EXAM DATE</Text>
-                      <Text style={[styles.tableRowValue, { color: '#0284C7' }]}>{selectedRecord.examDate}</Text>
-                    </View>
-
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableRowLabel}>SHIFT TIMING</Text>
-                      <Text style={styles.tableRowValue}>{selectedRecord.startTime} - {selectedRecord.endTime}</Text>
-                    </View>
-
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableRowLabel}>ROOM NUMBER</Text>
-                      <Text style={[styles.tableRowValue, { color: '#059669' }]}>Room {selectedRecord.roomNo}</Text>
-                    </View>
-
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableRowLabel}>WRITTEN MARK</Text>
-                      <Text style={styles.tableRowValue}>{selectedRecord.writtenMark} Marks</Text>
-                    </View>
-
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableRowLabel}>IS GRADE APPLICABLE</Text>
-                      <Text style={styles.tableRowValue}>{selectedRecord.isGrade}</Text>
-                    </View>
-                  </View>
-
-                  <View style={{ marginTop: 18, gap: 6 }}>
-                    <Text style={styles.modalTimestampText}>CREATED AT: {selectedRecord.createdAt}</Text>
-                  </View>
-                </ScrollView>
-
-                {/* Modal Footer Download Button */}
-                <View style={styles.modalFooter}>
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                
+                {/* 1. Exam Date Picker Button (Global PremiumDateTimePicker) */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Exam Date</Text>
                   <TouchableOpacity 
-                    style={styles.downloadBtn} 
-                    onPress={() => {
-                      alert('Exported Exam Schedule & Syllabus PDF successfully.');
-                      setSelectedRecord(null);
-                    }}
+                    style={styles.pickerFieldButton} 
+                    onPress={() => setIsDatePickerOpen(true)}
                     activeOpacity={0.8}
                   >
-                    <LinearGradient
-                      colors={['#0284C7', '#0369A1']}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <MaterialIcons name="file-download" size={24} color="#FFFFFF" />
-                    <Text style={styles.downloadBtnText}>Download Timetable PDF</Text>
+                    <View style={styles.pickerFieldLeft}>
+                      <MaterialIcons name="event" size={18} color="#0284C7" />
+                      <Text style={styles.pickerFieldValue}>{editingRecord.examDate}</Text>
+                    </View>
+                    <MaterialIcons name="calendar-today" size={18} color="#0284C7" />
                   </TouchableOpacity>
                 </View>
+
+                {/* 2. Start Time & End Time Picker Buttons (Global PremiumDateTimePicker) */}
+                <View style={styles.formRow}>
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={styles.formLabel}>Start Time</Text>
+                    <TouchableOpacity 
+                      style={styles.pickerFieldButton} 
+                      onPress={() => setTimePickerTarget('start')}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.pickerFieldLeft}>
+                        <MaterialIcons name="access-time" size={18} color="#7E22CE" />
+                        <Text style={styles.pickerFieldValue}>{editingRecord.startTime}</Text>
+                      </View>
+                      <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={styles.formLabel}>End Time</Text>
+                    <TouchableOpacity 
+                      style={styles.pickerFieldButton} 
+                      onPress={() => setTimePickerTarget('end')}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.pickerFieldLeft}>
+                        <MaterialIcons name="access-time" size={18} color="#7E22CE" />
+                        <Text style={styles.pickerFieldValue}>{editingRecord.endTime}</Text>
+                      </View>
+                      <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* 3. Room Number */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Room Number</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={editingRecord.roomNo}
+                    onChangeText={(val) => setEditingRecord({ ...editingRecord, roomNo: val })}
+                  />
+                </View>
+
+                {/* 4. Written Marks */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Written Marks</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    keyboardType="numeric"
+                    value={editingRecord.writtenMark.toString()}
+                    onChangeText={(val) => setEditingRecord({ ...editingRecord, writtenMark: parseInt(val) || 0 })}
+                  />
+                </View>
+              </ScrollView>
+
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  style={styles.modalCancelBtn} 
+                  onPress={() => setEditingRecord(null)}
+                >
+                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.modalSaveBtn} 
+                  onPress={handleSaveEdit}
+                >
+                  <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                  <Text style={styles.modalSaveBtnText}>Save Changes</Text>
+                </TouchableOpacity>
               </View>
-            )}
-          </View>
-        </Modal>
+            </View>
+          )}
+        </ViewportModal>
+
+        {/* ── APP'S OFFICIAL DATE PICKER MODAL (SAME AS HOMEWORK & ACTIVITY) ── */}
+        {editingRecord && (
+          <PremiumDateTimePicker
+            visible={isDatePickerOpen}
+            onClose={() => setIsDatePickerOpen(false)}
+            value={editingRecord.examDate || '28 Jun 2026'}
+            title="Select Exam Date"
+            showTime={false}
+            mode="date"
+            onSelect={(newDate) => {
+              setEditingRecord({ ...editingRecord, examDate: newDate });
+              setIsDatePickerOpen(false);
+            }}
+          />
+        )}
+
+        {/* ── APP'S OFFICIAL TIME PICKER MODAL (SAME AS HOMEWORK & ACTIVITY) ── */}
+        {editingRecord && timePickerTarget !== null && (
+          <PremiumDateTimePicker
+            visible={timePickerTarget !== null}
+            onClose={() => setTimePickerTarget(null)}
+            value={timePickerTarget === 'start' ? editingRecord.startTime : editingRecord.endTime}
+            title={timePickerTarget === 'start' ? 'Select Start Time' : 'Select End Time'}
+            mode="time"
+            onSelect={(newTime) => {
+              if (timePickerTarget === 'start') {
+                setEditingRecord({ ...editingRecord, startTime: newTime });
+              } else {
+                setEditingRecord({ ...editingRecord, endTime: newTime });
+              }
+              setTimePickerTarget(null);
+            }}
+          />
+        )}
+
+        {/* DELETE CONFIRMATION MODAL */}
+        <ViewportModal
+          visible={deleteConfirmId !== null}
+          onClose={() => setDeleteConfirmId(null)}
+        >
+          {deleteConfirmId && (
+            <View style={[styles.modalContainer, { maxWidth: 380 }]}>
+              <View style={styles.deleteConfirmIconBox}>
+                <MaterialIcons name="delete-forever" size={32} color="#EF4444" />
+              </View>
+              <Text style={styles.deleteConfirmTitle}>Delete Exam Schedule?</Text>
+              <Text style={styles.deleteConfirmDesc}>Are you sure you want to delete this exam schedule record? This action cannot be undone.</Text>
+              
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  style={styles.modalCancelBtn} 
+                  onPress={() => setDeleteConfirmId(null)}
+                >
+                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.modalDeleteConfirmBtn} 
+                  onPress={() => deleteConfirmId && handleDeleteRecord(deleteConfirmId)}
+                >
+                  <Text style={styles.modalDeleteConfirmBtnText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </ViewportModal>
 
       </SafeAreaView>
     </View>
@@ -420,507 +604,615 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  safeArea: { flex: 1 },
-
-  // Glowing ambient background circles
-  orb1: {
-    position: 'absolute', top: -140, right: -120,
-    width: 440, height: 440, borderRadius: 220,
-    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+  root: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
   },
-  orb2: {
-    position: 'absolute', bottom: -100, left: -120,
-    width: 400, height: 400, borderRadius: 200,
-    backgroundColor: 'rgba(14, 165, 233, 0.05)',
+  safeArea: {
+    flex: 1,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 720,
   },
 
   // App Bar Header
   appBar: {
-    height: 76,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.9)',
-    position: 'relative',
-    overflow: 'hidden',
+    paddingHorizontal: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
     zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
   },
   backButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 17,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   appBarIconButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
   },
 
   scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
+    padding: 12,
+    paddingBottom: 90,
   },
 
   // Ledger Container Card
   ledgerCard: {
-    borderRadius: 26,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: 'rgba(186, 230, 253, 0.95)',
-    position: 'relative',
-    overflow: 'hidden',
-    gap: 16,
-    elevation: 6,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-  },
-  topBlueStrip: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 5,
-    backgroundColor: '#0284C7',
-  },
-  portalTitleBox: {
-    height: 48,
     borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 10,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 3,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  portalTitleText: {
-    fontSize: 17.5,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-  },
-
-  // Export Toolbar
-  exportToolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F0F9FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-  },
-  exportLabel: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#0369A1',
-  },
-  exportBadgeRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  exportIconBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    padding: 14,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#BAE6FD',
-    elevation: 2,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    borderColor: '#E2E8F0',
+    gap: 12,
   },
-  exportText: {
-    fontSize: 12.5,
+  portalTitleBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 10,
+  },
+  portalTitleText: {
+    fontSize: 15.5,
     fontWeight: '900',
-    color: '#0284C7',
+    color: '#0F172A',
+    letterSpacing: -0.2,
   },
 
   // Search Row
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   searchLabel: {
-    fontSize: 14.5,
-    fontWeight: '900',
-    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#334155',
   },
   searchWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    height: 46,
-    paddingHorizontal: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(186, 230, 253, 0.9)',
-    backgroundColor: '#FFFFFF',
-    elevation: 2,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    borderRadius: 8,
+    height: 40,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
   },
   searchInput: {
     flex: 1,
     height: '100%',
     color: '#0F172A',
-    fontSize: 14.5,
+    fontSize: 13,
     fontWeight: '700',
   },
 
-  // SHARP & EASY TO READ CARDS
+  // Record Card
   recordsList: {
-    gap: 14,
+    gap: 12,
   },
   sharpRecordCard: {
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(186, 230, 253, 0.9)',
+    borderRadius: 12,
+    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
     position: 'relative',
     overflow: 'hidden',
     gap: 12,
-    elevation: 4,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
   },
   leftBlueTag: {
     position: 'absolute',
-    top: 0, bottom: 0, left: 0,
-    width: 5,
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
     backgroundColor: '#0284C7',
   },
   sharpCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#E0F2FE',
-    paddingBottom: 10,
+    paddingLeft: 4,
+    gap: 8,
   },
   courseTitleText: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   classPill: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: '#BAE6FD',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   classPillText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '900',
     color: '#0284C7',
   },
   termSubText: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 12.5,
     color: '#475569',
+    fontWeight: '700',
   },
-  sharpViewBtn: {
+  cardActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 3,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
-  sharpViewBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+  actionBtnView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  actionBtnViewText: {
+    fontSize: 12.5,
     fontWeight: '900',
+    color: '#0284C7',
+  },
+  actionBtnEdit: {
+    width: 30,
+    height: 30,
+    borderRadius: 6,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnDelete: {
+    width: 30,
+    height: 30,
+    borderRadius: 6,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  // Key Info Pills Row
-  keyInfoRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Structured Info Box (Date, Time, Room)
+  structuredInfoBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     gap: 8,
   },
-  infoPill: {
+  infoRowItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    gap: 10,
   },
-  infoPillText: {
-    fontSize: 14.5,
+  infoIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoLabel: {
+    fontSize: 10,
     fontWeight: '900',
+    color: '#64748B',
+    letterSpacing: 0.3,
+  },
+  infoValueDark: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  infoRowDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
   },
 
-  // Marks Summary Strip
+  // Horizontal Marks Summary Strip
   marksSummaryStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderWidth: 1.5,
-    borderColor: '#E0F2FE',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   markCol: {
     alignItems: 'center',
-    gap: 2,
+    flex: 1,
   },
   markColLabel: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '900',
     color: '#475569',
+    letterSpacing: 0.2,
   },
   markColValue: {
-    fontSize: 16.5,
+    fontSize: 13.5,
     fontWeight: '900',
+    marginTop: 2,
   },
   markDivider: {
     width: 1,
-    height: 20,
-    backgroundColor: '#E0F2FE',
+    height: 22,
+    backgroundColor: '#CBD5E1',
   },
 
   // Pagination
   paginationRow: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 6,
-    paddingTop: 14,
-    borderTopWidth: 1.5,
-    borderTopColor: '#E0F2FE',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
   entriesText: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12,
     color: '#64748B',
+    fontWeight: '700',
   },
   paginationBtns: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   pageBtnDisabled: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
-    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: '#BAE6FD',
+    borderColor: '#E2E8F0',
   },
   pageBtnTextDisabled: {
-    fontSize: 12.5,
-    fontWeight: '800',
+    fontSize: 12,
     color: '#94A3B8',
+    fontWeight: '700',
   },
   pageBtnActive: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     backgroundColor: '#0284C7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pageBtnTextActive: {
+    color: '#FFFFFF',
     fontSize: 12.5,
     fontWeight: '900',
-    color: '#FFFFFF',
   },
 
-  // Modal
-  modalBackdrop: {
+  // Empty state
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 6,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#334155',
+  },
+  emptyDesc: {
+    fontSize: 12.5,
+    color: '#64748B',
+    textAlign: 'center',
+  },
+
+  // Modal Dialogs Overlays
+  webModalOverlay: {
+    position: 'fixed' as any,
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    padding: 16,
+  },
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
+
+  // Modal Container
   modalContainer: {
     width: '100%',
-    maxHeight: '85%',
-    borderRadius: 26,
-    overflow: 'hidden',
-    position: 'relative',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.95)',
-    elevation: 14,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.22,
-    shadowRadius: 30,
+    maxWidth: 440,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    elevation: 8,
+    zIndex: 10000,
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 22,
-    paddingVertical: 18,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#E0F2FE',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   modalIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#F0F9FF',
-    borderWidth: 1.5,
-    borderColor: '#BAE6FD',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 15.5,
     fontWeight: '900',
     color: '#0F172A',
   },
   modalSubTitle: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12.5,
     color: '#64748B',
+    fontWeight: '700',
   },
-  closeBtn: {
-    padding: 6,
+  modalCloseBtn: {
+    padding: 4,
   },
   modalBody: {
-    padding: 22,
+    maxHeight: 380,
+    marginVertical: 12,
   },
-  modalInfoBox: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: '#BAE6FD',
-    marginBottom: 18,
-  },
-  modalCourseName: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#0F172A',
-  },
-  modalClassText: {
-    fontSize: 14.5,
-    fontWeight: '900',
-    color: '#64748B',
-    marginTop: 3,
-  },
+
+  // Breakdown Table for View Modal
   breakdownTable: {
-    gap: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
   },
-  tableTitle: {
-    fontSize: 16.5,
+  tableHeaderRow: {
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#CBD5E1',
+  },
+  tableHeaderTitle: {
+    fontSize: 13,
     fontWeight: '900',
     color: '#0F172A',
-    marginBottom: 4,
   },
   tableRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E0F2FE',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   tableRowLabel: {
-    fontSize: 14.5,
-    fontWeight: '900',
+    fontSize: 11.5,
+    fontWeight: '800',
     color: '#475569',
   },
   tableRowValue: {
-    fontSize: 16.5,
-    fontWeight: '900',
+    fontSize: 13.5,
     color: '#0F172A',
   },
   modalTimestampText: {
-    fontSize: 13.5,
-    fontWeight: '800',
+    fontSize: 11.5,
     color: '#64748B',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 10,
   },
+
+  // Modal Footer
   modalFooter: {
-    padding: 18,
-    borderTopWidth: 1.5,
-    borderTopColor: '#E0F2FE',
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
   },
-  downloadBtn: {
-    height: 56,
-    borderRadius: 18,
+  modalActionEditBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#D97706',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 5,
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    gap: 6,
+  },
+  modalActionEditBtnText: {
+    fontSize: 13.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  downloadBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#0284C7',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   downloadBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16.5,
+    fontSize: 13.5,
     fontWeight: '900',
-    letterSpacing: 0.3,
+    color: '#FFFFFF',
+  },
+
+  // Edit Modal Form
+  formGroup: {
+    gap: 4,
+    marginBottom: 10,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  formLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  formInput: {
+    height: 40,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+
+  // Date / Time Picker Trigger Button
+  pickerFieldButton: {
+    height: 40,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  pickerFieldLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pickerFieldValue: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+
+  modalCancelBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  modalSaveBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#0284C7',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  modalSaveBtnText: {
+    fontSize: 13.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+
+  // Delete Confirm
+  deleteConfirmIconBox: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  deleteConfirmTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  deleteConfirmDesc: {
+    fontSize: 13,
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  modalDeleteConfirmBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalDeleteConfirmBtnText: {
+    fontSize: 13.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
 });

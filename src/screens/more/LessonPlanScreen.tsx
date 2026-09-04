@@ -537,15 +537,6 @@ export const LessonPlanScreen = ({ navigation }: any) => {
 
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
-        {/* ── AI FEATURE PILLS ── */}
-        <View style={styles.pillRow}>
-          {['✦ Multilingual','⚡ Instant Draft','📋 Rubric Auto-gen'].map((t,i) => (
-            <View key={i} style={styles.featurePill}>
-              <Text style={styles.featurePillText}>{t}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* ── FORM CARD ── */}
         <View style={styles.card}>
 
