@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MatchColumnScreenProps {
   navigation: any;
@@ -107,15 +108,16 @@ const formatText = (set: MatchSet): string => {
 };
 
 export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation }) => {
-  const [requestInput, setRequestInput] = useState('');
-  const [fileName, setFileName] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const { appTheme, isDefaultTheme } = useAppTheme();
+  const [requestInput, setRequestInput]     = useState('');
+  const [fileName, setFileName]             = useState('');
+  const [generating, setGenerating]         = useState(false);
+  const [progress, setProgress]             = useState(0);
   const [progressStatus, setProgressStatus] = useState('');
-  const [sets, setSets] = useState<MatchSet[]>([]);
-  const [activeSet, setActiveSet] = useState<MatchSet | null>(null);
-  const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({});
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sets, setSets]                     = useState<MatchSet[]>([]);
+  const [activeSet, setActiveSet]           = useState<MatchSet | null>(null);
+  const [revealedIds, setRevealedIds]       = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId]             = useState<string | null>(null);
 
   const handleToggleFile = () =>
     setFileName(f => f ? '' : 'Paragraph_Text.pdf');
@@ -157,7 +159,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Background decoration */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -175,7 +177,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
 
       {/* HEADER */}
       <LinearGradient
-        colors={['#3E352B', '#63574A', '#B59A7A']}
+        colors={isDefaultTheme ? ['#3E352B', '#63574A', '#B59A7A'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -198,19 +200,23 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#D9CBB6', '#B59A7A', '#8C7C6D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient
+        colors={isDefaultTheme ? ['#D9CBB6', '#B59A7A', '#8C7C6D'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={styles.headerGlow}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* INPUT CARD */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -220,33 +226,40 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
           />
 
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[
+              styles.fileBox,
+              fileName ? styles.fileBoxActive : null,
+              !isDefaultTheme && {
+                backgroundColor: appTheme.surface,
+                borderColor: fileName ? appTheme.primary : appTheme.border,
+              },
+            ]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#F5ECE1', '#E6DFD5'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#F5ECE1', '#E6DFD5'] : [appTheme.primaryLight, appTheme.surface]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.bg])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#B59A7A' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#B59A7A' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -254,7 +267,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#3E352B', '#63574A', '#B59A7A']}
+                colors={isDefaultTheme ? ['#3E352B', '#63574A', '#B59A7A'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -277,37 +290,37 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#63574A" size="small" style={{ marginRight: 8 }} />
-              <Text style={styles.generatingText}>Generating pairings…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#63574A" : appTheme.primary} size="small" style={{ marginRight: 8 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.primary }]}>Generating pairings…</Text>
             </View>
           )}
         </View>
 
         {/* PROGRESS LOADER */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#B59A7A" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#B59A7A" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#8C7C6D', '#D9CBB6']}
+                colors={isDefaultTheme ? ['#8C7C6D', '#D9CBB6'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textMuted }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* RESULTS HEADER */}
         {sets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#B59A7A', '#8C7C6D']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Match the Column</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#B59A7A', '#8C7C6D'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Match the Column</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{sets.length}</Text>
             </View>
           </View>
@@ -318,21 +331,21 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
           {sets.map((set) => {
             const revealed = !!revealedIds[set.id];
             return (
-              <View key={set.id} style={styles.resultCard}>
-                <LinearGradient colors={['#3E352B', '#B59A7A', '#D9CBB6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+              <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#3E352B', '#B59A7A', '#D9CBB6'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
                 {/* Meta header */}
                 <View style={styles.resultMeta}>
-                  <LinearGradient colors={['#FAF5EC', '#E6DFD5']} style={styles.resultIconOrb}>
-                    <MaterialIcons name="extension" size={17} color="#B59A7A" />
+                  <LinearGradient colors={isDefaultTheme ? ['#FAF5EC', '#E6DFD5'] : [appTheme.primaryLight, appTheme.surface]} style={styles.resultIconOrb}>
+                    <MaterialIcons name="extension" size={17} color={isDefaultTheme ? "#B59A7A" : appTheme.primary} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                    <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                    <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                    <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textMuted }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                   </View>
                   <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
-                    <View style={styles.eyeOuter}>
-                      <LinearGradient colors={['#B59A7A', '#8C7C6D']} style={styles.eyeCore}>
+                    <View style={[styles.eyeOuter, !isDefaultTheme && { borderColor: appTheme.border, backgroundColor: appTheme.surface }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#B59A7A', '#8C7C6D'] : appTheme.primaryGradient} style={styles.eyeCore}>
                         <View style={styles.eyeGloss} />
                         <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                       </LinearGradient>
@@ -341,34 +354,34 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
                 </View>
 
                 {/* Passage Box */}
-                <View style={styles.passageBox}>
-                  <Text style={styles.passageText}>{set.passage}</Text>
+                <View style={[styles.passageBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.primary }]}>
+                  <Text style={[styles.passageText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{set.passage}</Text>
                 </View>
 
                 {/* Column Layout */}
                 <View style={styles.matchingColumnsLayout}>
                   {/* Column A */}
                   <View style={styles.matchingColHalf}>
-                    <Text style={styles.columnLabel}>Column A</Text>
+                    <Text style={[styles.columnLabel, !isDefaultTheme && { color: appTheme.textPrimary, borderBottomColor: appTheme.primary }]}>Column A</Text>
                     {set.columnA.map((item) => (
-                      <View key={item.num} style={styles.matchItemRow}>
-                        <LinearGradient colors={['#C5A880', '#A88C62']} style={styles.itemBadge}>
+                      <View key={item.num} style={[styles.matchItemRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.primary }]}>
+                        <LinearGradient colors={isDefaultTheme ? ['#C5A880', '#A88C62'] : appTheme.primaryGradient} style={styles.itemBadge}>
                           <Text style={styles.itemBadgeText}>{item.num}</Text>
                         </LinearGradient>
-                        <Text style={styles.itemText}>{item.text}</Text>
+                        <Text style={[styles.itemText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.text}</Text>
                       </View>
                     ))}
                   </View>
 
                   {/* Column B */}
                   <View style={styles.matchingColHalf}>
-                    <Text style={styles.columnLabel}>Column B</Text>
+                    <Text style={[styles.columnLabel, !isDefaultTheme && { color: appTheme.textPrimary, borderBottomColor: appTheme.primary }]}>Column B</Text>
                     {set.columnB.map((item) => (
-                      <View key={item.letter} style={styles.matchItemRow}>
-                        <LinearGradient colors={['#A88C62', '#8C724A']} style={styles.itemBadgeLetter}>
+                      <View key={item.letter} style={[styles.matchItemRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.accent }]}>
+                        <LinearGradient colors={isDefaultTheme ? ['#A88C62', '#8C724A'] : [appTheme.accent, appTheme.primary]} style={styles.itemBadgeLetter}>
                           <Text style={styles.itemBadgeText}>{item.letter}</Text>
                         </LinearGradient>
-                        <Text style={styles.itemText}>{item.text}</Text>
+                        <Text style={[styles.itemText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.text}</Text>
                       </View>
                     ))}
                   </View>
@@ -376,13 +389,13 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
 
                 {/* Answer Key */}
                 <View style={styles.answerKeyBlock}>
-                  <Text style={styles.answerKeyTitle}>Answer Key:</Text>
+                  <Text style={[styles.answerKeyTitle, !isDefaultTheme && { color: appTheme.accent }]}>Answer Key:</Text>
                   <View style={styles.answerKeyWrap}>
                     {set.answerKey.map((ak) => {
                       const correctWord = set.columnB.find(b => b.letter === ak.letter)?.text || '';
                       return (
-                        <View key={ak.num} style={styles.akChip}>
-                          <Text style={styles.akChipText}>
+                        <View key={ak.num} style={[styles.akChip, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                          <Text style={[styles.akChipText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                             {ak.num} - {ak.letter} {revealed && `(${correctWord})`}
                           </Text>
                         </View>
@@ -398,7 +411,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#8C7C6D', '#B59A7A']}
+                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#8C7C6D', '#B59A7A'] : appTheme.primaryGradient)}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.copyBtnGrad}
                   >
@@ -413,20 +426,20 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
                 </TouchableOpacity>
 
                 {/* Footer toolbar */}
-                <View style={styles.resultFooter}>
+                <View style={[styles.resultFooter, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                    <MaterialIcons name="open-in-full" size={13} color="#B59A7A" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerBtnText}>Full View</Text>
+                    <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? "#B59A7A" : appTheme.primary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => toggleReveal(set.id)}>
-                    <MaterialIcons name={revealed ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
-                    <Text style={[styles.footerBtnText, { color: '#B45309' }]}>
+                    <MaterialIcons name={revealed ? 'visibility-off' : 'vpn-key'} size={13} color={isDefaultTheme ? "#B45309" : appTheme.warning} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#B45309' : appTheme.warning }]}>
                       {revealed ? 'Hide Answers' : 'Show Answers'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                    <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                    <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                    <MaterialIcons name="print" size={13} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#64748B' : appTheme.textMuted }]}>Print</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -437,14 +450,14 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
 
       {/* FULL VIEW MODAL */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
-            <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#B59A7A" />
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetClose, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#B59A7A" : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleCopy(activeSet); }}
               activeOpacity={0.8}
             >
@@ -463,8 +476,8 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
-              <LinearGradient colors={['#3E352B', '#63574A']} style={styles.paperDocHeader}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#3E352B', '#63574A'] : appTheme.bannerGradient} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="extension" size={18} color="#fff" />
@@ -477,54 +490,54 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* Passage */}
-              <View style={styles.modalPassageBox}>
-                <Text style={styles.modalPassageTitle}>PASSAGE</Text>
-                <Text style={styles.modalPassageText}>{activeSet?.passage}</Text>
+              <View style={[styles.modalPassageBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.primary }]}>
+                <Text style={[styles.modalPassageTitle, !isDefaultTheme && { color: appTheme.primary }]}>PASSAGE</Text>
+                <Text style={[styles.modalPassageText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.passage}</Text>
               </View>
 
               {/* Matching Column Display */}
               <View style={styles.modalColumnsDisplay}>
                 <View style={styles.modalColHalf}>
-                  <Text style={styles.modalColTitle}>Column A</Text>
+                  <Text style={[styles.modalColTitle, !isDefaultTheme && { color: appTheme.textPrimary, borderBottomColor: appTheme.primary }]}>Column A</Text>
                   {activeSet?.columnA.map((item) => (
-                    <View key={item.num} style={styles.modalItemRow}>
-                      <LinearGradient colors={['#C5A880', '#A88C62']} style={styles.modalBadge}>
+                    <View key={item.num} style={[styles.modalItemRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#C5A880', '#A88C62'] : appTheme.primaryGradient} style={styles.modalBadge}>
                         <Text style={styles.modalBadgeText}>{item.num}</Text>
                       </LinearGradient>
-                      <Text style={styles.modalItemText}>{item.text}</Text>
+                      <Text style={[styles.modalItemText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.text}</Text>
                     </View>
                   ))}
                 </View>
                 <View style={styles.modalColHalf}>
-                  <Text style={styles.modalColTitle}>Column B</Text>
+                  <Text style={[styles.modalColTitle, !isDefaultTheme && { color: appTheme.textPrimary, borderBottomColor: appTheme.primary }]}>Column B</Text>
                   {activeSet?.columnB.map((item) => (
-                    <View key={item.letter} style={styles.modalItemRow}>
-                      <LinearGradient colors={['#A88C62', '#8C724A']} style={styles.modalBadgeLetter}>
+                    <View key={item.letter} style={[styles.modalItemRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#A88C62', '#8C724A'] : [appTheme.accent, appTheme.primary]} style={styles.modalBadgeLetter}>
                         <Text style={styles.modalBadgeText}>{item.letter}</Text>
                       </LinearGradient>
-                      <Text style={styles.modalItemText}>{item.text}</Text>
+                      <Text style={[styles.modalItemText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.text}</Text>
                     </View>
                   ))}
                 </View>
               </View>
 
               {/* Answer Key */}
-              <View style={styles.modalAnswerKeySection}>
-                <LinearGradient colors={['#3E352B', '#63574A']} style={styles.akHeader}>
+              <View style={[styles.modalAnswerKeySection, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#3E352B', '#63574A'] : appTheme.bannerGradient} style={styles.akHeader}>
                   <MaterialIcons name="vpn-key" size={15} color="#D9CBB6" style={{ marginRight: 8 }} />
                   <Text style={styles.akHeaderText}>Answer Key</Text>
                 </LinearGradient>
-                <View style={styles.akGrid}>
+                <View style={[styles.akGrid, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                   {activeSet?.answerKey.map((ak) => (
                     <View key={ak.num} style={styles.akItem}>
-                      <Text style={styles.akNum}>{ak.num}.</Text>
-                      <View style={styles.akBadge}>
+                      <Text style={[styles.akNum, !isDefaultTheme && { color: appTheme.textMuted }]}>{ak.num}.</Text>
+                      <View style={[styles.akBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                         <Text style={styles.akBadgeText}>{ak.letter}</Text>
                       </View>
                     </View>
@@ -539,7 +552,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : ['#63574A', '#B59A7A']}
+                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#63574A', '#B59A7A'] : appTheme.primaryGradient)}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >
@@ -561,7 +574,7 @@ export const MatchColumnScreen: React.FC<MatchColumnScreenProps> = ({ navigation
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F4EDE4' },
+  safeArea: { flex: 1, backgroundColor: '#F4EDE4', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -855,7 +868,7 @@ const styles = StyleSheet.create({
   footerBtn: { flexDirection: 'row', alignItems: 'center' },
   footerBtnText: { fontSize: 11.5, fontWeight: '800', color: '#63574A' },
 
-  sheetSafe: { flex: 1, backgroundColor: '#FAF6EE' },
+  sheetSafe: { flex: 1, backgroundColor: '#FAF6EE', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

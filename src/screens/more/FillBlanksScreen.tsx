@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface FillBlanksScreenProps {
   navigation: any;
@@ -100,6 +101,7 @@ const formatText = (result: FillBlanksResult): string => {
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, route }) => {
+  const { appTheme, isDefaultTheme } = useAppTheme();
   const [requestInput, setRequestInput]     = useState('');
   const [fileName, setFileName]             = useState('');
   const [generating, setGenerating]         = useState(false);
@@ -159,19 +161,19 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
 
   // ── Render paragraph with blanks (inline) ────────────────────────────────
   const renderParagraph = (result: FillBlanksResult, revealed: boolean) => (
-    <Text style={styles.paragraphText}>
+    <Text style={[styles.paragraphText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
       {result.segments.map((seg, i) => {
         if (!seg.isBlank) return <Text key={i}>{seg.text}</Text>;
         return revealed
-          ? <Text key={i} style={styles.answerInline}> {seg.answer} </Text>
-          : <Text key={i} style={styles.blankInline}> _____ </Text>;
+          ? <Text key={i} style={[styles.answerInline, !isDefaultTheme && { color: appTheme.success, textDecorationColor: appTheme.success }]}> {seg.answer} </Text>
+          : <Text key={i} style={[styles.blankInline, !isDefaultTheme && { color: appTheme.accent, textDecorationColor: appTheme.accent }]}> _____ </Text>;
       })}
     </Text>
   );
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* Ambient blobs */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
@@ -190,7 +192,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
 
       {/* ── HEADER ── */}
       <LinearGradient
-        colors={['#2E1065', '#4C1D95', '#6D28D9']}
+        colors={isDefaultTheme ? ['#2E1065', '#4C1D95', '#6D28D9'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -213,22 +215,27 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#A78BFA', '#7C3AED', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient
+        colors={isDefaultTheme ? ['#A78BFA', '#7C3AED', '#5B21B6'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.headerGlow}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── FORM CARD ── */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
           {/* YOUR REQUEST */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -239,33 +246,40 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
 
           {/* ATTACH FILE */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[
+              styles.fileBox,
+              fileName ? styles.fileBoxActive : null,
+              !isDefaultTheme && {
+                backgroundColor: appTheme.surface,
+                borderColor: fileName ? appTheme.primary : appTheme.border,
+              },
+            ]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#EDE9FE', '#DDD6FE'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#EDE9FE', '#DDD6FE'] : [appTheme.primaryLight, appTheme.surface]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.bg])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#7C3AED' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#7C3AED' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -274,7 +288,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#3B0764', '#6D28D9', '#7C3AED']}
+                colors={isDefaultTheme ? ['#3B0764', '#6D28D9', '#7C3AED'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -297,37 +311,37 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#7C3AED" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingText}>Generating exercise…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#7C3AED" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.primary }]}>Generating exercise…</Text>
             </View>
           )}
         </View>
 
         {/* ── PROGRESS LOADER ── */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#7C3AED" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#7C3AED" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#6D28D9', '#A78BFA']}
+                colors={isDefaultTheme ? ['#6D28D9', '#A78BFA'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textMuted }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* ── RESULTS SECTION HEADER ── */}
         {results.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#7C3AED', '#5B21B6']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Fill in the Blanks</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#7C3AED', '#5B21B6'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Fill in the Blanks</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{results.length}</Text>
             </View>
           </View>
@@ -336,23 +350,23 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
         {/* ── RESULT CARDS ── */}
         <View style={{ gap: 18 }}>
           {results.map((result) => (
-            <View key={result.id} style={styles.resultCard}>
+            <View key={result.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
               {/* Top strip */}
-              <LinearGradient colors={['#2E1065', '#7C3AED', '#A78BFA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+              <LinearGradient colors={isDefaultTheme ? ['#2E1065', '#7C3AED', '#A78BFA'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
               {/* Meta header */}
               <View style={styles.resultMeta}>
-                <LinearGradient colors={['#EDE9FE', '#DDD6FE']} style={styles.resultIconOrb}>
-                  <MaterialIcons name="border-color" size={17} color="#7C3AED" />
+                <LinearGradient colors={isDefaultTheme ? ['#EDE9FE', '#DDD6FE'] : [appTheme.primaryLight, appTheme.surface]} style={styles.resultIconOrb}>
+                  <MaterialIcons name="border-color" size={17} color={isDefaultTheme ? "#7C3AED" : appTheme.primary} />
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resultTopic} numberOfLines={1}>{result.topic}</Text>
-                  <Text style={styles.resultDate}>{result.date}{result.fileName ? ` · ${result.fileName}` : ''}</Text>
+                  <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{result.topic}</Text>
+                  <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textMuted }]}>{result.date}{result.fileName ? ` · ${result.fileName}` : ''}</Text>
                 </View>
                 <TouchableOpacity onPress={() => setActiveResult(result)} activeOpacity={0.8}>
-                  <View style={styles.eyeOuter}>
-                    <LinearGradient colors={['#7C3AED', '#5B21B6']} style={styles.eyeCore}>
+                  <View style={[styles.eyeOuter, !isDefaultTheme && { borderColor: appTheme.border, backgroundColor: appTheme.surface }]}>
+                    <LinearGradient colors={isDefaultTheme ? ['#7C3AED', '#5B21B6'] : appTheme.primaryGradient} style={styles.eyeCore}>
                       <View style={styles.eyeGloss} />
                       <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                     </LinearGradient>
@@ -361,16 +375,16 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
               </View>
 
               {/* ── CLOZE PARAGRAPH ── */}
-              <View style={styles.paragraphBox}>
+              <View style={[styles.paragraphBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                 {renderParagraph(result, !!revealedIds[result.id])}
               </View>
 
               {/* ── ANSWER KEY ROW ── */}
               <View style={styles.answerKeyRow}>
-                <Text style={styles.answerKeyLabel}>Answer Key:</Text>
+                <Text style={[styles.answerKeyLabel, !isDefaultTheme && { color: appTheme.accent }]}>Answer Key:</Text>
                 <View style={styles.answerKeyWrap}>
                   {result.answerKey.map((a) => (
-                    <Text key={a.num} style={styles.answerKeyItem}>
+                    <Text key={a.num} style={[styles.answerKeyItem, !isDefaultTheme && { backgroundColor: appTheme.surface, color: appTheme.textPrimary }]}>
                       {a.num}. {a.word}
                     </Text>
                   ))}
@@ -386,7 +400,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={copiedId === result.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#7C3AED']}
+                      colors={copiedId === result.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#7C3AED'] : appTheme.primaryGradient)}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={styles.copyBtnGrad}
                     >
@@ -446,7 +460,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === result.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#7C3AED']}
+                    colors={copiedId === result.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#7C3AED'] : appTheme.primaryGradient)}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.copyBtnGrad}
                   >
@@ -462,20 +476,20 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
               )}
 
               {/* Footer toolbar */}
-              <View style={styles.resultFooter}>
+              <View style={[styles.resultFooter, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveResult(result)}>
-                  <MaterialIcons name="open-in-full" size={13} color="#7C3AED" style={{ marginRight: 4 }} />
-                  <Text style={styles.footerBtnText}>Full View</Text>
+                  <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? "#7C3AED" : appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => toggleReveal(result.id)}>
-                  <MaterialIcons name={revealedIds[result.id] ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerBtnText, { color: '#B45309' }]}>
+                  <MaterialIcons name={revealedIds[result.id] ? 'visibility-off' : 'vpn-key'} size={13} color={isDefaultTheme ? "#B45309" : appTheme.warning} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#B45309' : appTheme.warning }]}>
                     {revealedIds[result.id] ? 'Hide Answers' : 'Show Answers'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                  <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                  <MaterialIcons name="print" size={13} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#64748B' : appTheme.textMuted }]}>Print</Text>
                 </TouchableOpacity>
               </View>
 
@@ -487,14 +501,14 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
 
       {/* ── FULL VIEW MODAL ── */}
       <Modal visible={activeResult !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
-            <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveResult(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#7C3AED" />
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetClose, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveResult(null)} activeOpacity={0.8}>
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#7C3AED" : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeResult?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeResult?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeResult) handleCopy(activeResult); }}
               activeOpacity={0.8}
             >
@@ -513,10 +527,10 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
               {/* Doc header */}
-              <LinearGradient colors={['#2E1065', '#4C1D95']} style={styles.paperDocHeader}>
+              <LinearGradient colors={isDefaultTheme ? ['#2E1065', '#4C1D95'] : appTheme.bannerGradient} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="border-color" size={18} color="#fff" />
@@ -529,26 +543,26 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeResult?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeResult?.topic}</Text>
               </View>
 
               {/* Instruction */}
-              <View style={styles.modalInstructionBox}>
-                <MaterialIcons name="info-outline" size={15} color="#7C3AED" style={{ marginRight: 8 }} />
-                <Text style={styles.modalInstructionText}>
+              <View style={[styles.modalInstructionBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                <MaterialIcons name="info-outline" size={15} color={isDefaultTheme ? "#7C3AED" : appTheme.primary} style={{ marginRight: 8 }} />
+                <Text style={[styles.modalInstructionText, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                   Fill in the blanks using the appropriate words. The answer key is provided at the end.
                 </Text>
               </View>
 
               {/* Cloze passage (blanks, no reveal) */}
-              <View style={styles.modalParagraphBox}>
+              <View style={[styles.modalParagraphBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                 {activeResult && (
-                  <Text style={styles.modalParagraphText}>
+                  <Text style={[styles.modalParagraphText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                     {activeResult.segments.map((seg, i) =>
                       seg.isBlank
-                        ? <Text key={i} style={styles.modalBlankInline}> ___({seg.blankNum})___ </Text>
+                        ? <Text key={i} style={[styles.modalBlankInline, !isDefaultTheme && { color: appTheme.accent, textDecorationColor: appTheme.accent }]}> ___({seg.blankNum})___ </Text>
                         : <Text key={i}>{seg.text}</Text>
                     )}
                   </Text>
@@ -556,16 +570,16 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
               </View>
 
               {/* Answer Key */}
-              <View style={styles.modalAnswerKeySection}>
-                <LinearGradient colors={['#3B0764', '#4C1D95']} style={styles.akHeader}>
+              <View style={[styles.modalAnswerKeySection, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#3B0764', '#4C1D95'] : appTheme.bannerGradient} style={styles.akHeader}>
                   <MaterialIcons name="vpn-key" size={15} color="#DDD6FE" style={{ marginRight: 8 }} />
                   <Text style={styles.akHeaderText}>Answer Key</Text>
                 </LinearGradient>
-                <View style={styles.akGrid}>
+                <View style={[styles.akGrid, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                   {activeResult?.answerKey.map((a) => (
                     <View key={a.num} style={styles.akItem}>
-                      <Text style={styles.akNum}>{a.num}.</Text>
-                      <View style={styles.akBadge}>
+                      <Text style={[styles.akNum, !isDefaultTheme && { color: appTheme.textMuted }]}>{a.num}.</Text>
+                      <View style={[styles.akBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                         <Text style={styles.akBadgeText}>{a.word}</Text>
                       </View>
                     </View>
@@ -582,7 +596,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={activeResult && copiedId === activeResult.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#7C3AED']}
+                      colors={activeResult && copiedId === activeResult.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#7C3AED'] : appTheme.primaryGradient)}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={styles.modalCopyBtnGrad}
                     >
@@ -644,7 +658,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={activeResult && copiedId === activeResult.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#7C3AED']}
+                    colors={activeResult && copiedId === activeResult.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#7C3AED'] : appTheme.primaryGradient)}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.modalCopyBtnGrad}
                   >
@@ -670,7 +684,7 @@ export const FillBlanksScreen: React.FC<FillBlanksScreenProps> = ({ navigation, 
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FAF8FF' },
+  safeArea: { flex: 1, backgroundColor: '#FAF8FF', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -910,7 +924,7 @@ const styles = StyleSheet.create({
   footerBtnText: { fontSize: 11, fontWeight: '800', color: '#7C3AED' },
 
   // MODAL
-  sheetSafe: { flex: 1, backgroundColor: '#F8FAFC' },
+  sheetSafe: { flex: 1, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

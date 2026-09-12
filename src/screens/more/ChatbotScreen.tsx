@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,17 +8,13 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
-  Dimensions,
-  Platform,
-  Pressable,
   Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Path } from 'react-native-svg';
-
-const { width: screenWidth } = Dimensions.get('window');
+import Svg, { Circle } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export interface ChatbotResult {
   id: string;
@@ -37,6 +33,9 @@ interface ChatbotScreenProps {
 }
 
 export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   // Form States
   const [requestInput, setRequestInput] = useState('');
   const [fileName, setFileName] = useState('');
@@ -118,19 +117,24 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* ── Ambient Mesh Backdrop ── */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <Circle cx="105%" cy="-5%" r="320" fill="#FB923C" opacity={0.06} />
-          <Circle cx="-10%" cy="50%" r="300" fill="#FBBF24" opacity={0.05} />
-          <Circle cx="80%" cy="95%" r="340" fill="#F59E0B" opacity={0.05} />
+          <Circle cx="105%" cy="-5%" r="320" fill={isDefaultTheme ? "#FB923C" : appTheme.primary} opacity={0.06} />
+          <Circle cx="-10%" cy="50%" r="300" fill={isDefaultTheme ? "#FBBF24" : appTheme.accent} opacity={0.05} />
+          <Circle cx="80%" cy="95%" r="340" fill={isDefaultTheme ? "#F59E0B" : appTheme.primary} opacity={0.05} />
         </Svg>
       </View>
 
       {/* ── HEADER BANNER ── */}
-      <LinearGradient colors={['#FB923C', '#F97316']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
+      <LinearGradient 
+        colors={isDefaultTheme ? ['#FB923C', '#F97316'] : appTheme.bannerGradient} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 1 }} 
+        style={styles.header}
+      >
         <View style={{ position: 'absolute', right: -35, top: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(255, 255, 255, 0.15)' }} />
         <View style={{ position: 'absolute', left: -25, bottom: -45, width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(254, 215, 170, 0.2)' }} />
 
@@ -154,22 +158,27 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
         </View>
       </LinearGradient>
       {/* Pastel Soft Glow Line */}
-      <LinearGradient colors={['#FED7AA', '#FBBF24']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBarGlow} />
+      <LinearGradient 
+        colors={isDefaultTheme ? ['#FED7AA', '#FBBF24'] : [appTheme.primary, appTheme.accent]} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 0 }} 
+        style={[styles.headerBarGlow, !isDefaultTheme && { opacity: 0.4 }]} 
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
         {/* ── FORM CARD ── */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
           {/* YOUR REQUEST */}
           <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.sectionLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.requestTextArea}
+            style={[styles.requestTextArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter your question or request… e.g. How to explain respiratory system to grade 5?"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -180,30 +189,41 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
 
           {/* ATTACH FILE */}
           <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.sectionLabel}>Attach File  <Text style={{ color: '#94A3B8', fontWeight: '600', textTransform: 'none' }}>optional</Text></Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Attach File  <Text style={{ color: !isDefaultTheme ? appTheme.textSecondary : '#94A3B8', fontWeight: '600', textTransform: 'none' }}>optional</Text></Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileAttachmentBox, fileName ? styles.fileAttachmentBoxActive : null]}
+            style={[
+              styles.fileAttachmentBox, 
+              !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+              fileName ? (isDefaultTheme ? styles.fileAttachmentBoxActive : { borderColor: appTheme.primary, backgroundColor: appTheme.surface }) : null
+            ]}
             onPress={handleToggleMockFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#FFEDD5', '#FFF7ED'] : ['#F8FAFC', '#F8FAFC']}
+              colors={fileName ? (isDefaultTheme ? ['#FFEDD5', '#FFF7ED'] : [appTheme.surface, appTheme.cardBg]) : (isDefaultTheme ? ['#F8FAFC', '#F8FAFC'] : [appTheme.surface, appTheme.surface])}
               style={styles.fileIconOrb}
             >
               <MaterialIcons
                 name={fileName ? "insert-drive-file" : "cloud-upload"}
                 size={18}
-                color={fileName ? "#F97316" : "#94A3B8"}
+                color={fileName ? (isDefaultTheme ? "#F97316" : appTheme.primary) : (!isDefaultTheme ? appTheme.textSecondary : "#94A3B8")}
               />
             </LinearGradient>
-            <Text style={[styles.fileAttachmentText, fileName ? styles.fileAttachmentTextActive : null]} numberOfLines={1}>
+            <Text 
+              style={[
+                styles.fileAttachmentText, 
+                !isDefaultTheme && { color: appTheme.textSecondary },
+                fileName ? (isDefaultTheme ? styles.fileAttachmentTextActive : { color: appTheme.primary, fontWeight: '700' }) : null
+              ]} 
+              numberOfLines={1}
+            >
               {fileName ? fileName : "Tap to choose a file (Image / PDF)"}
             </Text>
             {fileName && (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={17} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={17} color={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -216,7 +236,7 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#F97316', '#FB923C', '#F59E0B']}
+                colors={isDefaultTheme ? ['#F97316', '#FB923C', '#F59E0B'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.generateBtn}
@@ -245,28 +265,28 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingContainer}>
-              <ActivityIndicator color="#F97316" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingButtonText}>AI Assistant is thinking…</Text>
+            <View style={[styles.generatingContainer, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#F97316" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingButtonText, !isDefaultTheme && { color: appTheme.textPrimary }]}>AI Assistant is thinking…</Text>
             </View>
           )}
         </View>
 
         {/* ── PROCESSING LOADER ── */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.loaderHeader}>
-              <ActivityIndicator color="#F97316" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#F97316" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#F97316', '#FBBF24']}
+                colors={isDefaultTheme ? ['#F97316', '#FBBF24'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressBarFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPercentage}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPercentage, !isDefaultTheme && { color: appTheme.textSecondary }]}>{progress}% Complete</Text>
           </View>
         )}
 
@@ -274,33 +294,33 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
         {results.length > 0 && (
           <>
             <View style={styles.viewPlanHeaderRow}>
-              <LinearGradient colors={['#F97316', '#F59E0B']} style={styles.bulletIndicator} />
-              <Text style={styles.viewPlanTitle}>Generated Result</Text>
-              <View style={styles.planCountBadge}>
-                <Text style={styles.planCountText}>{results.length}</Text>
+              <LinearGradient colors={isDefaultTheme ? ['#F97316', '#F59E0B'] : [appTheme.primary, appTheme.accent]} style={styles.bulletIndicator} />
+              <Text style={[styles.viewPlanTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Generated Result</Text>
+              <View style={[styles.planCountBadge, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                <Text style={[styles.planCountText, !isDefaultTheme && { color: appTheme.primary }]}>{results.length}</Text>
               </View>
             </View>
 
             {/* ── GENERATED RESULT CARDS ── */}
             <View style={styles.plansListContainer}>
               {results.map((res) => (
-                <View key={res.id} style={styles.resultBoxCard}>
+                <View key={res.id} style={[styles.resultBoxCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                   {/* Result Meta Bar */}
-                  <View style={styles.resultMetaHeader}>
-                    <View style={styles.botAvatarBox}>
-                      <MaterialIcons name="smart-toy" size={18} color="#F97316" />
+                  <View style={[styles.resultMetaHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <View style={[styles.botAvatarBox, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="smart-toy" size={18} color={isDefaultTheme ? "#F97316" : appTheme.primary} />
                       <View style={styles.onlineBadgeDot} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.resultTopicTitle} numberOfLines={1}>{res.topic}</Text>
-                      <Text style={styles.resultDateText}>{res.date} {res.fileName ? `• ${res.fileName}` : ''}</Text>
+                      <Text style={[styles.resultTopicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{res.topic}</Text>
+                      <Text style={[styles.resultDateText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{res.date} {res.fileName ? `• ${res.fileName}` : ''}</Text>
                     </View>
 
                     {/* ── Premium Eye Button ── */}
                     <TouchableOpacity onPress={() => setActiveResult(res)} activeOpacity={0.8}>
                       <View style={styles.eyeBtnOuter}>
                         <LinearGradient
-                          colors={['#F97316', '#FB923C']}
+                          colors={isDefaultTheme ? ['#F97316', '#FB923C'] : [appTheme.primary, appTheme.accent]}
                           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                           style={styles.eyeBtnCore}
                         >
@@ -313,31 +333,31 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
 
                   {/* Result Body Text Preview */}
                   <View style={styles.resultBodyPreview}>
-                    <Text style={styles.resultIntroText}>{res.response.intro}</Text>
+                    <Text style={[styles.resultIntroText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{res.response.intro}</Text>
                     
                     {res.response.points.slice(0, 3).map((p, idx) => (
                       <View key={idx} style={styles.pointRow}>
-                        <Text style={styles.pointTitle}>•  {p.title}: </Text>
-                        <Text style={styles.pointDesc} numberOfLines={2}>{p.desc}</Text>
+                        <Text style={[styles.pointTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>•  {p.title}: </Text>
+                        <Text style={[styles.pointDesc, !isDefaultTheme && { color: appTheme.textSecondary }]} numberOfLines={2}>{p.desc}</Text>
                       </View>
                     ))}
                   </View>
 
                   {/* Action Toolbar */}
-                  <View style={styles.resultFooterBar}>
+                  <View style={[styles.resultFooterBar, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                     <TouchableOpacity style={styles.footerActionBtn} onPress={() => setActiveResult(res)}>
-                      <MaterialIcons name="open-in-full" size={14} color="#F97316" style={{ marginRight: 4 }} />
-                      <Text style={styles.footerActionText}>Full View</Text>
+                      <MaterialIcons name="open-in-full" size={14} color={isDefaultTheme ? "#F97316" : appTheme.primary} style={{ marginRight: 4 }} />
+                      <Text style={[styles.footerActionText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Copied', 'AI Response copied to clipboard.')}>
-                      <MaterialIcons name="content-copy" size={14} color="#64748B" style={{ marginRight: 4 }} />
-                      <Text style={[styles.footerActionText, { color: '#64748B' }]}>Copy</Text>
+                      <MaterialIcons name="content-copy" size={14} color={!isDefaultTheme ? appTheme.textSecondary : "#64748B"} style={{ marginRight: 4 }} />
+                      <Text style={[styles.footerActionText, { color: !isDefaultTheme ? appTheme.textSecondary : '#64748B' }]}>Copy</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.footerActionBtn} onPress={() => Alert.alert('Print Queue', 'Sent to printer.')}>
-                      <MaterialIcons name="print" size={14} color="#64748B" style={{ marginRight: 4 }} />
-                      <Text style={[styles.footerActionText, { color: '#64748B' }]}>Print</Text>
+                      <MaterialIcons name="print" size={14} color={!isDefaultTheme ? appTheme.textSecondary : "#64748B"} style={{ marginRight: 4 }} />
+                      <Text style={[styles.footerActionText, { color: !isDefaultTheme ? appTheme.textSecondary : '#64748B' }]}>Print</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -351,17 +371,17 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
 
       {/* ── FULL RESULT VIEWER MODAL ── */}
       <Modal visible={activeResult !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafeArea} edges={['top']}>
+        <SafeAreaView style={[styles.sheetSafeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
           {/* Modal Header */}
-          <View style={styles.sheetNavBar}>
+          <View style={[styles.sheetNavBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
             <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setActiveResult(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#F97316" />
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#F97316" : appTheme.primary} />
             </TouchableOpacity>
 
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeResult?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeResult?.topic}</Text>
 
             <TouchableOpacity
-              style={styles.sheetPrintBtn}
+              style={[styles.sheetPrintBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => Alert.alert('Print Response', 'AI Chatbot Response sent to print queue as PDF.')}
               activeOpacity={0.8}
             >
@@ -372,36 +392,36 @@ export const ChatbotScreen: React.FC<ChatbotScreenProps> = ({ navigation }) => {
 
           {/* Result Full Content */}
           <ScrollView contentContainerStyle={styles.sheetScrollContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperSheetCard}>
+            <View style={[styles.paperSheetCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               
-              <View style={styles.paperHeader}>
+              <View style={[styles.paperHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <View style={styles.modalBotAvatar}>
+                  <View style={[styles.modalBotAvatar, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                     <MaterialIcons name="smart-toy" size={20} color="#fff" />
                   </View>
                   <View>
-                    <Text style={styles.modalBotTitle}>AI Teaching Assistant</Text>
-                    <Text style={styles.modalBotSubtitle}>{activeResult?.date}</Text>
+                    <Text style={[styles.modalBotTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>AI Teaching Assistant</Text>
+                    <Text style={[styles.modalBotSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeResult?.date}</Text>
                   </View>
                 </View>
-                <Text style={styles.paperMainTitle}>{activeResult?.topic}</Text>
+                <Text style={[styles.paperMainTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeResult?.topic}</Text>
               </View>
 
               {/* Response Intro */}
-              <Text style={styles.modalIntroText}>{activeResult?.response.intro}</Text>
+              <Text style={[styles.modalIntroText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeResult?.response.intro}</Text>
 
               {/* Response Bullet Points */}
               <View style={styles.modalPointsContainer}>
                 {activeResult?.response.points.map((pt, idx) => (
-                  <View key={idx} style={styles.modalPointCard}>
-                    <Text style={styles.modalPointTitle}>•  {pt.title}:</Text>
-                    <Text style={styles.modalPointDesc}>{pt.desc}</Text>
+                  <View key={idx} style={[styles.modalPointCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                    <Text style={[styles.modalPointTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>•  {pt.title}:</Text>
+                    <Text style={[styles.modalPointDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>{pt.desc}</Text>
                   </View>
                 ))}
               </View>
 
               {/* Response Outro */}
-              <Text style={styles.modalOutroText}>{activeResult?.response.outro}</Text>
+              <Text style={[styles.modalOutroText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeResult?.response.outro}</Text>
 
             </View>
           </ScrollView>
@@ -416,6 +436,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFBF7',
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
 
   // HEADER STYLE
@@ -892,6 +915,9 @@ const styles = StyleSheet.create({
   sheetSafeArea: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   sheetNavBar: {
     height: 56,

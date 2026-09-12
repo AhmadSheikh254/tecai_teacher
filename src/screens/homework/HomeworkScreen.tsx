@@ -9,7 +9,6 @@ import {
   Image, 
   Modal,
   Animated,
-  useWindowDimensions,
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
@@ -18,13 +17,15 @@ import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface HomeworkScreenProps {
   navigation: any;
 }
 
 export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) => {
-  const { width } = useWindowDimensions();
+  const { appTheme, isDefaultTheme } = useAppTheme();
+  const isDark = appTheme?.isDark ?? false;
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,7 +60,6 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   const [formImage, setFormImage] = useState<string | null>(null);
 
   // Bottom picker sheet toggle
-  const [activePicker, setActivePicker] = useState<'class' | 'section' | 'subject' | null>(null);
   const [showClassDropdown, setShowClassDropdown] = useState(false);
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
@@ -293,17 +293,6 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
     return true;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Graded':
-        return { bg: 'rgba(76, 175, 80, 0.1)', text: '#4CAF50', border: 'rgba(76, 175, 80, 0.2)' };
-      case 'Pending':
-        return { bg: 'rgba(255, 179, 0, 0.1)', text: '#FFB300', border: 'rgba(255, 179, 0, 0.2)' };
-      default:
-        return { bg: 'rgba(108, 117, 125, 0.1)', text: '#6c757d', border: 'rgba(108, 117, 125, 0.2)' };
-    }
-  };
-
   const toggleExpandNote = (id: string) => {
     setExpandedNotes(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -327,14 +316,14 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   // ── EARLY FULL-SCREEN RETURN: VIEW HOMEWORK DETAILS ──
   if (viewModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
-        <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 720 }} edges={['top', 'bottom']}>
+        <View style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : "#ffffff" }}>
             {/* Header */}
-            <View style={[styles.formHeader, { paddingTop: 36 }]}>
-              <Text style={styles.formHeaderTitle}>Homework Details</Text>
-              <TouchableOpacity onPress={() => setViewModalVisible(false)} style={styles.formCloseBtn}>
-                <MaterialIcons name="close" size={20} color="#0052cc" />
+            <View style={[styles.formHeader, { paddingTop: 36, backgroundColor: isDark ? appTheme.cardBg : '#ffffff', borderBottomColor: isDark ? appTheme.border : '#F1F5F9' }]}>
+              <Text style={[styles.formHeaderTitle, { color: isDark ? appTheme.textPrimary : '#003d9b' }]}>Homework Details</Text>
+              <TouchableOpacity onPress={() => setViewModalVisible(false)} style={[styles.formCloseBtn, isDark && { backgroundColor: appTheme.surfaceVariant }]}>
+                <MaterialIcons name="close" size={20} color={isDark ? appTheme.textPrimary : "#0052cc"} />
               </TouchableOpacity>
             </View>
 
@@ -354,40 +343,40 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </View>
 
                 {/* Title */}
-                <Text style={[styles.cardTitle, { fontSize: 18, marginTop: 8 }]}>{viewingHomework.title}</Text>
+                <Text style={[styles.cardTitle, { fontSize: 18, marginTop: 8, color: isDark ? appTheme.textPrimary : '#0F172A' }]}>{viewingHomework.title}</Text>
 
                 {/* Teacher & Date info */}
                 <View style={styles.creatorMetaRow}>
                   <View style={styles.creatorLeftInfo}>
-                    <MaterialIcons name="person" size={15} color="#0066FF" />
-                    <Text style={styles.creatorTeacherName}>{viewingHomework.teacher}</Text>
+                    <MaterialIcons name="person" size={15} color={isDark ? appTheme.primary : "#0066FF"} />
+                    <Text style={[styles.creatorTeacherName, { color: isDark ? appTheme.textPrimary : '#334155' }]}>{viewingHomework.teacher}</Text>
                     <Text style={styles.metaDot}>•</Text>
-                    <MaterialIcons name="calendar-today" size={13} color="#64748B" />
-                    <Text style={styles.creatorMetaDate}>{viewingHomework.createdAt}</Text>
+                    <MaterialIcons name="calendar-today" size={13} color={isDark ? appTheme.textMuted : "#64748B"} />
+                    <Text style={[styles.creatorMetaDate, { color: isDark ? appTheme.textMuted : '#64748B' }]}>{viewingHomework.createdAt}</Text>
                   </View>
                   <View style={[styles.statusPill, { 
-                    backgroundColor: viewingHomework.status === 'Graded' ? '#D1FAE5' : '#FEF3C7'
+                    backgroundColor: viewingHomework.status === 'Graded' ? (isDark ? 'rgba(16,185,129,0.18)' : '#D1FAE5') : (isDark ? 'rgba(245,158,11,0.18)' : '#FEF3C7')
                   }]}>
                     <MaterialIcons 
                       name={viewingHomework.status === 'Graded' ? "check-circle" : "access-time"} 
                       size={13} 
-                      color={viewingHomework.status === 'Graded' ? "#059669" : "#D97706"} 
+                      color={viewingHomework.status === 'Graded' ? "#10B981" : "#F59E0B"} 
                     />
                     <Text style={[styles.statusPillText, { 
-                      color: viewingHomework.status === 'Graded' ? '#059669' : '#D97706' 
+                      color: viewingHomework.status === 'Graded' ? '#10B981' : '#F59E0B' 
                     }]}>{viewingHomework.status.toUpperCase()}</Text>
                   </View>
                 </View>
 
                 {/* Full Instructions Note */}
                 <View style={{ marginVertical: 14 }}>
-                  <Text style={[styles.formLabel, { marginBottom: 6 }]}>Instructions / Notes</Text>
-                  <View style={styles.noteBox}>
+                  <Text style={[styles.formLabel, { marginBottom: 6, color: isDark ? appTheme.textPrimary : '#0F172A' }]}>Instructions / Notes</Text>
+                  <View style={[styles.noteBox, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     <View style={styles.noteTopRow}>
-                      <View style={styles.noteIconCircle}>
-                        <MaterialIcons name="description" size={15} color="#2563EB" />
+                      <View style={[styles.noteIconCircle, isDark && { backgroundColor: 'rgba(99,102,241,0.15)' }]}>
+                        <MaterialIcons name="description" size={15} color={isDark ? appTheme.primary : "#2563EB"} />
                       </View>
-                      <Text style={[styles.noteText, { fontSize: 13.5, color: '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
+                      <Text style={[styles.noteText, { fontSize: 13.5, color: isDark ? appTheme.textSecondary : '#334155', fontWeight: '500', lineHeight: 20 }]}>{viewingHomework.note}</Text>
                     </View>
                   </View>
                 </View>
@@ -395,8 +384,8 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 {/* Image */}
                 {viewingHomework.image ? (
                   <View>
-                    <Text style={[styles.formLabel, { marginBottom: 8 }]}>Attached Photo</Text>
-                    <View style={[styles.imageWrapper, { height: 220 }]}>
+                    <Text style={[styles.formLabel, { marginBottom: 8, color: isDark ? appTheme.textPrimary : '#0F172A' }]}>Attached Photo</Text>
+                    <View style={[styles.imageWrapper, { height: 220 }, isDark && { borderColor: appTheme.border }]}>
                       <Image 
                         source={typeof viewingHomework.image === 'string' ? { uri: viewingHomework.image } : viewingHomework.image} 
                         style={styles.homeworkImg} 
@@ -419,10 +408,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                     <Text style={styles.formSubmitText}>Edit Homework</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={[styles.formCancelBtn, { flex: 1, height: 42 }]} 
+                    style={[styles.formCancelBtn, { flex: 1, height: 42 }, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                     onPress={() => setViewModalVisible(false)}
                   >
-                    <Text style={styles.formCancelText}>Close</Text>
+                    <Text style={[styles.formCancelText, isDark && { color: appTheme.textMuted }]}>Close</Text>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -436,22 +425,22 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   // ── EARLY FULL-SCREEN RETURN: CREATE/POST HOMEWORK ──
   if (createModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 500 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 720 }} edges={['top', 'bottom']}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : "#ffffff" }}>
             {/* Gradient Header Bar */}
             <LinearGradient
-              colors={['#003d9b', '#0052cc']}
+              colors={isDark ? ['#1e1b4b', '#312e81'] : ['#003d9b', '#0052cc']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.createModalBand}
             >
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
-                  <View style={styles.createModalIconBox}>
+                  <View style={[styles.createModalIconBox, isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
                     <MaterialIcons name={editingHomeworkId ? "edit" : "menu-book"} size={18} color="#ffffff" />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -480,11 +469,15 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
             >
               {/* Target Class Dropdown */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
+                <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>
                   Target Class <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={[styles.formDropdown, showClassDropdown && styles.formDropdownOpen]}
+                  style={[
+                    styles.formDropdown, 
+                    isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border },
+                    showClassDropdown && (isDark ? { borderColor: appTheme.primary } : styles.formDropdownOpen)
+                  ]}
                   onPress={() => {
                     setShowClassDropdown(!showClassDropdown);
                     setShowSectionDropdown(false);
@@ -493,32 +486,44 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   activeOpacity={0.8}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <View style={[styles.formIconBadge, { backgroundColor: '#EEF2FF' }]}>
-                      <MaterialIcons name="school" size={18} color="#2563EB" />
+                    <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(37,99,235,0.18)' : '#EEF2FF' }]}>
+                      <MaterialIcons name="school" size={18} color={isDark ? appTheme.primary : "#2563EB"} />
                     </View>
-                    <Text style={[styles.formDropdownText, !formClass && styles.formPlaceholderText]}>
+                    <Text style={[
+                      styles.formDropdownText, 
+                      isDark && { color: appTheme.textPrimary },
+                      !formClass && (isDark ? { color: appTheme.textMuted } : styles.formPlaceholderText)
+                    ]}>
                       {formClass || 'Choose Class (e.g. GRADE-II)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
+                  <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={isDark ? appTheme.textMuted : "#64748B"} />
                 </TouchableOpacity>
 
                 {showClassDropdown && (
-                  <View style={styles.formDropdownOptions}>
+                  <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {['GRADE-II', 'Grade-I', 'Grade-III'].map(c => {
                       const isSelected = formClass === c;
                       return (
                         <TouchableOpacity 
                           key={c} 
-                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          style={[
+                            styles.formDropdownItem, 
+                            isDark && { borderBottomColor: appTheme.border },
+                            isSelected && (isDark ? { backgroundColor: 'rgba(99,102,241,0.15)' } : styles.formDropdownItemActive)
+                          ]}
                           onPress={() => {
                             setFormClass(c);
                             setShowClassDropdown(false);
                           }}
                           activeOpacity={0.7}
                         >
-                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{c}</Text>
-                          {isSelected && <MaterialIcons name="check-circle" size={18} color="#2563EB" />}
+                          <Text style={[
+                            styles.formDropdownItemText, 
+                            isDark && { color: appTheme.textPrimary },
+                            isSelected && (isDark ? { color: appTheme.primary, fontWeight: '700' } : styles.formDropdownItemTextActive)
+                          ]}>{c}</Text>
+                          {isSelected && <MaterialIcons name="check-circle" size={18} color={isDark ? appTheme.primary : "#2563EB"} />}
                         </TouchableOpacity>
                       );
                     })}
@@ -529,19 +534,23 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               {/* Section Multi-Select Dropdown */}
               <View style={styles.formGroup}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.formLabel}>
+                  <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>
                     Section(s) <Text style={{ color: '#EF4444' }}>*</Text>
                   </Text>
                   {formSection ? (
-                    <View style={styles.selectedBadge}>
-                      <Text style={styles.selectedBadgeText}>
+                    <View style={[styles.selectedBadge, isDark && { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)' }]}>
+                      <Text style={[styles.selectedBadgeText, isDark && { color: '#10B981' }]}>
                         {formSection.split(',').filter(Boolean).length} Selected
                       </Text>
                     </View>
                   ) : null}
                 </View>
                 <TouchableOpacity 
-                  style={[styles.formDropdown, showSectionDropdown && styles.formDropdownOpen]}
+                  style={[
+                    styles.formDropdown, 
+                    isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border },
+                    showSectionDropdown && (isDark ? { borderColor: appTheme.primary } : styles.formDropdownOpen)
+                  ]}
                   onPress={() => {
                     setShowSectionDropdown(!showSectionDropdown);
                     setShowClassDropdown(false);
@@ -550,23 +559,27 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   activeOpacity={0.8}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <View style={[styles.formIconBadge, { backgroundColor: '#F0FDF4' }]}>
-                      <MaterialIcons name="layers" size={18} color="#059669" />
+                    <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(16,185,129,0.18)' : '#F0FDF4' }]}>
+                      <MaterialIcons name="layers" size={18} color={isDark ? '#10B981' : "#059669"} />
                     </View>
-                    <Text style={[styles.formDropdownText, !formSection && styles.formPlaceholderText]} numberOfLines={1}>
+                    <Text style={[
+                      styles.formDropdownText, 
+                      isDark && { color: appTheme.textPrimary },
+                      !formSection && (isDark ? { color: appTheme.textMuted } : styles.formPlaceholderText)
+                    ]} numberOfLines={1}>
                       {formSection ? (formSection.split(',').map(s => s.trim()).length === 3 ? 'All Sections (A, B, C)' : `Section ${formSection}`) : 'Select Section(s)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
+                  <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={isDark ? appTheme.textMuted : "#64748B"} />
                 </TouchableOpacity>
 
                 {showSectionDropdown && (
-                  <View style={styles.formDropdownOptions}>
+                  <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {/* Select All Option */}
                     <TouchableOpacity
                       style={[
                         styles.formDropdownItem,
-                        { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                        { borderBottomWidth: 1, borderBottomColor: isDark ? appTheme.border : '#E2E8F0', backgroundColor: isDark ? appTheme.surfaceVariant : '#F8FAFC' }
                       ]}
                       onPress={() => {
                         const sections = ['A', 'B', 'C'];
@@ -578,7 +591,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                         }
                       }}
                     >
-                      <Text style={[styles.formDropdownItemText, { fontWeight: '800', color: '#059669' }]}>
+                      <Text style={[styles.formDropdownItemText, { fontWeight: '800', color: isDark ? '#34D399' : '#059669' }]}>
                         {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === 3 ? '✕ Deselect All' : '✦ Select All Sections'}
                       </Text>
                     </TouchableOpacity>
@@ -589,7 +602,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                       return (
                         <TouchableOpacity 
                           key={s} 
-                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          style={[
+                            styles.formDropdownItem, 
+                            isDark && { borderBottomColor: appTheme.border },
+                            isSelected && (isDark ? { backgroundColor: 'rgba(16,185,129,0.15)' } : styles.formDropdownItemActive)
+                          ]}
                           onPress={() => {
                             let updated: string[];
                             if (isSelected) {
@@ -601,21 +618,25 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                           }}
                           activeOpacity={0.7}
                         >
-                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>Section {s}</Text>
+                          <Text style={[
+                            styles.formDropdownItemText, 
+                            isDark && { color: appTheme.textPrimary },
+                            isSelected && (isDark ? { color: '#34D399', fontWeight: '700' } : styles.formDropdownItemTextActive)
+                          ]}>Section {s}</Text>
                           <MaterialIcons 
                             name={isSelected ? "check-box" : "check-box-outline-blank"} 
                             size={20} 
-                            color={isSelected ? "#059669" : "#94A3B8"} 
+                            color={isSelected ? (isDark ? '#34D399' : "#059669") : (isDark ? appTheme.textMuted : "#94A3B8")} 
                           />
                         </TouchableOpacity>
                       );
                     })}
 
                     <TouchableOpacity
-                      style={styles.doneSelectingBtn}
+                      style={[styles.doneSelectingBtn, isDark && { backgroundColor: 'rgba(16,185,129,0.15)' }]}
                       onPress={() => setShowSectionDropdown(false)}
                     >
-                      <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                      <Text style={[styles.doneSelectingText, isDark && { color: '#34D399' }]}>Done Selecting</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -623,11 +644,15 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
               {/* Course/Subject Dropdown */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
+                <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>
                   Subject <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={[styles.formDropdown, showSubjectDropdown && styles.formDropdownOpen]}
+                  style={[
+                    styles.formDropdown, 
+                    isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border },
+                    showSubjectDropdown && (isDark ? { borderColor: appTheme.primary } : styles.formDropdownOpen)
+                  ]}
                   onPress={() => {
                     setShowSubjectDropdown(!showSubjectDropdown);
                     setShowClassDropdown(false);
@@ -636,32 +661,44 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   activeOpacity={0.8}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <View style={[styles.formIconBadge, { backgroundColor: '#FAF5FF' }]}>
-                      <MaterialIcons name="menu-book" size={18} color="#7C3AED" />
+                    <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(124,58,237,0.18)' : '#FAF5FF' }]}>
+                      <MaterialIcons name="menu-book" size={18} color={isDark ? '#A78BFA' : "#7C3AED"} />
                     </View>
-                    <Text style={[styles.formDropdownText, !formSubject && styles.formPlaceholderText]}>
+                    <Text style={[
+                      styles.formDropdownText, 
+                      isDark && { color: appTheme.textPrimary },
+                      !formSubject && (isDark ? { color: appTheme.textMuted } : styles.formPlaceholderText)
+                    ]}>
                       {formSubject || 'Choose Subject (e.g. English)'}
                     </Text>
                   </View>
-                  <MaterialIcons name={showSubjectDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color="#64748B" />
+                  <MaterialIcons name={showSubjectDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={isDark ? appTheme.textMuted : "#64748B"} />
                 </TouchableOpacity>
 
                 {showSubjectDropdown && (
-                  <View style={styles.formDropdownOptions}>
+                  <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {['English', 'Mathematics', 'Science', 'Social Studies'].map(sub => {
                       const isSelected = formSubject === sub;
                       return (
                         <TouchableOpacity 
                           key={sub} 
-                          style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                          style={[
+                            styles.formDropdownItem, 
+                            isDark && { borderBottomColor: appTheme.border },
+                            isSelected && (isDark ? { backgroundColor: 'rgba(124,58,237,0.15)' } : styles.formDropdownItemActive)
+                          ]}
                           onPress={() => {
                             setFormSubject(sub);
                             setShowSubjectDropdown(false);
                           }}
                           activeOpacity={0.7}
                         >
-                          <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sub}</Text>
-                          {isSelected && <MaterialIcons name="check-circle" size={18} color="#7C3AED" />}
+                          <Text style={[
+                            styles.formDropdownItemText, 
+                            isDark && { color: appTheme.textPrimary },
+                            isSelected && (isDark ? { color: '#A78BFA', fontWeight: '700' } : styles.formDropdownItemTextActive)
+                          ]}>{sub}</Text>
+                          {isSelected && <MaterialIcons name="check-circle" size={18} color={isDark ? '#A78BFA' : "#7C3AED"} />}
                         </TouchableOpacity>
                       );
                     })}
@@ -671,54 +708,58 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
               {/* Assignment Date Selector */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>
+                <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>
                   Assignment Date <Text style={{ color: '#EF4444' }}>*</Text>
                 </Text>
                 <TouchableOpacity 
-                  style={styles.formInputWrapper}
+                  style={[styles.formInputWrapper, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                   onPress={() => setIsDatePickerVisible(true)}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.formIconBadge, { backgroundColor: '#FEF3C7' }]}>
-                    <MaterialIcons name="event" size={18} color="#D97706" />
+                  <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(217,119,6,0.18)' : '#FEF3C7' }]}>
+                    <MaterialIcons name="event" size={18} color={isDark ? '#FBBF24' : "#D97706"} />
                   </View>
-                  <Text style={[styles.formDateDisplay, !formDate && styles.formPlaceholderText]}>
+                  <Text style={[
+                    styles.formDateDisplay, 
+                    isDark && { color: appTheme.textPrimary },
+                    !formDate && (isDark ? { color: appTheme.textMuted } : styles.formPlaceholderText)
+                  ]}>
                     {formDate || 'Tap to select date (e.g. 06/08/2026)'}
                   </Text>
-                  <View style={styles.calendarBadge}>
-                    <MaterialIcons name="calendar-today" size={16} color="#D97706" />
+                  <View style={[styles.calendarBadge, isDark && { backgroundColor: 'rgba(217,119,6,0.18)' }]}>
+                    <MaterialIcons name="calendar-today" size={16} color={isDark ? '#FBBF24' : "#D97706"} />
                   </View>
                 </TouchableOpacity>
               </View>
 
               {/* Attach Image (Book Page Photo / Worksheet) */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Attach Photo / Page (Optional)</Text>
+                <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Attach Photo / Page (Optional)</Text>
                 {formImage ? (
-                  <View style={styles.imageAttachedCard}>
+                  <View style={[styles.imageAttachedCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     <View style={styles.imageAttachedLeft}>
                       <Image source={{ uri: formImage }} style={styles.imageThumbnail} />
                       <View style={{ flex: 1, marginLeft: 10 }}>
                         <View style={styles.attachedStatusRow}>
                           <MaterialIcons name="check-circle" size={14} color="#10B981" />
-                          <Text style={styles.attachedStatusText}>Photo Attached</Text>
+                          <Text style={[styles.attachedStatusText, isDark && { color: '#10B981' }]}>Photo Attached</Text>
                         </View>
-                        <Text style={styles.attachedFileName} numberOfLines={1}>
+                        <Text style={[styles.attachedFileName, isDark && { color: appTheme.textPrimary }]} numberOfLines={1}>
                           BookPage_Attachment.jpg
                         </Text>
                       </View>
                     </View>
                     <View style={styles.imageActionsRow}>
                       <TouchableOpacity 
-                        style={styles.imageChangeBtn} 
+                        style={[styles.imageChangeBtn, isDark && { backgroundColor: appTheme.surfaceVariant }]} 
                         onPress={handlePickMockImage}
                         activeOpacity={0.8}
                       >
-                        <MaterialIcons name="edit" size={14} color="#2563EB" />
-                        <Text style={styles.imageChangeText}>Change</Text>
+                        <MaterialIcons name="edit" size={14} color={isDark ? appTheme.primary : "#2563EB"} />
+                        <Text style={[styles.imageChangeText, isDark && { color: appTheme.primary }]}>Change</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        style={styles.imageRemoveBtn} 
+                        style={[styles.imageRemoveBtn, isDark && { backgroundColor: 'rgba(239,68,68,0.15)' }]} 
                         onPress={() => setFormImage(null)}
                         activeOpacity={0.8}
                       >
@@ -729,35 +770,35 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   </View>
                 ) : (
                   <TouchableOpacity 
-                    style={styles.uploadPhotoCard} 
+                    style={[styles.uploadPhotoCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                     onPress={handlePickMockImage}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.formIconBadge, { backgroundColor: '#FFE4E6', width: 36, height: 36, borderRadius: 10 }]}>
-                      <MaterialIcons name="add-a-photo" size={18} color="#E11D48" />
+                    <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(225,29,72,0.18)' : '#FFE4E6', width: 36, height: 36, borderRadius: 10 }]}>
+                      <MaterialIcons name="add-a-photo" size={18} color={isDark ? '#FB7185' : "#E11D48"} />
                     </View>
                     <View style={{ flex: 1, marginLeft: 6 }}>
-                      <Text style={styles.uploadPhotoTitle}>Tap to attach photo (Book page, Diary, etc.)</Text>
-                      <Text style={styles.uploadPhotoSubtitle}>Optional • Camera or Gallery</Text>
+                      <Text style={[styles.uploadPhotoTitle, isDark && { color: appTheme.textPrimary }]}>Tap to attach photo (Book page, Diary, etc.)</Text>
+                      <Text style={[styles.uploadPhotoSubtitle, isDark && { color: appTheme.textMuted }]}>Optional • Camera or Gallery</Text>
                     </View>
-                    <MaterialIcons name="cloud-upload" size={20} color="#E11D48" />
+                    <MaterialIcons name="cloud-upload" size={20} color={isDark ? '#FB7185' : "#E11D48"} />
                   </TouchableOpacity>
                 )}
               </View>
 
               {/* Homework Title (Optional) */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Homework Title (Optional)</Text>
-                <View style={styles.formInputWrapper}>
-                  <View style={[styles.formIconBadge, { backgroundColor: '#E0F2FE' }]}>
-                    <MaterialIcons name="subtitles" size={18} color="#0284C7" />
+                <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Homework Title (Optional)</Text>
+                <View style={[styles.formInputWrapper, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                  <View style={[styles.formIconBadge, { backgroundColor: isDark ? 'rgba(2,132,199,0.18)' : '#E0F2FE' }]}>
+                    <MaterialIcons name="subtitles" size={18} color={isDark ? '#38BDF8' : "#0284C7"} />
                   </View>
                   <TextInput
-                    style={styles.formInputText}
+                    style={[styles.formInputText, isDark && { color: appTheme.textPrimary }]}
                     value={formTitle}
                     onChangeText={setFormTitle}
                     placeholder="e.g. Chapter 4 Multiplication Practice"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDark ? appTheme.textMuted : "#94A3B8"}
                   />
                 </View>
               </View>
@@ -765,19 +806,19 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
               {/* Homework Instructions / Notes */}
               <View style={styles.formGroup}>
                 <View style={styles.formNoteHeader}>
-                  <Text style={styles.formLabel}>
+                  <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>
                     Homework Instructions / Notes <Text style={{ color: '#EF4444' }}>*</Text>
                   </Text>
-                  <Text style={styles.formCharCounter}>{formNote.length}/2000</Text>
+                  <Text style={[styles.formCharCounter, isDark && { color: appTheme.textMuted }]}>{formNote.length}/2000</Text>
                 </View>
                 <TextInput
-                  style={styles.formTextArea}
+                  style={[styles.formTextArea, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                   multiline={true}
                   numberOfLines={5}
                   value={formNote}
                   onChangeText={formText => setFormNote(formText.substring(0, 2000))}
                   placeholder="Write clear homework instructions for students...&#10;e.g. Read pages 20-25 and solve exercise questions 1 to 5 in workbook."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={isDark ? appTheme.textMuted : "#94A3B8"}
                   textAlignVertical="top"
                 />
               </View>
@@ -803,11 +844,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={styles.formCancelBtn}
+                  style={[styles.formCancelBtn, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                   onPress={() => setCreateModalVisible(false)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.formCancelText}>Cancel</Text>
+                  <Text style={[styles.formCancelText, isDark && { color: appTheme.textMuted }]}>Cancel</Text>
                 </TouchableOpacity>
               </View>
 
@@ -832,35 +873,35 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 500 }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: appTheme.bg, alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* Premium AppBar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
         <View style={styles.appBarLeft}>
-          <TouchableOpacity style={styles.appBarButton} activeOpacity={0.7} onPress={() => navigation.navigate('Home')}>
-            <MaterialIcons name="arrow-back" size={20} color="#0052cc" />
+          <TouchableOpacity style={[styles.appBarButton, { backgroundColor: appTheme.surfaceVariant }]} activeOpacity={0.7} onPress={() => navigation.navigate('Home')}>
+            <MaterialIcons name="arrow-back" size={20} color={appTheme.primary} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <View style={styles.logoBadge}>
+            <View style={[styles.logoBadge, { backgroundColor: appTheme.primary }]}>
               <Text style={styles.logoBadgeText}>AE</Text>
             </View>
             <View style={{ marginLeft: 2 }}>
-              <Text style={styles.appBarTitle} numberOfLines={1}>Homework</Text>
-              <Text style={styles.appBarSubtitle}>Daily Tasks</Text>
+              <Text style={[styles.appBarTitle, { color: appTheme.textPrimary }]} numberOfLines={1}>Homework</Text>
+              <Text style={[styles.appBarSubtitle, { color: appTheme.textMuted }]}>Daily Tasks</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.appBarRight}>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
-            <MaterialIcons name="search" size={19} color="#0052cc" />
+          <TouchableOpacity style={[styles.appBarIconBtn, { backgroundColor: appTheme.surfaceVariant }]} activeOpacity={0.7}>
+            <MaterialIcons name="search" size={19} color={appTheme.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.appBarIconBtn, { backgroundColor: appTheme.surfaceVariant }]} activeOpacity={0.7}>
             <View style={styles.notificationWrapper}>
-              <MaterialIcons name="notifications-none" size={20} color="#0052cc" />
+              <MaterialIcons name="notifications-none" size={20} color={appTheme.primary} />
               <View style={styles.notificationDot} />
             </View>
           </TouchableOpacity>
-          <View style={styles.avatarBorderRing}>
+          <View style={[styles.avatarBorderRing, { borderColor: appTheme.primary }]}>
             <Image 
               source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCP8Fes6Wf9DdkJS-k33oTvc53T3DDc43ixr_T8hwh_pr7sY__yCD2W_7u82_wSOmxr5bh8BWjPCpfyruGFXgrPxwBnxu3LTADJnrW1Pyal-Qu22X6blXtzKTJ1Qq9MSu3lKFCjAiSBqPq2uZCCOWWLFfJ_afO1UosCa0JnsAyjMZTLqPq-T2HkOCTCMpG_U0QCY9cje_vqA6rxLx33tk9UUSBSy0TQyKocGDGSGQPP-eLL9BRYsDjQTw' }}
               style={styles.profileAvatar}
@@ -883,9 +924,9 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
         showsVerticalScrollIndicator={false}
       >
         {/* Solid White High-Contrast Control Center Deck */}
-        <View style={styles.controlDeck}>
+        <View style={[styles.controlDeck, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           {/* Segmented Date Filter Bar */}
-          <View style={styles.filterBar}>
+          <View style={[styles.filterBar, { backgroundColor: appTheme.surfaceVariant }]}>
             {(['Today', 'Yesterday', 'Custom Date'] as const).map((filter) => {
               const isSelected = selectedFilter === filter;
               return (
@@ -893,7 +934,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                   key={filter}
                   style={[
                     styles.filterBarOption,
-                    isSelected ? styles.filterBarOptionActive : null
+                    isSelected && [styles.filterBarOptionActive, { backgroundColor: appTheme.primary, borderColor: appTheme.primary }]
                   ]}
                   onPress={() => handleFilterChange(filter)}
                   activeOpacity={0.8}
@@ -903,12 +944,13 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                       <MaterialIcons 
                         name="calendar-month" 
                         size={20} 
-                        color={isSelected ? '#0047CC' : '#475569'} 
+                        color={isSelected ? '#ffffff' : appTheme.textMuted} 
                       />
                     ) : (
                       <Text style={[
                         styles.filterBarOptionText,
-                        isSelected ? styles.filterBarOptionTextActive : null
+                        { color: appTheme.textMuted },
+                        isSelected && [styles.filterBarOptionTextActive, { color: '#ffffff' }]
                       ]}>
                         {filter}
                       </Text>
@@ -920,30 +962,30 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
           </View>
 
           {/* High-Contrast Search Bar */}
-          <View style={styles.searchWrapper}>
-            <MaterialIcons name="search" size={22} color="#0047CC" style={styles.searchIcon} />
+          <View style={[styles.searchWrapper, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}>
+            <MaterialIcons name="search" size={22} color={appTheme.primary} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: appTheme.textPrimary }]}
               placeholder="Search note, class, subject..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={appTheme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery !== '' && (
               <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={20} color="#64748B" />
+                <MaterialIcons name="close" size={20} color={appTheme.textMuted} />
               </TouchableOpacity>
             )}
           </View>
 
           {/* Action Buttons */}
           <View style={styles.topActionsRow}>
-            <TouchableOpacity style={[styles.topActionBtn, styles.exportBtn]} activeOpacity={0.8}>
-              <MaterialIcons name="file-download" size={19} color="#0047CC" />
-              <Text style={styles.exportBtnText}>Export</Text>
+            <TouchableOpacity style={[styles.topActionBtn, styles.exportBtn, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]} activeOpacity={0.8}>
+              <MaterialIcons name="file-download" size={19} color={appTheme.primary} />
+              <Text style={[styles.exportBtnText, { color: appTheme.primary }]}>Export</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.topActionBtn, styles.createBtn]} 
+              style={[styles.topActionBtn, styles.createBtn, { backgroundColor: appTheme.primary }]} 
               activeOpacity={0.8}
               onPress={() => setCreateModalVisible(true)}
             >
@@ -977,34 +1019,21 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
         ) : (
           <View style={styles.listContainer}>
             {filteredHomework.map((homework) => {
-              const statusStyle = getStatusColor(homework.status);
               const isExpanded = !!expandedNotes[homework.id];
               const shouldTruncate = homework.note.length > 90;
-              const displayNote = (shouldTruncate && !isExpanded) 
-                ? `${homework.note.substring(0, 90)}...` 
-                : homework.note;
-              const getSubjectColor = (sub: string) => {
-                switch (sub) {
-                  case 'English': return '#10B981';
-                  case 'Mathematics': return '#7C3AED';
-                  case 'Science': return '#0052cc';
-                  default: return '#F59E0B';
-                }
-              };
-              const subjectColor = getSubjectColor(homework.subject);
 
               return (
                 <View key={homework.id} style={styles.cardContainer}>
-                  {/* Clean White Diary Sheet Page */}
-                  <View style={styles.card}>
+                  {/* Clean Diary Sheet Page */}
+                  <View style={[styles.card, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {/* Premium Notebook Spiral Bind along the left edge */}
                     <View style={styles.spiralBinder} pointerEvents="none">
                       {Array.from({ length: 9 }).map((_, rIdx) => (
                         <View key={rIdx} style={styles.spiralRingContainer}>
                           {/* C-shaped metallic coil looping over the edge */}
-                          <View style={styles.spiralLoop} />
+                          <View style={[styles.spiralLoop, !isDefaultTheme && { backgroundColor: 'rgba(255, 255, 255, 0.22)' }]} />
                           {/* Punched round hole on the page */}
-                          <View style={styles.spiralHole} />
+                          <View style={[styles.spiralHole, !isDefaultTheme && { backgroundColor: appTheme.bg, borderColor: appTheme.border }]} />
                         </View>
                       ))}
                     </View>
@@ -1012,10 +1041,10 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                     {/* Top Row: Date Box + Badges & Title & Bookmark */}
                     <View style={styles.cardHeaderRow}>
                       {/* Date Badge Box */}
-                      <View style={styles.dateBadgeBox}>
-                        <Text style={styles.dateDayText}>{homework.day || '06'}</Text>
-                        <Text style={styles.dateMonthText}>{homework.month || 'AUG'}</Text>
-                        <Text style={styles.dateDayNameText}>
+                      <View style={[styles.dateBadgeBox, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}>
+                        <Text style={[styles.dateDayText, !isDefaultTheme && { color: appTheme.primary }]}>{homework.day || '06'}</Text>
+                        <Text style={[styles.dateMonthText, !isDefaultTheme && { color: appTheme.primary }]}>{homework.month || 'AUG'}</Text>
+                        <Text style={[styles.dateDayNameText, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                           {homework.day === '06' ? 'WEDNESDAY' : homework.day === '05' ? 'TUESDAY' : homework.day === '04' ? 'MONDAY' : 'WEEKDAY'}
                         </Text>
                       </View>
@@ -1024,37 +1053,41 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                       <View style={styles.headerRightCol}>
                         <View style={styles.badgeAndBookmarkRow}>
                           <View style={styles.badgeRow}>
-                            <View style={styles.classBadge}>
-                              <Text style={styles.classBadgeText}>{homework.grade}</Text>
+                            <View style={[styles.classBadge, !isDefaultTheme && { backgroundColor: appTheme.primaryLight }]}>
+                              <Text style={[styles.classBadgeText, !isDefaultTheme && { color: appTheme.primary }]}>{homework.grade}</Text>
                             </View>
-                            <View style={styles.sectionBadge}>
-                              <Text style={styles.sectionBadgeText}>Sec {homework.section}</Text>
+                            <View style={[styles.sectionBadge, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant }]}>
+                              <Text style={[styles.sectionBadgeText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Sec {homework.section}</Text>
                             </View>
                             <View style={[styles.subjectBadge, {
-                              backgroundColor: homework.subject === 'English' ? '#F3E8FF' : homework.subject === 'Mathematics' ? '#EDE9FE' : homework.subject === 'Science' ? '#E0F2FE' : '#FEF3C7'
+                              backgroundColor: isDefaultTheme 
+                                ? (homework.subject === 'English' ? '#F3E8FF' : homework.subject === 'Mathematics' ? '#EDE9FE' : homework.subject === 'Science' ? '#E0F2FE' : '#FEF3C7')
+                                : appTheme.accentBg
                             }]}>
                               <Text style={[styles.subjectBadgeText, {
-                                color: homework.subject === 'English' ? '#7E22CE' : homework.subject === 'Mathematics' ? '#6D28D9' : homework.subject === 'Science' ? '#0369A1' : '#D97706'
+                                color: isDefaultTheme 
+                                  ? (homework.subject === 'English' ? '#7E22CE' : homework.subject === 'Mathematics' ? '#6D28D9' : homework.subject === 'Science' ? '#0369A1' : '#D97706')
+                                  : appTheme.accent
                               }]}>{homework.subject}</Text>
                             </View>
                           </View>
 
                           {/* Bookmark Button */}
                           <TouchableOpacity 
-                            style={styles.bookmarkBtn} 
+                            style={[styles.bookmarkBtn, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant }]} 
                             onPress={() => toggleBookmark(homework.id)}
                             activeOpacity={0.7}
                           >
                             <MaterialIcons 
                               name={bookmarkedIds[homework.id] ? "bookmark" : "bookmark-border"} 
                               size={18} 
-                              color="#0066FF" 
+                              color={appTheme.primary} 
                             />
                           </TouchableOpacity>
                         </View>
 
-                        {/* Title */}
-                        <Text style={styles.cardTitle} numberOfLines={2}>
+                        {/* Title - high contrast crisp readable text */}
+                        <Text style={[styles.cardTitle, { color: appTheme.textPrimary }]} numberOfLines={2}>
                           {homework.title}
                         </Text>
                       </View>
@@ -1063,28 +1096,28 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                     {/* Metadata Row: Teacher • Date Time + Status Pill (Single Clean Row) */}
                     <View style={styles.creatorMetaRow}>
                       <View style={styles.creatorLeftInfo}>
-                        <MaterialIcons name="person" size={13} color="#0066FF" />
-                        <Text style={styles.creatorTeacherName} numberOfLines={1}>{homework.teacher}</Text>
-                        <Text style={styles.metaDot}>•</Text>
-                        <MaterialIcons name="calendar-today" size={12} color="#64748B" />
-                        <Text style={styles.creatorMetaDate} numberOfLines={1}>
+                        <MaterialIcons name="person" size={13} color={appTheme.primary} />
+                        <Text style={[styles.creatorTeacherName, { color: appTheme.textSecondary }]} numberOfLines={1}>{homework.teacher}</Text>
+                        <Text style={[styles.metaDot, { color: appTheme.textMuted }]}>•</Text>
+                        <MaterialIcons name="calendar-today" size={12} color={appTheme.textMuted} />
+                        <Text style={[styles.creatorMetaDate, { color: appTheme.textSecondary }]} numberOfLines={1}>
                           {homework.day || '6'} {homework.month ? (homework.month.charAt(0) + homework.month.slice(1).toLowerCase()) : 'Aug'}
                         </Text>
-                        <MaterialIcons name="access-time" size={12} color="#64748B" />
-                        <Text style={styles.creatorMetaTime} numberOfLines={1}>09:30 AM</Text>
+                        <MaterialIcons name="access-time" size={12} color={appTheme.textMuted} />
+                        <Text style={[styles.creatorMetaTime, { color: appTheme.textSecondary }]} numberOfLines={1}>09:30 AM</Text>
                       </View>
 
                       {/* Status Pill */}
                       <View style={[styles.statusPill, {
-                        backgroundColor: homework.status === 'Graded' ? '#D1FAE5' : '#FEF3C7'
+                        backgroundColor: homework.status === 'Graded' ? (appTheme.isDark ? 'rgba(52, 211, 153, 0.16)' : '#D1FAE5') : (appTheme.isDark ? 'rgba(251, 191, 36, 0.16)' : '#FEF3C7')
                       }]}>
                         <MaterialIcons 
                           name={homework.status === 'Graded' ? "check-circle" : "access-time"} 
                           size={12} 
-                          color={homework.status === 'Graded' ? "#059669" : "#D97706"} 
+                          color={homework.status === 'Graded' ? (appTheme.isDark ? '#34D399' : '#059669') : (appTheme.isDark ? '#FBBF24' : '#D97706')} 
                         />
                         <Text style={[styles.statusPillText, {
-                          color: homework.status === 'Graded' ? "#059669" : "#D97706"
+                          color: homework.status === 'Graded' ? (appTheme.isDark ? '#34D399' : '#059669') : (appTheme.isDark ? '#FBBF24' : '#D97706')
                         }]}>
                           {homework.status.toUpperCase()}
                         </Text>
@@ -1092,13 +1125,13 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                     </View>
 
                     {/* Note Box */}
-                    <View style={styles.noteBox}>
+                    <View style={[styles.noteBox, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}>
                       <View style={styles.noteTopRow}>
-                        <View style={styles.noteIconCircle}>
-                          <MaterialIcons name="description" size={16} color="#2563EB" />
+                        <View style={[styles.noteIconCircle, !isDefaultTheme && { backgroundColor: appTheme.primaryLight }]}>
+                          <MaterialIcons name="description" size={16} color={appTheme.primary} />
                         </View>
                         <Text 
-                          style={styles.noteText} 
+                          style={[styles.noteText, { color: appTheme.textPrimary }]} 
                           numberOfLines={isExpanded ? undefined : 3}
                         >
                           {homework.note}
@@ -1107,11 +1140,11 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
                       {shouldTruncate && (
                         <TouchableOpacity onPress={() => toggleExpandNote(homework.id)} style={styles.readMoreBtn} activeOpacity={0.7}>
-                          <Text style={styles.readMoreText}>{isExpanded ? 'Read Less' : 'Read More'}</Text>
+                          <Text style={[styles.readMoreText, { color: appTheme.primary }]}>{isExpanded ? 'Read Less' : 'Read More'}</Text>
                           <MaterialIcons 
                             name={isExpanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} 
                             size={18} 
-                            color="#0066FF" 
+                            color={appTheme.primary} 
                           />
                         </TouchableOpacity>
                       )}
@@ -1122,7 +1155,7 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
                       <TouchableOpacity 
                         onPress={() => setPreviewImage(homework.image)} 
                         activeOpacity={0.9}
-                        style={styles.imageWrapper}
+                        style={[styles.imageWrapper, !isDefaultTheme && { borderColor: appTheme.border }]}
                       >
                         <Image 
                           source={typeof homework.image === 'string' ? { uri: homework.image } : homework.image} 
@@ -1138,13 +1171,13 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
 
                     {/* Action Buttons: View, Edit, Delete */}
                     <View style={styles.cardFooterActions}>
-                      <TouchableOpacity style={styles.actionBtnView} activeOpacity={0.75} onPress={() => handleViewPress(homework)}>
-                        <MaterialIcons name="visibility" size={18} color="#0066FF" />
-                        <Text style={styles.actionBtnViewText}>View</Text>
+                      <TouchableOpacity style={[styles.actionBtnView, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]} activeOpacity={0.75} onPress={() => handleViewPress(homework)}>
+                        <MaterialIcons name="visibility" size={18} color={appTheme.primary} />
+                        <Text style={[styles.actionBtnViewText, { color: appTheme.primary }]}>View</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.actionBtnEdit} activeOpacity={0.75} onPress={() => handleEditPress(homework)}>
-                        <MaterialIcons name="edit" size={16} color="#334155" />
-                        <Text style={styles.actionBtnEditText}>Edit</Text>
+                      <TouchableOpacity style={[styles.actionBtnEdit, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]} activeOpacity={0.75} onPress={() => handleEditPress(homework)}>
+                        <MaterialIcons name="edit" size={16} color={appTheme.textSecondary} />
+                        <Text style={[styles.actionBtnEditText, { color: appTheme.textSecondary }]}>Edit</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.actionBtnDelete} activeOpacity={0.75} onPress={() => handleDeletePress(homework.id)}>
                         <MaterialIcons name="delete" size={18} color="#DC2626" />
@@ -1162,19 +1195,19 @@ export const HomeworkScreen: React.FC<HomeworkScreenProps> = ({ navigation }) =>
         {filteredHomework.length > 0 && (
           <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 28 }}>
             <View style={{
-              backgroundColor: '#F8FAFC',
+              backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.surfaceVariant,
               borderWidth: 1,
-              borderColor: '#E2E8F0',
+              borderColor: isDefaultTheme ? '#E2E8F0' : appTheme.border,
               paddingHorizontal: 20,
               paddingVertical: 10,
               borderRadius: 20,
-              shadowColor: '#0F172A',
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.04,
               shadowRadius: 6,
               elevation: 2,
             }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: isDefaultTheme ? '#475569' : appTheme.textSecondary }}>
                 All {filteredHomework.length} homework records loaded
               </Text>
             </View>

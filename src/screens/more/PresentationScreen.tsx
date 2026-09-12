@@ -9,12 +9,12 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
-  Clipboard,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface PresentationScreenProps {
   navigation: any;
@@ -107,18 +107,18 @@ const buildMockDeck = (
 };
 
 export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigation }) => {
+  const { appTheme, isDefaultTheme } = useAppTheme();
   const [topic, setTopic] = useState('');
   const [format, setFormat] = useState('Presentation');
   const [textMode, setTextMode] = useState('Generate');
-  const [slidesCount, setSlidesCount] = useState('');
+  const [slidesCount, setSlidesCount] = useState('8');
   const [exportAs, setExportAs] = useState('PowerPoint (PPTX)');
   const [additionalNotes, setAdditionalNotes] = useState('');
-  
+
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStatus, setProgressStatus] = useState('');
   const [decks, setDecks] = useState<PresentationSet[]>([]);
-  const [activeDeck, setActiveDeck] = useState<PresentationSet | null>(null);
 
   // Dropdown options
   const [formatOpen, setFormatOpen] = useState(false);
@@ -166,7 +166,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Background decoration */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -184,7 +184,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
 
       {/* HEADER */}
       <LinearGradient
-        colors={['#5C1605', '#A83014', '#D24726']}
+        colors={isDefaultTheme ? ['#5C1605', '#A83014', '#D24726'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -207,20 +207,24 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#FFAB91', '#D24726', '#A83014']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient
+        colors={isDefaultTheme ? ['#FFAB91', '#D24726', '#A83014'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={styles.headerGlow}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* INPUT CARD */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           {/* Topic / Content */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Topic / Content</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Topic / Content</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter presentation topic or outline..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -231,31 +235,31 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
 
           {/* Format Selection Dropdown */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Format</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Format</Text>
           </View>
-          <TouchableOpacity style={styles.dropdownSelector} onPress={() => setFormatOpen(true)}>
-            <Text style={styles.dropdownText}>{format}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+          <TouchableOpacity style={[styles.dropdownSelector, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setFormatOpen(true)}>
+            <Text style={[styles.dropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{format}</Text>
+            <MaterialIcons name="arrow-drop-down" size={24} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
           </TouchableOpacity>
 
           {/* Text Mode Dropdown */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Text Mode</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Text Mode</Text>
           </View>
-          <TouchableOpacity style={styles.dropdownSelector} onPress={() => setModeOpen(true)}>
-            <Text style={styles.dropdownText}>{textMode}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+          <TouchableOpacity style={[styles.dropdownSelector, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setModeOpen(true)}>
+            <Text style={[styles.dropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{textMode}</Text>
+            <MaterialIcons name="arrow-drop-down" size={24} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
           </TouchableOpacity>
 
           {/* Desired number of slides */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Desired number of slides</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Desired number of slides</Text>
           </View>
           <TextInput
-            style={styles.singleLineInput}
+            style={[styles.singleLineInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             keyboardType="numeric"
             value={slidesCount}
             onChangeText={setSlidesCount}
@@ -264,23 +268,23 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
 
           {/* Export As Dropdown */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Export As (optional)</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Export As (optional)</Text>
           </View>
-          <TouchableOpacity style={styles.dropdownSelector} onPress={() => setExportOpen(true)}>
-            <Text style={styles.dropdownText}>{exportAs}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="#64748B" />
+          <TouchableOpacity style={[styles.dropdownSelector, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setExportOpen(true)}>
+            <Text style={[styles.dropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{exportAs}</Text>
+            <MaterialIcons name="arrow-drop-down" size={24} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
           </TouchableOpacity>
 
           {/* Additional Instructions */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Additional Instructions</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Additional Instructions</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Tone, audience, or extra styling notes"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -293,7 +297,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
           {!generating ? (
             <TouchableOpacity style={styles.generateBtn} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#D24726', '#A83014']}
+                colors={isDefaultTheme ? ['#D24726', '#A83014'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.generateBtnGrad}
               >
@@ -301,37 +305,37 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#D24726" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingStateText}>Creating slides outline…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#D24726" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingStateText, !isDefaultTheme && { color: appTheme.primary }]}>Creating slides outline…</Text>
             </View>
           )}
         </View>
 
         {/* PROGRESS LOADER */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#D24726" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#D24726" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#A83014', '#FF7A59']}
+                colors={isDefaultTheme ? ['#A83014', '#FF7A59'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textMuted }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* RESULTS HEADER */}
         {decks.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#D24726', '#A83014']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Generated Slides</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#D24726', '#A83014'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Generated Slides</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{decks.length}</Text>
             </View>
           </View>
@@ -340,21 +344,21 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
         {/* RESULT DECK PREVIEWS */}
         <View style={{ gap: 20 }}>
           {decks.map((deck) => (
-            <View key={deck.id} style={styles.resultCard}>
-              <LinearGradient colors={['#5C1605', '#D24726', '#FFAB91']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+            <View key={deck.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#5C1605', '#D24726', '#FFAB91'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
               
               {/* Meta details */}
               <View style={styles.resultMeta}>
-                <LinearGradient colors={['#FCE8E6', '#FFCDD2']} style={styles.resultIconOrb}>
-                  <MaterialIcons name="slideshow" size={17} color="#D24726" />
+                <LinearGradient colors={isDefaultTheme ? ['#FCE8E6', '#FFCDD2'] : [appTheme.primaryLight, appTheme.surface]} style={styles.resultIconOrb}>
+                  <MaterialIcons name="slideshow" size={17} color={isDefaultTheme ? "#D24726" : appTheme.primary} />
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resultTopic} numberOfLines={1}>{deck.topic}</Text>
-                  <Text style={styles.resultDate}>{deck.date} · {deck.slides.length} Slides</Text>
+                  <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{deck.topic}</Text>
+                  <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textMuted }]}>{deck.date} · {deck.slides.length} Slides</Text>
                 </View>
-                <TouchableOpacity onPress={() => setActiveDeck(deck)} activeOpacity={0.8}>
-                  <View style={styles.eyeOuter}>
-                    <LinearGradient colors={['#D24726', '#A83014']} style={styles.eyeCore}>
+                <TouchableOpacity onPress={() => downloadDeck(deck)} activeOpacity={0.8}>
+                  <View style={[styles.eyeOuter, !isDefaultTheme && { borderColor: appTheme.border, backgroundColor: appTheme.surface }]}>
+                    <LinearGradient colors={isDefaultTheme ? ['#D24726', '#A83014'] : appTheme.primaryGradient} style={styles.eyeCore}>
                       <View style={styles.eyeGloss} />
                       <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                     </LinearGradient>
@@ -366,8 +370,8 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
               <ScrollView horizontal showsHorizontalScrollIndicator={true} style={styles.slideScroll}>
                 <View style={styles.slideDeckRow}>
                   {deck.slides.map((slide) => (
-                    <View key={slide.num} style={styles.slidePreviewCard}>
-                      <LinearGradient colors={['#5C1605', '#A83014']} style={styles.slidePreviewHeader}>
+                    <View key={slide.num} style={[styles.slidePreviewCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#5C1605', '#A83014'] : appTheme.bannerGradient} style={styles.slidePreviewHeader}>
                         <Text style={styles.slidePreviewTitle} numberOfLines={1}>{slide.title}</Text>
                         <View style={styles.slideNumberBadge}>
                           <Text style={styles.slideNumberText}>{slide.num}</Text>
@@ -376,8 +380,8 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
                       <View style={styles.slidePreviewContent}>
                         {slide.bullets.map((b, i) => (
                           <View key={i} style={styles.bulletRow}>
-                            <View style={styles.bulletDot} />
-                            <Text style={styles.bulletText} numberOfLines={2}>{b}</Text>
+                            <View style={[styles.bulletDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+                            <Text style={[styles.bulletText, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={2}>{b}</Text>
                           </View>
                         ))}
                       </View>
@@ -389,7 +393,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
               {/* Actions */}
               <View style={styles.actionsBlock}>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => downloadDeck(deck)} activeOpacity={0.8}>
-                  <LinearGradient colors={['#A83014', '#D24726']} style={styles.actionBtnGrad}>
+                  <LinearGradient colors={isDefaultTheme ? ['#A83014', '#D24726'] : appTheme.primaryGradient} style={styles.actionBtnGrad}>
                     <MaterialIcons name="get-app" size={18} color="#fff" style={{ marginRight: 6 }} />
                     <Text style={styles.actionBtnText}>Download PowerPoint (.pptx)</Text>
                   </LinearGradient>
@@ -404,22 +408,27 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
       {/* FORMAT MODAL */}
       <Modal visible={formatOpen} transparent={true} animationType="slide" onRequestClose={() => setFormatOpen(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setFormatOpen(false)}>
-          <View style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetHandle} />
-            <Text style={styles.bottomSheetTitle}>Select Format</Text>
+          <View style={[styles.bottomSheetContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+            <View style={[styles.bottomSheetHandle, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+            <Text style={[styles.bottomSheetTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Format</Text>
             {['Presentation', 'Doc', 'Social'].map((item) => {
               const isSelected = format === item;
               return (
                 <TouchableOpacity
                   key={item}
-                  style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                  style={[
+                    styles.dropdownItem,
+                    isSelected && styles.dropdownItemActive,
+                    !isDefaultTheme && { borderBottomColor: appTheme.border },
+                    !isDefaultTheme && isSelected && { backgroundColor: appTheme.surface },
+                  ]}
                   onPress={() => {
                     setFormat(item);
                     setFormatOpen(false);
                   }}
                 >
-                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>{item}</Text>
-                  {isSelected && <MaterialIcons name="check" size={20} color="#D24726" />}
+                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive, !isDefaultTheme && !isSelected && { color: appTheme.textSecondary }, !isDefaultTheme && isSelected && { color: appTheme.primary }]}>{item}</Text>
+                  {isSelected && <MaterialIcons name="check" size={20} color={isDefaultTheme ? "#D24726" : appTheme.primary} />}
                 </TouchableOpacity>
               );
             })}
@@ -430,22 +439,27 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
       {/* TEXT MODE MODAL */}
       <Modal visible={modeOpen} transparent={true} animationType="slide" onRequestClose={() => setModeOpen(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModeOpen(false)}>
-          <View style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetHandle} />
-            <Text style={styles.bottomSheetTitle}>Select Text Mode</Text>
+          <View style={[styles.bottomSheetContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+            <View style={[styles.bottomSheetHandle, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+            <Text style={[styles.bottomSheetTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Text Mode</Text>
             {['Generate', 'Condense', 'Preserve'].map((item) => {
               const isSelected = textMode === item;
               return (
                 <TouchableOpacity
                   key={item}
-                  style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                  style={[
+                    styles.dropdownItem,
+                    isSelected && styles.dropdownItemActive,
+                    !isDefaultTheme && { borderBottomColor: appTheme.border },
+                    !isDefaultTheme && isSelected && { backgroundColor: appTheme.surface },
+                  ]}
                   onPress={() => {
                     setTextMode(item);
                     setModeOpen(false);
                   }}
                 >
-                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>{item}</Text>
-                  {isSelected && <MaterialIcons name="check" size={20} color="#D24726" />}
+                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive, !isDefaultTheme && !isSelected && { color: appTheme.textSecondary }, !isDefaultTheme && isSelected && { color: appTheme.primary }]}>{item}</Text>
+                  {isSelected && <MaterialIcons name="check" size={20} color={isDefaultTheme ? "#D24726" : appTheme.primary} />}
                 </TouchableOpacity>
               );
             })}
@@ -456,22 +470,27 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
       {/* EXPORT AS MODAL */}
       <Modal visible={exportOpen} transparent={true} animationType="slide" onRequestClose={() => setExportOpen(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setExportOpen(false)}>
-          <View style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetHandle} />
-            <Text style={styles.bottomSheetTitle}>Export As</Text>
+          <View style={[styles.bottomSheetContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+            <View style={[styles.bottomSheetHandle, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+            <Text style={[styles.bottomSheetTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Export As</Text>
             {['PowerPoint (PPTX)', 'PDF'].map((item) => {
               const isSelected = exportAs === item;
               return (
                 <TouchableOpacity
                   key={item}
-                  style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                  style={[
+                    styles.dropdownItem,
+                    isSelected && styles.dropdownItemActive,
+                    !isDefaultTheme && { borderBottomColor: appTheme.border },
+                    !isDefaultTheme && isSelected && { backgroundColor: appTheme.surface },
+                  ]}
                   onPress={() => {
                     setExportAs(item);
                     setExportOpen(false);
                   }}
                 >
-                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>{item}</Text>
-                  {isSelected && <MaterialIcons name="check" size={20} color="#D24726" />}
+                  <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive, !isDefaultTheme && !isSelected && { color: appTheme.textSecondary }, !isDefaultTheme && isSelected && { color: appTheme.primary }]}>{item}</Text>
+                  {isSelected && <MaterialIcons name="check" size={20} color={isDefaultTheme ? "#D24726" : appTheme.primary} />}
                 </TouchableOpacity>
               );
             })}
@@ -484,7 +503,7 @@ export const PresentationScreen: React.FC<PresentationScreenProps> = ({ navigati
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF5F2' },
+  safeArea: { flex: 1, backgroundColor: '#FFF5F2', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -786,6 +805,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 34,
     width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -10 },
     shadowOpacity: 0.1,

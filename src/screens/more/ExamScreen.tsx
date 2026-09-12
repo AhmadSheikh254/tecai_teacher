@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 type ExamSubModule = {
   id: string;
@@ -28,6 +29,8 @@ type ExamSubModule = {
 };
 
 export const ExamScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   const { width } = useWindowDimensions();
 
   // Search & Selected Submodule States
@@ -121,10 +124,10 @@ export const ExamScreen = ({ navigation }: any) => {
   });
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
       {/* ── CLEAN LIGHT OFF-WHITE BG WITH FAINT GLOW ── */}
       <LinearGradient
-        colors={['#FAFAFA', '#F8FAFC', '#FFFFFF']}
+        colors={isDefaultTheme ? ['#FAFAFA', '#F8FAFC', '#FFFFFF'] : [appTheme.bg, appTheme.bg, appTheme.bg]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -141,22 +144,24 @@ export const ExamScreen = ({ navigation }: any) => {
         <Path d="M-40,240 Q160,120 380,260 T820,220" fill="none" stroke="rgba(2,132,199,0.04)" strokeWidth={1.5} />
       </Svg>
 
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar Header */}
-        <View style={styles.appBar}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.96)', 'rgba(248,250,252,0.90)']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+          {isDefaultTheme && (
+            <LinearGradient
+              colors={['rgba(255,255,255,0.96)', 'rgba(248,250,252,0.90)']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={26} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={26} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exam Management</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Exam Management</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="history-edu" size={28} color="#0284C7" />
+          <TouchableOpacity style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} activeOpacity={0.7}>
+            <MaterialIcons name="history-edu" size={28} color={isDefaultTheme ? "#0284C7" : appTheme.primary} />
           </TouchableOpacity>
         </View>
 
@@ -168,18 +173,18 @@ export const ExamScreen = ({ navigation }: any) => {
 
 
           {/* SEARCH BAR FOR SUB-MODULES */}
-          <View style={styles.searchWrapper}>
-            <MaterialIcons name="search" size={22} color="#0284C7" style={{ marginRight: 8 }} />
+          <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+            <MaterialIcons name="search" size={22} color={isDefaultTheme ? "#0284C7" : appTheme.primary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
               placeholder="Search exam sub-modules (Schedule, Marks, Cards)..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery !== '' && (
               <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                <MaterialIcons name="close" size={20} color="#64748B" />
+                <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
               </TouchableOpacity>
             )}
           </View>
@@ -376,7 +381,7 @@ export const ExamScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 },
 
   // Faint ambient background circles
   orb1: {
@@ -683,6 +688,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
     maxHeight: '85%',
     borderRadius: 26,
     overflow: 'hidden',

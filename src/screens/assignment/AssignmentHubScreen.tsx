@@ -8,13 +8,13 @@ import {
   Pressable,
   Image,
   Animated,
-  useWindowDimensions,
   Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Rect, Path, Line, G, Defs, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface AssignmentHubScreenProps {
   navigation: any;
@@ -24,26 +24,41 @@ interface AssignmentHubScreenProps {
 interface ModuleIconProps {
   iconName: string;
   accentColor: string;
-  bgColor: string;
+  bgColor?: string;
 }
-const ModuleIcon: React.FC<ModuleIconProps> = ({ iconName, accentColor, bgColor }) => {
+const ModuleIcon: React.FC<ModuleIconProps> = ({ iconName, accentColor }) => {
+  const { appTheme } = useAppTheme();
+  const isDark = appTheme.isDark;
+  const displayColor = isDark 
+    ? (accentColor === '#003d9b' ? '#38BDF8' 
+      : accentColor === '#7C3AED' ? '#A78BFA' 
+      : accentColor === '#F59E0B' ? '#FBBF24' 
+      : '#34D399')
+    : accentColor;
+
   return (
     <View style={styles.iconOuterWrapper} pointerEvents="none">
       {/* Soft background ambient glow for the icon */}
-      <View style={[styles.iconInnerGlow, { backgroundColor: `${accentColor}18` }]} />
+      <View style={[styles.iconInnerGlow, { backgroundColor: `${displayColor}${isDark ? '38' : '18'}` }]} />
       
       {/* Main glass-like icon plate */}
-      <View style={[styles.iconGlassContainer, { borderColor: `${accentColor}15` }]}>
+      <View style={[
+        styles.iconGlassContainer, 
+        { 
+          borderColor: isDark ? `${displayColor}55` : `${displayColor}15`,
+          backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'
+        }
+      ]}>
         <LinearGradient
-          colors={['#ffffff', `${accentColor}10`]}
+          colors={isDark ? [`${displayColor}35`, `${displayColor}10`] : ['#ffffff', `${displayColor}10`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <MaterialIcons name={iconName as any} size={22} color={accentColor} />
+        <MaterialIcons name={iconName as any} size={22} color={displayColor} />
         {/* Glass reflection line */}
-        <View style={styles.iconGlassShine} />
+        <View style={[styles.iconGlassShine, { opacity: isDark ? 0.25 : 1 }]} />
       </View>
     </View>
   );
@@ -55,10 +70,35 @@ interface CategoryBadgeProps {
   accentColor: string;
 }
 const CategoryBadge: React.FC<CategoryBadgeProps> = ({ label, accentColor }) => {
+  const { appTheme } = useAppTheme();
+  const isDark = appTheme.isDark;
+  const displayColor = isDark 
+    ? (accentColor === '#003d9b' ? '#38BDF8' 
+      : accentColor === '#7C3AED' ? '#A78BFA' 
+      : accentColor === '#F59E0B' ? '#FBBF24' 
+      : '#34D399')
+    : accentColor;
+
   return (
-    <View style={[styles.badgeCapsule, { backgroundColor: `${accentColor}08`, borderColor: `${accentColor}18` }]} pointerEvents="none">
-      <View style={[styles.badgeDot, { backgroundColor: accentColor }]} />
-      <Text style={[styles.badgeText, { color: accentColor }]}>{label}</Text>
+    <View style={[
+      styles.badgeCapsule, 
+      { 
+        backgroundColor: isDark ? `${displayColor}1E` : `${displayColor}08`, 
+        borderColor: isDark ? `${displayColor}55` : `${displayColor}18` 
+      }
+    ]} pointerEvents="none">
+      <View style={[
+        styles.badgeDot, 
+        { 
+          backgroundColor: displayColor,
+          shadowColor: isDark ? displayColor : 'transparent',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: isDark ? 0.9 : 0,
+          shadowRadius: 4,
+          elevation: isDark ? 2 : 0
+        }
+      ]} />
+      <Text style={[styles.badgeText, { color: displayColor }]}>{label}</Text>
     </View>
   );
 };
@@ -68,14 +108,37 @@ interface ActionButtonProps {
   accentColor: string;
 }
 const ActionButton: React.FC<ActionButtonProps> = ({ accentColor }) => {
-  const gradientColors = accentColor === '#F59E0B' ? ['#FBBF24', '#D97706']
-                       : accentColor === '#7C3AED' ? ['#A78BFA', '#6D28D9']
-                       : accentColor === '#10B981' ? ['#34D399', '#059669']
-                       : ['#60A5FA', '#1D4ED8'];
+  const { appTheme } = useAppTheme();
+  const isDark = appTheme.isDark;
+  const displayColor = isDark 
+    ? (accentColor === '#003d9b' ? '#38BDF8' 
+      : accentColor === '#7C3AED' ? '#A78BFA' 
+      : accentColor === '#F59E0B' ? '#FBBF24' 
+      : '#34D399')
+    : accentColor;
+
+  const gradientColors = (accentColor === '#F59E0B' || displayColor === '#FBBF24') ? ['#FBBF24', '#D97706']
+                       : (accentColor === '#7C3AED' || displayColor === '#A78BFA') ? ['#C084FC', '#7C3AED']
+                       : (accentColor === '#10B981' || displayColor === '#34D399') ? ['#34D399', '#059669']
+                       : ['#38BDF8', '#0284C7'];
 
   return (
-    <View style={[styles.actionOrbitalTrack, { borderColor: `${accentColor}18` }]} pointerEvents="none">
-      <View style={[styles.actionCircleInner, { shadowColor: accentColor }]} pointerEvents="none">
+    <View style={[
+      styles.actionOrbitalTrack, 
+      { 
+        borderColor: isDark ? `${displayColor}45` : `${displayColor}18`,
+        backgroundColor: isDark ? `${displayColor}12` : 'transparent'
+      }
+    ]} pointerEvents="none">
+      <View style={[
+        styles.actionCircleInner, 
+        { 
+          shadowColor: displayColor,
+          shadowOpacity: isDark ? 0.6 : 0.35,
+          shadowRadius: isDark ? 8 : 6,
+          elevation: isDark ? 4 : 3
+        }
+      ]} pointerEvents="none">
         <LinearGradient
           colors={gradientColors as any}
           start={{ x: 0, y: 0 }}
@@ -106,9 +169,17 @@ interface ModuleCardProps {
   onPress: () => void;
 }
 const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => {
-  const { width } = useWindowDimensions();
+  const { appTheme } = useAppTheme();
+  const isDark = appTheme.isDark;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const displayAccentColor = isDark 
+    ? (item.color === '#003d9b' ? '#38BDF8' 
+      : item.color === '#7C3AED' ? '#A78BFA' 
+      : item.color === '#F59E0B' ? '#FBBF24' 
+      : '#34D399')
+    : item.color;
 
   const handlePressIn = () => {
     Animated.parallel([
@@ -163,36 +234,33 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
     ]
   };
 
-  const cardBgColor = item.color === '#F59E0B' ? '#FFFDF6' 
-                    : item.color === '#7C3AED' ? '#FAF8FF'
-                    : item.color === '#10B981' ? '#F3FDF8'
-                    : '#F4F9FF';
-  const cardBorderColor = `${item.color}22`;
+  const cardBorderColor = isDark ? `${displayAccentColor}3A` : `${item.color}22`;
 
   const renderCardWatermark = () => {
     const size = 110;
+    const strokeColor = isDark ? displayAccentColor : item.color;
     if (item.title === 'Activity') {
       return (
         <Svg width={size} height={size} style={styles.cardWatermarkSvg}>
           {/* Concentric orbit tracks */}
-          <Circle cx={size - 25} cy={size - 25} r={32} stroke={item.color} strokeWidth={1} strokeDasharray="3,3" fill="none" opacity={0.22} />
-          <Circle cx={size - 25} cy={size - 25} r={18} stroke={item.color} strokeWidth={0.8} fill="none" opacity={0.16} />
-          <Path d={`M 40 72 A 26 26 0 0 1 82 48`} stroke={item.color} strokeWidth={1} strokeDasharray="4,4" fill="none" opacity={0.25} />
+          <Circle cx={size - 25} cy={size - 25} r={32} stroke={strokeColor} strokeWidth={1} strokeDasharray="3,3" fill="none" opacity={isDark ? 0.32 : 0.22} />
+          <Circle cx={size - 25} cy={size - 25} r={18} stroke={strokeColor} strokeWidth={0.8} fill="none" opacity={isDark ? 0.24 : 0.16} />
+          <Path d={`M 40 72 A 26 26 0 0 1 82 48`} stroke={strokeColor} strokeWidth={1} strokeDasharray="4,4" fill="none" opacity={isDark ? 0.35 : 0.25} />
           
           {/* Spiraling launch trajectory trail */}
-          <Path d={`M 26 84 Q 44 48 76 68 T 88 34`} stroke={item.color} strokeWidth={1.2} fill="none" opacity={0.28} />
+          <Path d={`M 26 84 Q 44 48 76 68 T 88 34`} stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={isDark ? 0.4 : 0.28} />
           
           {/* Tiny flying rocket arrowhead silhouette on the path */}
-          <Path d="M 86 36 L 91 28 L 82 31 Z" fill={item.color} opacity={0.65} />
+          <Path d="M 86 36 L 91 28 L 82 31 Z" fill={strokeColor} opacity={isDark ? 0.85 : 0.65} />
           
           {/* Floating space dust / sparkles */}
-          <Circle cx={size - 45} cy={size - 30} r={1.5} fill={item.color} opacity={0.35} />
-          <Circle cx={size - 10} cy={size - 42} r={2.5} fill={item.color} opacity={0.3} />
-          <Circle cx={size - 68} cy={size - 22} r={1} fill={item.color} opacity={0.2} />
+          <Circle cx={size - 45} cy={size - 30} r={1.5} fill={strokeColor} opacity={0.45} />
+          <Circle cx={size - 10} cy={size - 42} r={2.5} fill={strokeColor} opacity={0.4} />
+          <Circle cx={size - 68} cy={size - 22} r={1} fill={strokeColor} opacity={0.3} />
 
           {/* Premium four-point vector stars */}
-          <Path d={`M 66 36 L 68 32 L 70 36 L 74 38 L 70 40 L 68 44 L 66 40 L 62 38 Z`} fill={item.color} opacity={0.38} />
-          <Path d={`M 38 68 L 40 64 L 42 68 L 46 70 L 42 72 L 40 76 L 38 72 L 34 70 Z`} fill={item.color} opacity={0.35} />
+          <Path d={`M 66 36 L 68 32 L 70 36 L 74 38 L 70 40 L 68 44 L 66 40 L 62 38 Z`} fill={strokeColor} opacity={isDark ? 0.55 : 0.38} />
+          <Path d={`M 38 68 L 40 64 L 42 68 L 46 70 L 42 72 L 40 76 L 38 72 L 34 70 Z`} fill={strokeColor} opacity={isDark ? 0.5 : 0.35} />
         </Svg>
       );
     }
@@ -201,33 +269,33 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
         <Svg width={size} height={size} style={styles.cardWatermarkSvg}>
           <G transform="rotate(4, 60, 65)">
             {/* Third underpage layer */}
-            <Path d="M56 58 L28 58 A3 3 0 0 0 25 61 L25 84 A3 3 0 0 0 28 87 L56 87 Z" stroke={item.color} strokeWidth={1} fill="none" opacity={0.08} />
-            <Path d="M56 58 L84 58 A3 3 0 0 1 87 61 L87 84 A3 3 0 0 1 84 87 L56 87 Z" stroke={item.color} strokeWidth={1} fill="none" opacity={0.08} />
+            <Path d="M56 58 L28 58 A3 3 0 0 0 25 61 L25 84 A3 3 0 0 0 28 87 L56 87 Z" stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.16 : 0.08} />
+            <Path d="M56 58 L84 58 A3 3 0 0 1 87 61 L87 84 A3 3 0 0 1 84 87 L56 87 Z" stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.16 : 0.08} />
 
             {/* Second underpage layer */}
-            <Path d="M58 55 L30 55 A3 3 0 0 0 27 58 L27 81 A3 3 0 0 0 30 84 L58 84 Z" stroke={item.color} strokeWidth={1.2} fill="none" opacity={0.16} />
-            <Path d="M58 55 L86 55 A3 3 0 0 1 89 58 L89 81 A3 3 0 0 1 86 84 L58 84 Z" stroke={item.color} strokeWidth={1.2} fill="none" opacity={0.16} />
+            <Path d="M58 55 L30 55 A3 3 0 0 0 27 58 L27 81 A3 3 0 0 0 30 84 L58 84 Z" stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={isDark ? 0.28 : 0.16} />
+            <Path d="M58 55 L86 55 A3 3 0 0 1 89 58 L89 81 A3 3 0 0 1 86 84 L58 84 Z" stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={isDark ? 0.28 : 0.16} />
             
             {/* Front main page sheet */}
-            <Path d="M60 52 L32 52 A3 3 0 0 0 29 55 L29 78 A3 3 0 0 0 32 81 L60 81 Z" stroke={item.color} strokeWidth={1.5} fill="none" opacity={0.3} />
-            <Path d="M60 52 L88 52 A3 3 0 0 1 91 55 L91 78 A3 3 0 0 1 88 81 L60 81 Z" stroke={item.color} strokeWidth={1.5} fill="none" opacity={0.3} />
+            <Path d="M60 52 L32 52 A3 3 0 0 0 29 55 L29 78 A3 3 0 0 0 32 81 L60 81 Z" stroke={strokeColor} strokeWidth={1.5} fill="none" opacity={isDark ? 0.45 : 0.3} />
+            <Path d="M60 52 L88 52 A3 3 0 0 1 91 55 L91 78 A3 3 0 0 1 88 81 L60 81 Z" stroke={strokeColor} strokeWidth={1.5} fill="none" opacity={isDark ? 0.45 : 0.3} />
             
             {/* Bookmark ribbon hanging down the center spine */}
-            <Path d="M 59.2 52 L 59.2 87 L 61 89 L 62.8 87 L 62.8 52 Z" fill="#003d9b" opacity={0.55} />
-            <Line x1={60} y1={52} x2={60} y2={81} stroke={item.color} strokeWidth={1.5} opacity={0.4} />
+            <Path d="M 59.2 52 L 59.2 87 L 61 89 L 62.8 87 L 62.8 52 Z" fill={strokeColor} opacity={0.65} />
+            <Line x1={60} y1={52} x2={60} y2={81} stroke={strokeColor} strokeWidth={1.5} opacity={isDark ? 0.55 : 0.4} />
             
             {/* Text lines */}
-            <Line x1={36} y1={59} x2={54} y2={59} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
-            <Line x1={36} y1={66} x2={50} y2={66} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
-            <Line x1={36} y1={73} x2={54} y2={73} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
-            <Line x1={66} y1={59} x2={84} y2={59} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
-            <Line x1={66} y1={66} x2={80} y2={66} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
-            <Line x1={66} y1={73} x2={84} y2={73} stroke={item.color} strokeWidth={1.2} opacity={0.2} />
+            <Line x1={36} y1={59} x2={54} y2={59} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
+            <Line x1={36} y1={66} x2={50} y2={66} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
+            <Line x1={36} y1={73} x2={54} y2={73} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
+            <Line x1={66} y1={59} x2={84} y2={59} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
+            <Line x1={66} y1={66} x2={80} y2={66} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
+            <Line x1={66} y1={73} x2={84} y2={73} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.3 : 0.2} />
           </G>
 
           {/* Floating four-point vector magic stars */}
-          <Path d={`M ${size - 54} ${size - 76} L ${size - 52} ${size - 81} L ${size - 50} ${size - 76} L ${size - 45} ${size - 74} L ${size - 50} ${size - 72} L ${size - 52} ${size - 67} L ${size - 54} ${size - 72} L ${size - 59} ${size - 74} Z`} fill={item.color} opacity={0.35} />
-          <Path d={`M ${size - 28} ${size - 68} L ${size - 26} ${size - 72} L ${size - 24} ${size - 68} L ${size - 20} ${size - 66} L ${size - 24} ${size - 64} L ${size - 26} ${size - 60} L ${size - 28} ${size - 64} L ${size - 32} ${size - 66} Z`} fill={item.color} opacity={0.4} />
+          <Path d={`M ${size - 54} ${size - 76} L ${size - 52} ${size - 81} L ${size - 50} ${size - 76} L ${size - 45} ${size - 74} L ${size - 50} ${size - 72} L ${size - 52} ${size - 67} L ${size - 54} ${size - 72} L ${size - 59} ${size - 74} Z`} fill={strokeColor} opacity={isDark ? 0.55 : 0.35} />
+          <Path d={`M ${size - 28} ${size - 68} L ${size - 26} ${size - 72} L ${size - 24} ${size - 68} L ${size - 20} ${size - 66} L ${size - 24} ${size - 64} L ${size - 26} ${size - 60} L ${size - 28} ${size - 64} L ${size - 32} ${size - 66} Z`} fill={strokeColor} opacity={isDark ? 0.6 : 0.4} />
         </Svg>
       );
     }
@@ -236,41 +304,41 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
         <Svg width={size} height={size} style={styles.cardWatermarkSvg}>
           <G transform="rotate(-6, 50, 56)">
             {/* Underlying shadow board layer */}
-            <Rect x={27} y={32} width={40} height={52} rx={4} stroke={item.color} strokeWidth={1} fill="none" opacity={0.12} />
+            <Rect x={27} y={32} width={40} height={52} rx={4} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.2 : 0.12} />
             
             {/* Main clipboard sheet */}
-            <Rect x={30} y={30} width={40} height={52} rx={4} stroke={item.color} strokeWidth={1.5} fill="none" opacity={0.3} />
+            <Rect x={30} y={30} width={40} height={52} rx={4} stroke={strokeColor} strokeWidth={1.5} fill="none" opacity={isDark ? 0.45 : 0.3} />
             
             {/* Top clip block */}
-            <Rect x={45} y={26} width={10} height={4} rx={1} stroke={item.color} strokeWidth={1.2} fill="none" opacity={0.35} />
+            <Rect x={45} y={26} width={10} height={4} rx={1} stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={isDark ? 0.55 : 0.35} />
             
             {/* Question 1: text line + choices A, B, C */}
-            <Line x1={36} y1={38} x2={56} y2={38} stroke={item.color} strokeWidth={1.2} opacity={0.25} />
-            <Circle cx={38} cy={45} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
-            <Circle cx={46} cy={45} r={2} fill="#0D9488" opacity={0.65} />
-            <Circle cx={54} cy={45} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
-            <Circle cx={62} cy={45} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
+            <Line x1={36} y1={38} x2={56} y2={38} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.35 : 0.25} />
+            <Circle cx={38} cy={45} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
+            <Circle cx={46} cy={45} r={2} fill={strokeColor} opacity={0.75} />
+            <Circle cx={54} cy={45} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
+            <Circle cx={62} cy={45} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
             
             {/* Question 2: text line + choices A, B, C */}
-            <Line x1={36} y1={52} x2={60} y2={52} stroke={item.color} strokeWidth={1.2} opacity={0.25} />
-            <Circle cx={38} cy={59} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
-            <Circle cx={46} cy={59} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
-            <Circle cx={54} cy={59} r={2} fill="#0D9488" opacity={0.65} />
-            <Circle cx={62} cy={59} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
+            <Line x1={36} y1={52} x2={60} y2={52} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.35 : 0.25} />
+            <Circle cx={38} cy={59} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
+            <Circle cx={46} cy={59} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
+            <Circle cx={54} cy={59} r={2} fill={strokeColor} opacity={0.75} />
+            <Circle cx={62} cy={59} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
 
             {/* Question 3: text line + choices A, B, C */}
-            <Line x1={36} y1={66} x2={50} y2={66} stroke={item.color} strokeWidth={1.2} opacity={0.25} />
-            <Circle cx={38} cy={73} r={2} fill="#0D9488" opacity={0.65} />
-            <Circle cx={46} cy={73} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
-            <Circle cx={54} cy={73} r={2} stroke={item.color} strokeWidth={1} fill="none" opacity={0.3} />
+            <Line x1={36} y1={66} x2={50} y2={66} stroke={strokeColor} strokeWidth={1.2} opacity={isDark ? 0.35 : 0.25} />
+            <Circle cx={38} cy={73} r={2} fill={strokeColor} opacity={0.75} />
+            <Circle cx={46} cy={73} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
+            <Circle cx={54} cy={73} r={2} stroke={strokeColor} strokeWidth={1} fill="none" opacity={isDark ? 0.4 : 0.3} />
           </G>
           
           {/* Floating emerald diamond particles */}
-          <Path d={`M ${size - 22} ${size - 48} L ${size - 19} ${size - 51} L ${size - 22} ${size - 54} L ${size - 25} ${size - 51} Z`} fill={item.color} opacity={0.35} />
+          <Path d={`M ${size - 22} ${size - 48} L ${size - 19} ${size - 51} L ${size - 22} ${size - 54} L ${size - 25} ${size - 51} Z`} fill={strokeColor} opacity={isDark ? 0.55 : 0.35} />
           
           {/* Floating Checkmark Badge in background */}
-          <Circle cx={76} cy={72} r={6.5} stroke="#0D9488" strokeWidth={1.2} fill="none" opacity={0.28} />
-          <Path d="M 73.5 72 L 75.5 74 L 78.5 70" stroke="#0D9488" strokeWidth={1.2} fill="none" opacity={0.6} />
+          <Circle cx={76} cy={72} r={6.5} stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={isDark ? 0.45 : 0.28} />
+          <Path d="M 73.5 72 L 75.5 74 L 78.5 70" stroke={strokeColor} strokeWidth={1.2} fill="none" opacity={0.8} />
         </Svg>
       );
     }
@@ -279,36 +347,36 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
       <Svg width={size} height={size} style={styles.cardWatermarkSvg}>
         <Defs>
           <SvgLinearGradient id="sbEqGrad1" x1="0" y1="1" x2="0" y2="0">
-            <Stop offset="0%" stopColor="#003d9b" stopOpacity="0.2" />
-            <Stop offset="100%" stopColor="#0284C7" stopOpacity="0.8" />
+            <Stop offset="0%" stopColor={isDark ? "#0284C7" : "#003d9b"} stopOpacity="0.2" />
+            <Stop offset="100%" stopColor={isDark ? "#38BDF8" : "#0284C7"} stopOpacity="0.8" />
           </SvgLinearGradient>
           <SvgLinearGradient id="sbEqGrad2" x1="0" y1="1" x2="0" y2="0">
-            <Stop offset="0%" stopColor="#0284C7" stopOpacity="0.3" />
+            <Stop offset="0%" stopColor={isDark ? "#00D8F6" : "#0284C7"} stopOpacity="0.3" />
             <Stop offset="100%" stopColor="#00D8F6" stopOpacity="0.9" />
           </SvgLinearGradient>
           <SvgLinearGradient id="sbWaveGrad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0%" stopColor="#0284C7" stopOpacity="0.1" />
+            <Stop offset="0%" stopColor={isDark ? "#0284C7" : "#0284C7"} stopOpacity="0.1" />
             <Stop offset="50%" stopColor="#00D8F6" stopOpacity="0.6" />
-            <Stop offset="100%" stopColor="#003d9b" stopOpacity="0.2" />
+            <Stop offset="100%" stopColor={isDark ? "#38BDF8" : "#003d9b"} stopOpacity="0.2" />
           </SvgLinearGradient>
         </Defs>
 
         {/* Outer Pulsing Radial Ring */}
-        <Circle cx={72} cy={44} r={28} stroke="#0284C7" strokeWidth={1} strokeDasharray="3,3" fill="none" opacity={0.25} />
-        <Circle cx={72} cy={44} r={18} fill="#0284C7" opacity={0.08} />
+        <Circle cx={72} cy={44} r={28} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1} strokeDasharray="3,3" fill="none" opacity={isDark ? 0.4 : 0.25} />
+        <Circle cx={72} cy={44} r={18} fill={isDark ? "#38BDF8" : "#0284C7"} opacity={isDark ? 0.15 : 0.08} />
 
         {/* Sleek Studio Condenser Microphone Capsule */}
         <G transform="rotate(8, 72, 44)">
-          <Rect x={67} y={32} width={10} height={18} rx={5} stroke="#0284C7" strokeWidth={1.5} fill="none" opacity={0.65} />
-          <Line x1={67} y1={38} x2={77} y2={38} stroke="#0284C7" strokeWidth={1} opacity={0.4} />
-          <Line x1={67} y1={42} x2={77} y2={42} stroke="#0284C7" strokeWidth={1} opacity={0.4} />
+          <Rect x={67} y={32} width={10} height={18} rx={5} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1.5} fill="none" opacity={0.75} />
+          <Line x1={67} y1={38} x2={77} y2={38} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1} opacity={0.5} />
+          <Line x1={67} y1={42} x2={77} y2={42} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1} opacity={0.5} />
           <Circle cx={72} cy={46} r={1} fill="#00D8F6" opacity={0.9} />
-          <Path d="M 63 40 A 9 9 0 0 0 81 40" stroke="#0284C7" strokeWidth={1.5} fill="none" opacity={0.55} />
-          <Line x1={72} y1={49} x2={72} y2={56} stroke="#0284C7" strokeWidth={1.5} opacity={0.55} />
-          <Line x1={66} y1={56} x2={78} y2={56} stroke="#0284C7" strokeWidth={1.5} opacity={0.55} />
+          <Path d="M 63 40 A 9 9 0 0 0 81 40" stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1.5} fill="none" opacity={0.65} />
+          <Line x1={72} y1={49} x2={72} y2={56} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1.5} opacity={0.65} />
+          <Line x1={66} y1={56} x2={78} y2={56} stroke={isDark ? "#38BDF8" : "#0284C7"} strokeWidth={1.5} opacity={0.65} />
         </G>
 
-        {/* 5 Gradient Equalizer Pillars (positioned left to avoid button overlap) */}
+        {/* 5 Gradient Equalizer Pillars */}
         <Rect x={18} y={48} width={3.5} height={14} rx={1.75} fill="url(#sbEqGrad1)" />
         <Rect x={25} y={40} width={3.5} height={22} rx={1.75} fill="url(#sbEqGrad2)" />
         <Rect x={32} y={32} width={4} height={30} rx={2} fill="url(#sbEqGrad1)" />
@@ -317,23 +385,18 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
 
         {/* Organic Flowing Fluid Siri Wave Sweeps */}
         <Path d="M 8 72 Q 35 48 65 72 T 100 72" stroke="url(#sbWaveGrad)" strokeWidth={2} fill="none" />
-        <Path d="M 4 76 Q 38 42 68 76 T 104 76" stroke="#00D8F6" strokeWidth={1} fill="none" opacity={0.3} />
+        <Path d="M 4 76 Q 38 42 68 76 T 104 76" stroke="#00D8F6" strokeWidth={1} fill="none" opacity={0.4} />
 
         {/* Cyber Sparkle Vector Stars */}
-        <Path d={`M 15 32 L 17 27 L 19 32 L 24 34 L 19 36 L 17 41 L 15 36 L 10 34 Z`} fill="#00D8F6" opacity={0.55} />
-        <Path d={`M 54 22 L 55.5 18 L 57 22 L 61 23.5 L 57 25 L 55.5 29 L 54 25 L 50 23.5 Z`} fill="#0284C7" opacity={0.45} />
+        <Path d={`M 15 32 L 17 27 L 19 32 L 24 34 L 19 36 L 17 41 L 15 36 L 10 34 Z`} fill="#00D8F6" opacity={0.7} />
+        <Path d={`M 54 22 L 55.5 18 L 57 22 L 61 23.5 L 57 25 L 55.5 29 L 54 25 L 50 23.5 Z`} fill={isDark ? "#38BDF8" : "#0284C7"} opacity={0.6} />
 
         {/* Ambient Floating Audio Glow Dots */}
-        <Circle cx={12} cy={54} r={1.5} fill="#0284C7" opacity={0.4} />
-        <Circle cx={86} cy={28} r={2} fill="#00D8F6" opacity={0.5} />
+        <Circle cx={12} cy={54} r={1.5} fill={isDark ? "#38BDF8" : "#0284C7"} opacity={0.5} />
+        <Circle cx={86} cy={28} r={2} fill="#00D8F6" opacity={0.65} />
       </Svg>
     );
   };
-
-  const cardGradientColors = item.color === '#2563EB' ? ['#ffffff', '#EFF6FF', '#DBEAFE'] 
-                           : item.color === '#003d9b' ? ['#ffffff', '#F0F5FF', '#D9E6FF']
-                           : item.color === '#0D9488' ? ['#ffffff', '#F0FDFA', '#CCFBF1']
-                           : ['#ffffff', '#F0F9FF', '#E0F2FE'];
 
   const dynamicCardWidth = '100%';
 
@@ -341,21 +404,48 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
     <Animated.View style={[
       styles.moduleCard, 
       animatedShadowStyle, 
-      { borderColor: cardBorderColor, width: dynamicCardWidth }
+      { 
+        borderColor: cardBorderColor, 
+        width: dynamicCardWidth,
+        backgroundColor: isDark ? '#10172A' : '#FFFFFF'
+      }
     ]}>
       <Pressable
-        style={styles.cardTouchable}
+        style={[styles.cardTouchable, { backgroundColor: isDark ? '#10172A' : '#FFFFFF' }]}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
         accessible={true}
         accessibilityRole="button"
       >
-        {/* Solid Opaque Mask Surface Layer - Completely masks all page-level background decorations */}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF', borderRadius: 18, zIndex: 0 }]} pointerEvents="none" />
+        {/* Solid Opaque Mask / Gradient Surface Layer */}
+        <LinearGradient
+          colors={isDark ? ['#141E34', '#0D1527'] : ['#FFFFFF', '#FFFFFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 18, zIndex: 0 }]}
+          pointerEvents="none"
+        />
+
+        {/* Dynamic Corner Aura Glow in Dark Mode ONLY */}
+        {isDark && (
+          <View 
+            style={{
+              position: 'absolute',
+              top: -24,
+              left: -24,
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: `${displayAccentColor}14`,
+              zIndex: 0
+            }} 
+            pointerEvents="none" 
+          />
+        )}
 
         {/* Left Accent Border strip */}
-        <View style={[styles.cardLeftBorder, { backgroundColor: item.color }]} pointerEvents="none" />
+        <View style={[styles.cardLeftBorder, { backgroundColor: displayAccentColor }]} pointerEvents="none" />
 
         {/* Dynamic Category Watermark Overlay with float animations */}
         <Animated.View style={[styles.watermarkWrapper, animatedWatermarkStyle]} pointerEvents="none">
@@ -372,7 +462,7 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
 
           {/* Title stack */}
           <View style={styles.cardMainContent} pointerEvents="none">
-            <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.cardTitle, { color: isDark ? '#FFFFFF' : '#0F172A' }]} numberOfLines={1}>{item.title}</Text>
           </View>
 
           {/* Card Footer Row */}
@@ -387,8 +477,7 @@ const ModuleCard: React.FC<ModuleCardProps> = React.memo(({ item, onPress }) => 
 
 
 export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ navigation }) => {
-  const { width } = useWindowDimensions();
-  const cardWidth = (width - 44) / 2; // Exact 2-column width with side padding 16px and 12px gap
+  const { theme: appTheme } = useAppTheme();
 
   const modules = [
     { 
@@ -434,45 +523,57 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: appTheme.bg, alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* ── High-Fidelity Ambient Background Glow Particles ── */}
       <View style={styles.bgGlow1} pointerEvents="none" />
       <View style={styles.bgGlow2} pointerEvents="none" />
       <View style={styles.bgGlow3} pointerEvents="none" />
 
       {/* Premium AppBar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
         <View style={styles.appBarLeft}>
-          <TouchableOpacity style={styles.appBarButton} activeOpacity={0.7} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={20} color="#0052cc" />
+          <TouchableOpacity style={[styles.appBarButton, { backgroundColor: `${appTheme.primary}12` }]} activeOpacity={0.7} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={20} color={appTheme.primary} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <View style={styles.logoBadge}>
+            <View style={[styles.logoBadge, { backgroundColor: appTheme.primary }]}>
               <Text style={styles.logoBadgeText}>AE</Text>
             </View>
             <View style={{ marginLeft: 2 }}>
-              <Text style={styles.appBarTitle} numberOfLines={1}>Teacher Hub</Text>
-              <Text style={styles.appBarSubtitle}>Assignment Portal</Text>
+              <Text style={[styles.appBarTitle, { color: appTheme.textPrimary }]} numberOfLines={1}>Teacher Hub</Text>
+              <Text style={[styles.appBarSubtitle, { color: appTheme.textMuted }]}>Assignment Portal</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.appBarRight}>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
-            <MaterialIcons name="search" size={19} color="#0052cc" />
+          <TouchableOpacity 
+            style={[styles.appBarIconBtn, { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'AIToolkit' })}
+          >
+            <MaterialIcons name="auto-awesome" size={18} color={appTheme.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={[styles.appBarIconBtn, { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'Notice' })}
+          >
             <View style={styles.notificationWrapper}>
-              <MaterialIcons name="notifications-none" size={20} color="#0052cc" />
+              <MaterialIcons name="notifications-none" size={20} color={appTheme.primary} />
               <View style={styles.notificationDot} />
             </View>
           </TouchableOpacity>
-          <View style={styles.avatarBorderRing}>
+          <TouchableOpacity 
+            style={[styles.avatarBorderRing, { borderColor: `${appTheme.primary}30` }]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'ThemeSettings' })}
+          >
             <Image 
               source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCP8Fes6Wf9DdkJS-k33oTvc53T3DDc43ixr_T8hwh_pr7sY__yCD2W_7u82_wSOmxr5bh8BWjPCpfyruGFXgrPxwBnxu3LTADJnrW1Pyal-Qu22X6blXtzKTJ1Qq9MSu3lKFCjAiSBqPq2uZCCOWWLFfJ_afO1UosCa0JnsAyjMZTLqPq-T2HkOCTCMpG_U0QCY9cje_vqA6rxLx33tk9UUSBSy0TQyKocGDGSGQPP-eLL9BRYsDjQTw' }}
               style={styles.profilePic}
             />
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -482,7 +583,12 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
         showsVerticalScrollIndicator={false}
       >
         {/* Deep Luxury Header Banner */}
-        <View style={styles.welcomeBanner}>
+        <LinearGradient
+          colors={appTheme.bannerGradient as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.welcomeBanner}
+        >
           {/* Replicated Home Page Aurora System */}
           <View style={styles.auroraGlow1} />
           <View style={styles.auroraGlow2} />
@@ -501,12 +607,12 @@ export const AssignmentHubScreen: React.FC<AssignmentHubScreenProps> = ({ naviga
             <View style={styles.radarRing2} />
             <MaterialIcons name="hub" size={26} color="#fff" />
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Section title */}
         <View style={styles.sectionHeaderRow}>
-          <MaterialIcons name="auto-awesome" size={15} color="#0052cc" style={{ marginRight: 6 }} />
-          <Text style={styles.sectionTitle}>Interactive Modules</Text>
+          <MaterialIcons name="auto-awesome" size={15} color={appTheme.primary} style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { color: appTheme.textPrimary }]}>Interactive Modules</Text>
         </View>
 
         {/* 2-Column Responsive Grid */}

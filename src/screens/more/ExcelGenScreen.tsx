@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface ExcelGenScreenProps {
   navigation: any;
@@ -77,6 +78,9 @@ const formatMarkdownTable = (set: ExcelSet): string => {
 };
 
 export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   const [requestInput, setRequestInput] = useState('');
   const [fileName, setFileName] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -127,25 +131,25 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Background decoration */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           <Defs>
             <SvgLinearGradient id="b1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#217346" stopOpacity={0.07} />
-              <Stop offset="100%" stopColor="#1e6b3f" stopOpacity={0.03} />
+              <Stop offset="0%" stopColor={isDefaultTheme ? "#217346" : appTheme.primary} stopOpacity={0.07} />
+              <Stop offset="100%" stopColor={isDefaultTheme ? "#1e6b3f" : appTheme.accent} stopOpacity={0.03} />
             </SvgLinearGradient>
           </Defs>
           <Circle cx="110%" cy="-6%" r="280" fill="url(#b1)" />
-          <Circle cx="-10%" cy="48%" r="240" fill="#217346" opacity={0.05} />
-          <Circle cx="88%" cy="95%" r="300" fill="#1e6b3f" opacity={0.04} />
+          <Circle cx="-10%" cy="48%" r="240" fill={isDefaultTheme ? "#217346" : appTheme.primary} opacity={0.05} />
+          <Circle cx="88%" cy="95%" r="300" fill={isDefaultTheme ? "#1e6b3f" : appTheme.accent} opacity={0.04} />
         </Svg>
       </View>
 
       {/* HEADER */}
       <LinearGradient
-        colors={['#103822', '#1a5c38', '#217346']}
+        colors={isDefaultTheme ? ['#103822', '#1a5c38', '#217346'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -168,19 +172,24 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#A7F3D0', '#217346', '#1a5c38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient 
+        colors={isDefaultTheme ? ['#A7F3D0', '#217346', '#1a5c38'] : [appTheme.primary, appTheme.accent, appTheme.primary]} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 0 }} 
+        style={[styles.headerGlow, !isDefaultTheme && { opacity: 0.3 }]} 
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* INPUT CARD */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter student list or columns here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -190,33 +199,33 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
           />
 
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: !isDefaultTheme ? appTheme.textSecondary : '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[styles.fileBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, fileName ? styles.fileBoxActive : null]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#D1F5E9', '#A7F3D0'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#D1F5E9', '#A7F3D0'] : [appTheme.surface, appTheme.cardBg]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.surface])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#217346' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#217346' : appTheme.primary) : (!isDefaultTheme ? appTheme.textSecondary : '#94A3B8')}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, !isDefaultTheme && { color: appTheme.textSecondary }, fileName ? (isDefaultTheme ? styles.fileTextActive : { color: appTheme.primary, fontWeight: '700' }) : null]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -224,7 +233,7 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#103822', '#1a5c38', '#217346']}
+                colors={isDefaultTheme ? ['#103822', '#1a5c38', '#217346'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -247,38 +256,38 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#217346" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingStateText}>Generating Excel spreadsheet…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#217346" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingStateText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Generating Excel spreadsheet…</Text>
             </View>
           )}
         </View>
 
         {/* PROGRESS LOADER */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#217346" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#217346" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#1a5c38', '#6EE7B7']}
+                colors={isDefaultTheme ? ['#1a5c38', '#6EE7B7'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textSecondary }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* RESULTS HEADER */}
         {sets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#217346', '#1a5c38']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Excel Sheets</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{sets.length}</Text>
+            <LinearGradient colors={isDefaultTheme ? ['#217346', '#1a5c38'] : [appTheme.primary, appTheme.accent]} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Excel Sheets</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+              <Text style={[styles.countBadgeText, !isDefaultTheme && { color: appTheme.primary }]}>{sets.length}</Text>
             </View>
           </View>
         )}
@@ -286,21 +295,21 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
         {/* RESULT CARDS */}
         <View style={{ gap: 18 }}>
           {sets.map((set) => (
-            <View key={set.id} style={styles.resultCard}>
-              <LinearGradient colors={['#103822', '#217346', '#6EE7B7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+            <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#103822', '#217346', '#6EE7B7'] : [appTheme.primary, appTheme.accent, appTheme.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
               {/* Meta header */}
-              <View style={styles.resultMeta}>
-                <LinearGradient colors={['#D1F5E9', '#A7F3D0']} style={styles.resultIconOrb}>
-                  <MaterialIcons name="table-chart" size={17} color="#217346" />
-                  </LinearGradient>
+              <View style={[styles.resultMeta, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#D1F5E9', '#A7F3D0'] : [appTheme.surface, appTheme.surface]} style={styles.resultIconOrb}>
+                  <MaterialIcons name="table-chart" size={17} color={isDefaultTheme ? "#217346" : appTheme.primary} />
+                </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                  <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                  <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                  <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textSecondary }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                 </View>
                 <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
                   <View style={styles.eyeOuter}>
-                    <LinearGradient colors={['#217346', '#1a5c38']} style={styles.eyeCore}>
+                    <LinearGradient colors={isDefaultTheme ? ['#217346', '#1a5c38'] : [appTheme.primary, appTheme.accent]} style={styles.eyeCore}>
                       <View style={styles.eyeGloss} />
                       <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                     </LinearGradient>
@@ -310,31 +319,31 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
 
               {/* Sheet preview table */}
               <View style={styles.sheetPreviewBlock}>
-                <Text style={styles.sheetTitle}>{set.title}</Text>
+                <Text style={[styles.sheetTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{set.title}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={true} style={styles.tableScroll}>
-                  <View style={styles.tableContainer}>
+                  <View style={[styles.tableContainer, !isDefaultTheme && { borderColor: appTheme.border }]}>
                     {/* Headers */}
                     <View style={styles.tableHeaderRow}>
                       {set.headers.map((h, i) => (
-                        <View key={i} style={[styles.tableCell, styles.tableHeaderCell, i === 0 && { width: 120 }]}>
-                          <Text style={styles.tableHeaderCellText}>{h}</Text>
+                        <View key={i} style={[styles.tableCell, styles.tableHeaderCell, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, i === 0 && { width: 120 }]}>
+                          <Text style={[styles.tableHeaderCellText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{h}</Text>
                         </View>
                       ))}
                     </View>
                     
                     {/* Rows */}
                     {set.rows.map((row) => (
-                      <View key={row.id} style={styles.tableDataRow}>
-                        <View style={[styles.tableCell, { width: 120 }]}>
-                          <Text style={styles.tableNameText}>{row.name}</Text>
+                      <View key={row.id} style={[styles.tableDataRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                        <View style={[styles.tableCell, !isDefaultTheme && { borderColor: appTheme.border }, { width: 120 }]}>
+                          <Text style={[styles.tableNameText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{row.name}</Text>
                         </View>
-                        <View style={styles.tableCell}>
-                          <Text style={styles.tableDataText}>{row.quiz1}</Text>
+                        <View style={[styles.tableCell, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                          <Text style={[styles.tableDataText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{row.quiz1}</Text>
                         </View>
-                        <View style={styles.tableCell}>
-                          <Text style={styles.tableDataText}>{row.quiz2}</Text>
+                        <View style={[styles.tableCell, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                          <Text style={[styles.tableDataText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{row.quiz2}</Text>
                         </View>
-                        <View style={[styles.tableCell, styles.averageCell]}>
+                        <View style={[styles.tableCell, styles.averageCell, !isDefaultTheme && { backgroundColor: isDefaultTheme ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)', borderColor: appTheme.border }]}>
                           <Text style={styles.tableAverageText}>{row.average.toFixed(1)}</Text>
                         </View>
                       </View>
@@ -351,7 +360,7 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={['#1a5c38', '#217346']}
+                    colors={isDefaultTheme ? ['#1a5c38', '#217346'] : [appTheme.primary, appTheme.accent]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.actionBtnGrad}
                   >
@@ -366,7 +375,7 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#475569', '#64748B']}
+                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#475569', '#64748B'] : [appTheme.surface, appTheme.cardBg])}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.actionBtnGrad}
                   >
@@ -382,18 +391,18 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
               </View>
 
               {/* Footer toolbar */}
-              <View style={styles.resultFooter}>
+              <View style={[styles.resultFooter, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                  <MaterialIcons name="open-in-full" size={13} color="#217346" style={{ marginRight: 4 }} />
-                  <Text style={styles.footerBtnText}>Full View</Text>
+                  <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? "#217346" : appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => handleDownload(set)}>
                   <MaterialIcons name="get-app" size={13} color="#B45309" style={{ marginRight: 4 }} />
                   <Text style={[styles.footerBtnText, { color: '#B45309' }]}>Export CSV</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                  <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                  <MaterialIcons name="print" size={13} color={!isDefaultTheme ? appTheme.textSecondary : "#64748B"} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, { color: !isDefaultTheme ? appTheme.textSecondary : '#64748B' }]}>Print</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -403,29 +412,29 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
 
       {/* FULL VIEW MODAL */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
             <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#217346" />
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#217346" : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetDownloadBtn}
+              style={[styles.sheetDownloadBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleDownload(activeSet); }}
               activeOpacity={0.8}
             >
               <MaterialIcons name="file-download" size={14} color="#fff" style={{ marginRight: 4 }} />
               <Text style={styles.sheetCopyText}>Download</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetPrintBtn} onPress={() => Alert.alert('Print', 'Sent to print queue.')} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.sheetPrintBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} onPress={() => Alert.alert('Print', 'Sent to print queue.')} activeOpacity={0.8}>
               <MaterialIcons name="print" size={14} color="#fff" style={{ marginRight: 4 }} />
               <Text style={styles.sheetPrintText}>Print</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
-              <LinearGradient colors={['#103822', '#1a5c38']} style={styles.paperDocHeader}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#103822', '#1a5c38'] : [appTheme.primary, appTheme.accent]} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="table-chart" size={18} color="#fff" />
@@ -438,36 +447,36 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* SpreadSheet detailed table */}
               <View style={styles.modalTableBlock}>
-                <Text style={styles.modalHeading}>Spreadsheet Preview</Text>
+                <Text style={[styles.modalHeading, !isDefaultTheme && { color: appTheme.textPrimary }]}>Spreadsheet Preview</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-                  <View style={styles.modalTableContainer}>
+                  <View style={[styles.modalTableContainer, !isDefaultTheme && { borderColor: appTheme.border }]}>
                     <View style={styles.modalTableHeaderRow}>
                       {activeSet?.headers.map((h, i) => (
-                        <View key={i} style={[styles.modalTableCell, styles.modalTableHeaderCell, i === 0 && { width: 140 }]}>
-                          <Text style={styles.modalTableHeaderCellText}>{h}</Text>
+                        <View key={i} style={[styles.modalTableCell, styles.modalTableHeaderCell, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, i === 0 && { width: 140 }]}>
+                          <Text style={[styles.modalTableHeaderCellText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{h}</Text>
                         </View>
                       ))}
                     </View>
                     
                     {activeSet?.rows.map((row) => (
-                      <View key={row.id} style={styles.modalTableDataRow}>
-                        <View style={[styles.modalTableCell, { width: 140 }]}>
-                          <Text style={styles.modalTableNameText}>{row.name}</Text>
+                      <View key={row.id} style={[styles.modalTableDataRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                        <View style={[styles.modalTableCell, !isDefaultTheme && { borderColor: appTheme.border }, { width: 140 }]}>
+                          <Text style={[styles.modalTableNameText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{row.name}</Text>
                         </View>
-                        <View style={styles.modalTableCell}>
-                          <Text style={styles.modalTableDataText}>{row.quiz1}</Text>
+                        <View style={[styles.modalTableCell, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                          <Text style={[styles.modalTableDataText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{row.quiz1}</Text>
                         </View>
-                        <View style={styles.modalTableCell}>
-                          <Text style={styles.modalTableDataText}>{row.quiz2}</Text>
+                        <View style={[styles.modalTableCell, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                          <Text style={[styles.modalTableDataText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{row.quiz2}</Text>
                         </View>
-                        <View style={[styles.modalTableCell, styles.modalAverageCell]}>
+                        <View style={[styles.modalTableCell, styles.modalAverageCell, !isDefaultTheme && { backgroundColor: isDefaultTheme ? '#ECFDF5' : 'rgba(16, 185, 129, 0.15)', borderColor: appTheme.border }]}>
                           <Text style={styles.modalTableAverageText}>{row.average.toFixed(1)}</Text>
                         </View>
                       </View>
@@ -483,7 +492,7 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={['#1a5c38', '#217346']}
+                  colors={isDefaultTheme ? ['#1a5c38', '#217346'] : [appTheme.primary, appTheme.accent]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >
@@ -500,7 +509,7 @@ export const ExcelGenScreen: React.FC<ExcelGenScreenProps> = ({ navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#ECFDF5' },
+  safeArea: { flex: 1, backgroundColor: '#ECFDF5', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -798,7 +807,7 @@ const styles = StyleSheet.create({
   footerBtn: { flexDirection: 'row', alignItems: 'center' },
   footerBtnText: { fontSize: 11.5, fontWeight: '800', color: '#1a5c38' },
 
-  sheetSafe: { flex: 1, backgroundColor: '#ECFDF5' },
+  sheetSafe: { flex: 1, backgroundColor: '#ECFDF5', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

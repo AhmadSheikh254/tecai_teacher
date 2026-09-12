@@ -26,6 +26,7 @@ import { theme } from '../../theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Rect, Circle, Line, G, Path, Defs, Stop, Text as SvgText, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
+import { useAppTheme } from '../../context/ThemeContext';
 
 const ViewportModal: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; zIndex?: number }> = ({ visible, onClose, children, zIndex = 999999 }) => {
   if (!visible) return null;
@@ -435,6 +436,9 @@ const generateCrosswordGrid = (clues: { word: string; clue: string }[]) => {
 };
 
 export const ActivityScreen = ({ navigation, route }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+  const isDark = appTheme?.isDark ?? false;
   const [assignments, setAssignments] = useState<any[]>(INITIAL_ASSIGNMENTS);
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -2675,12 +2679,12 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     }
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : '#ffffff' }} edges={['top', 'bottom']}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, backgroundColor: '#ffffff' }}
+          style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : '#ffffff' }}
         >
-          <View style={{ flex: 1, backgroundColor: '#ffffff', maxWidth: 720, width: '100%', alignSelf: 'center' }}>
+          <View style={{ flex: 1, backgroundColor: isDark ? appTheme.bg : '#ffffff', maxWidth: 720, width: '100%', alignSelf: 'center' }}>
 
             {/* Premium Background Design (Glow & Mesh) */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -2725,7 +2729,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
             {/* Gradient Header Bar */}
             <LinearGradient
-              colors={['#0B1B3D', '#0047CC']}
+              colors={isDark ? ['#1e1b4b', '#312e81'] : ['#0B1B3D', '#0047CC']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0 }]}
@@ -2733,7 +2737,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
               <View style={[styles.bandCircle, { width: 100, height: 100, bottom: -40, right: -10, opacity: 0.1 }]} />
               <View style={styles.createModalHeaderRow}>
                 <View style={styles.createModalHeaderLeft}>
-                  <View style={styles.createModalIconBox}>
+                  <View style={[styles.createModalIconBox, isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
                     <MaterialIcons name="add-task" size={18} color="#ffffff" />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -2763,23 +2767,23 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                 {createStep === 'details' ? (
                   <>
                     {/* General Info Card */}
-                    <View style={styles.formCard}>
+                    <View style={[styles.formCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                       <View style={styles.formCardHeaderRow}>
-                        <View style={[styles.formHeaderIconBox, { backgroundColor: '#EEF2FF' }]}>
-                          <MaterialIcons name="assignment" size={18} color="#003d9b" />
+                        <View style={[styles.formHeaderIconBox, { backgroundColor: isDark ? 'rgba(59,130,246,0.18)' : '#EEF2FF' }]}>
+                          <MaterialIcons name="assignment" size={18} color={isDark ? appTheme.primary : "#003d9b"} />
                         </View>
-                        <Text style={styles.formCardHeader}>General Information</Text>
+                        <Text style={[styles.formCardHeader, isDark && { color: appTheme.textPrimary }]}>General Information</Text>
                       </View>
 
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Assignment Title</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Assignment Title</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TextInput
-                          style={styles.formInput}
+                          style={[styles.formInput, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                           placeholder="e.g. Solve linear equations"
-                          placeholderTextColor="#64748B"
+                          placeholderTextColor={isDark ? appTheme.textMuted : "#64748B"}
                           value={formTitle}
                           onChangeText={setFormTitle}
                         />
@@ -2788,38 +2792,46 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       {/* Dropdown Assignment Type */}
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Assignment Format</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Assignment Format</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => setShowTypeDropdown(!showTypeDropdown)}
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="style" size={16} color="#003d9b" style={{ marginRight: 8 }} />
-                            <Text style={styles.formSelectText}>{getTypeLabel(formType)}</Text>
+                            <MaterialIcons name="style" size={16} color={isDark ? appTheme.primary : "#003d9b"} style={{ marginRight: 8 }} />
+                            <Text style={[styles.formSelectText, isDark && { color: appTheme.textPrimary }]}>{getTypeLabel(formType)}</Text>
                           </View>
-                          <MaterialIcons name={showTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
+                          <MaterialIcons name={showTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDark ? appTheme.primary : "#003d9b"} />
                         </TouchableOpacity>
 
                         {showTypeDropdown && (
-                          <View style={styles.formDropdownOptions}>
+                          <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             {typesList.map(type => {
                               const isSelected = formType === type;
                               return (
                                 <TouchableOpacity 
                                   key={type} 
-                                  style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                                  style={[
+                                    styles.formDropdownItem, 
+                                    isDark && { borderBottomColor: appTheme.border },
+                                    isSelected && (isDark ? { backgroundColor: 'rgba(59,130,246,0.15)' } : styles.formDropdownItemActive)
+                                  ]}
                                   onPress={() => {
                                     setFormType(type);
                                     setShowTypeDropdown(false);
                                   }}
                                 >
-                                  <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                                  <Text style={[
+                                    styles.formDropdownItemText, 
+                                    isDark && { color: appTheme.textPrimary },
+                                    isSelected && (isDark ? { color: appTheme.primary, fontWeight: '700' } : styles.formDropdownItemTextActive)
+                                  ]}>
                                     {getTypeLabel(type)}
                                   </Text>
-                                  {isSelected && <MaterialIcons name="check" size={16} color="#003d9b" />}
+                                  {isSelected && <MaterialIcons name="check" size={16} color={isDark ? appTheme.primary : "#003d9b"} />}
                                 </TouchableOpacity>
                               );
                             })}
@@ -2829,49 +2841,61 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </View>
 
                     {/* Academic Target Card */}
-                    <View style={styles.formCard}>
+                    <View style={[styles.formCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                       <View style={styles.formCardHeaderRow}>
-                        <View style={[styles.formHeaderIconBox, { backgroundColor: '#F0FDF4' }]}>
-                          <MaterialIcons name="school" size={16} color="#0B8A7D" />
+                        <View style={[styles.formHeaderIconBox, { backgroundColor: isDark ? 'rgba(16,185,129,0.18)' : '#F0FDF4' }]}>
+                          <MaterialIcons name="school" size={16} color={isDark ? '#34D399' : "#0B8A7D"} />
                         </View>
-                        <Text style={[styles.formCardHeader, { color: '#0B8A7D' }]}>Academic Target</Text>
+                        <Text style={[styles.formCardHeader, { color: isDark ? '#34D399' : '#0B8A7D' }]}>Academic Target</Text>
                       </View>
 
                       {/* Dropdown Class */}
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Target Class</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Target Class</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => setShowClassDropdown(!showClassDropdown)}
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="groups" size={16} color={formClass ? '#0B8A7D' : '#94A3B8'} style={{ marginRight: 8 }} />
-                            <Text style={[styles.formSelectText, !formClass && styles.formSelectPlaceholder]}>
+                            <MaterialIcons name="groups" size={16} color={formClass ? (isDark ? '#34D399' : '#0B8A7D') : (isDark ? appTheme.textMuted : '#94A3B8')} style={{ marginRight: 8 }} />
+                            <Text style={[
+                              styles.formSelectText, 
+                              isDark && { color: appTheme.textPrimary },
+                              !formClass && (isDark ? { color: appTheme.textMuted } : styles.formSelectPlaceholder)
+                            ]}>
                               {formClass || 'Select a class...'}
                             </Text>
                           </View>
-                          <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#0B8A7D" />
+                          <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDark ? '#34D399' : "#0B8A7D"} />
                         </TouchableOpacity>
 
                         {showClassDropdown && (
-                          <View style={styles.formDropdownOptions}>
+                          <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             {classesList.map(c => {
                               const isSelected = formClass === c;
                               return (
                                 <TouchableOpacity 
                                   key={c} 
-                                  style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                                  style={[
+                                    styles.formDropdownItem, 
+                                    isDark && { borderBottomColor: appTheme.border },
+                                    isSelected && (isDark ? { backgroundColor: 'rgba(16,185,129,0.15)' } : styles.formDropdownItemActive)
+                                  ]}
                                   onPress={() => {
                                     setFormClass(c);
                                     setShowClassDropdown(false);
                                   }}
                                 >
-                                  <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{c}</Text>
-                                  {isSelected && <MaterialIcons name="check" size={16} color="#0B8A7D" />}
+                                  <Text style={[
+                                    styles.formDropdownItemText, 
+                                    isDark && { color: appTheme.textPrimary },
+                                    isSelected && (isDark ? { color: '#34D399', fontWeight: '700' } : styles.formDropdownItemTextActive)
+                                  ]}>{c}</Text>
+                                  {isSelected && <MaterialIcons name="check" size={16} color={isDark ? '#34D399' : "#0B8A7D"} />}
                                 </TouchableOpacity>
                               );
                             })}
@@ -2882,35 +2906,39 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       {/* Dropdown Section (Multi-Select) */}
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Section(s)</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Section(s)</Text>
                           <Text style={styles.requiredStar}>*</Text>
                           {formSection ? (
-                            <Text style={{ fontSize: 11, color: '#0B8A7D', fontWeight: '800', marginLeft: 'auto' }}>
+                            <Text style={{ fontSize: 11, color: isDark ? '#34D399' : '#0B8A7D', fontWeight: '800', marginLeft: 'auto' }}>
                               {formSection.split(',').length} Selected
                             </Text>
                           ) : null}
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => setShowSectionDropdown(!showSectionDropdown)}
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="bookmark" size={16} color={formSection ? '#0B8A7D' : '#94A3B8'} style={{ marginRight: 8 }} />
-                            <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                            <MaterialIcons name="bookmark" size={16} color={formSection ? (isDark ? '#34D399' : '#0B8A7D') : (isDark ? appTheme.textMuted : '#94A3B8')} style={{ marginRight: 8 }} />
+                            <Text style={[
+                              styles.formSelectText, 
+                              isDark && { color: appTheme.textPrimary },
+                              !formSection && (isDark ? { color: appTheme.textMuted } : styles.formSelectPlaceholder)
+                            ]} numberOfLines={1}>
                               {formSection || 'Select section(s)...'}
                             </Text>
                           </View>
-                          <MaterialIcons name={showSectionDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={20} color="#0B8A7D" />
+                          <MaterialIcons name={showSectionDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={20} color={isDark ? '#34D399' : "#0B8A7D"} />
                         </TouchableOpacity>
 
                         {showSectionDropdown && (
-                          <View style={styles.formDropdownOptions}>
+                          <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             {/* Select All Option */}
                             <TouchableOpacity
                               style={[
                                 styles.formDropdownItem,
-                                { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                                { borderBottomWidth: 1, borderBottomColor: isDark ? appTheme.border : '#E2E8F0', backgroundColor: isDark ? appTheme.surfaceVariant : '#F8FAFC' }
                               ]}
                               onPress={() => {
                                 const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -2921,7 +2949,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                 }
                               }}
                             >
-                              <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0B8A7D' }]}>
+                              <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: isDark ? '#34D399' : '#0B8A7D' }]}>
                                 {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
                               </Text>
                             </TouchableOpacity>
@@ -2932,7 +2960,11 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                               return (
                                 <TouchableOpacity
                                   key={sec}
-                                  style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                                  style={[
+                                    styles.formDropdownItem, 
+                                    isDark && { borderBottomColor: appTheme.border },
+                                    isSelected && (isDark ? { backgroundColor: 'rgba(16,185,129,0.15)' } : styles.formDropdownItemActive)
+                                  ]}
                                   onPress={() => {
                                     let updated: string[];
                                     if (isSelected) {
@@ -2943,11 +2975,15 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                                     setFormSection(updated.join(', '));
                                   }}
                                 >
-                                  <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sec}</Text>
+                                  <Text style={[
+                                    styles.formDropdownItemText, 
+                                    isDark && { color: appTheme.textPrimary },
+                                    isSelected && (isDark ? { color: '#34D399', fontWeight: '700' } : styles.formDropdownItemTextActive)
+                                  ]}>{sec}</Text>
                                   <MaterialIcons 
                                     name={isSelected ? "check-box" : "check-box-outline-blank"} 
                                     size={18} 
-                                    color={isSelected ? "#0B8A7D" : "#94A3B8"} 
+                                    color={isSelected ? (isDark ? '#34D399' : "#0B8A7D") : (isDark ? appTheme.textMuted : "#94A3B8")} 
                                   />
                                 </TouchableOpacity>
                               );
@@ -2956,7 +2992,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                             {/* Done Action Button */}
                             <TouchableOpacity
                               style={{
-                                backgroundColor: '#0B8A7D',
+                                backgroundColor: isDark ? appTheme.primary : '#0B8A7D',
                                 paddingVertical: 8,
                                 alignItems: 'center',
                                 marginTop: 4,
@@ -2971,38 +3007,50 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                       </View>
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Course / Subject</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Course / Subject</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => setShowCourseDropdown(!showCourseDropdown)}
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="menu-book" size={16} color={formCourse ? '#0B8A7D' : '#94A3B8'} style={{ marginRight: 8 }} />
-                            <Text style={[styles.formSelectText, !formCourse && styles.formSelectPlaceholder]}>
+                            <MaterialIcons name="menu-book" size={16} color={formCourse ? (isDark ? '#34D399' : '#0B8A7D') : (isDark ? appTheme.textMuted : '#94A3B8')} style={{ marginRight: 8 }} />
+                            <Text style={[
+                              styles.formSelectText, 
+                              isDark && { color: appTheme.textPrimary },
+                              !formCourse && (isDark ? { color: appTheme.textMuted } : styles.formSelectPlaceholder)
+                            ]}>
                               {formCourse || 'Select a subject...'}
                             </Text>
                           </View>
-                          <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#0B8A7D" />
+                          <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDark ? '#34D399' : "#0B8A7D"} />
                         </TouchableOpacity>
 
                         {showCourseDropdown && (
-                          <View style={styles.formDropdownOptions}>
+                          <View style={[styles.formDropdownOptions, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             {coursesList.map(course => {
                               const isSelected = formCourse === course;
                               return (
                                 <TouchableOpacity 
                                   key={course} 
-                                  style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                                  style={[
+                                    styles.formDropdownItem, 
+                                    isDark && { borderBottomColor: appTheme.border },
+                                    isSelected && (isDark ? { backgroundColor: 'rgba(16,185,129,0.15)' } : styles.formDropdownItemActive)
+                                  ]}
                                   onPress={() => {
                                     setFormCourse(course);
                                     setShowCourseDropdown(false);
                                   }}
                                 >
-                                  <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{course}</Text>
-                                  {isSelected && <MaterialIcons name="check" size={16} color="#0B8A7D" />}
+                                  <Text style={[
+                                    styles.formDropdownItemText, 
+                                    isDark && { color: appTheme.textPrimary },
+                                    isSelected && (isDark ? { color: '#34D399', fontWeight: '700' } : styles.formDropdownItemTextActive)
+                                  ]}>{course}</Text>
+                                  {isSelected && <MaterialIcons name="check" size={16} color={isDark ? '#34D399' : "#0B8A7D"} />}
                                 </TouchableOpacity>
                               );
                             })}
@@ -3012,31 +3060,31 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </View>
 
                     {/* Content Structure Card */}
-                    <View style={styles.formCard}>
+                    <View style={[styles.formCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                       <View style={styles.formCardHeaderRow}>
-                        <View style={[styles.formHeaderIconBox, { backgroundColor: '#F5F3FF' }]}>
-                          <MaterialIcons name="auto-stories" size={16} color="#3B4FD8" />
+                        <View style={[styles.formHeaderIconBox, { backgroundColor: isDark ? 'rgba(99,102,241,0.18)' : '#F5F3FF' }]}>
+                          <MaterialIcons name="auto-stories" size={16} color={isDark ? '#818CF8' : "#3B4FD8"} />
                         </View>
-                        <Text style={[styles.formCardHeader, { color: '#3B4FD8' }]}>Content Structure</Text>
+                        <Text style={[styles.formCardHeader, { color: isDark ? '#818CF8' : '#3B4FD8' }]}>Content Structure</Text>
                       </View>
 
                       <View style={styles.formField}>
-                        <Text style={styles.formLabel}>Chapter Name</Text>
+                        <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Chapter Name</Text>
                         <TextInput
-                          style={styles.formInput}
+                          style={[styles.formInput, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                           placeholder="e.g. Chapter # 1"
-                          placeholderTextColor="#94A3B8"
+                          placeholderTextColor={isDark ? appTheme.textMuted : "#94A3B8"}
                           value={formChapter}
                           onChangeText={setFormChapter}
                         />
                       </View>
 
                       <View style={styles.formField}>
-                        <Text style={styles.formLabel}>Topic Name</Text>
+                        <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Topic Name</Text>
                         <TextInput
-                          style={styles.formInput}
+                          style={[styles.formInput, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                           placeholder="e.g. Slo # 1.1 & 1.3"
-                          placeholderTextColor="#94A3B8"
+                          placeholderTextColor={isDark ? appTheme.textMuted : "#94A3B8"}
                           value={formTopic}
                           onChangeText={setFormTopic}
                         />
@@ -3044,21 +3092,21 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                     </View>
 
                     {/* Timeline Setup Card */}
-                    <View style={styles.formCard}>
+                    <View style={[styles.formCard, isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                       <View style={styles.formCardHeaderRow}>
-                        <View style={[styles.formHeaderIconBox, { backgroundColor: '#FFFBEB' }]}>
-                          <MaterialIcons name="event" size={16} color="#B45309" />
+                        <View style={[styles.formHeaderIconBox, { backgroundColor: isDark ? 'rgba(245,158,11,0.18)' : '#FFFBEB' }]}>
+                          <MaterialIcons name="event" size={16} color={isDark ? '#FBBF24' : "#B45309"} />
                         </View>
-                        <Text style={[styles.formCardHeader, { color: '#B45309' }]}>Timeline Settings</Text>
+                        <Text style={[styles.formCardHeader, { color: isDark ? '#FBBF24' : '#B45309' }]}>Timeline Settings</Text>
                       </View>
 
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Start Date & Time</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Start Date & Time</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => {
                             setDatePickerTarget('start');
                             setDatePickerValue(formStart);
@@ -3068,20 +3116,20 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                            <Text style={styles.formSelectText}>{formStart}</Text>
+                            <MaterialIcons name="event" size={16} color={isDark ? '#FBBF24' : "#B45309"} style={{ marginRight: 8 }} />
+                            <Text style={[styles.formSelectText, isDark && { color: appTheme.textPrimary }]}>{formStart}</Text>
                           </View>
-                          <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                          <MaterialIcons name="keyboard-arrow-down" size={20} color={isDark ? '#FBBF24' : "#B45309"} />
                         </TouchableOpacity>
                       </View>
 
                       <View style={styles.formField}>
                         <View style={styles.labelRow}>
-                          <Text style={styles.formLabel}>Submission Deadline</Text>
+                          <Text style={[styles.formLabel, isDark && { color: appTheme.textPrimary }]}>Submission Deadline</Text>
                           <Text style={styles.requiredStar}>*</Text>
                         </View>
                         <TouchableOpacity 
-                          style={styles.formSelectBox}
+                          style={[styles.formSelectBox, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                           onPress={() => {
                             setDatePickerTarget('deadline');
                             setDatePickerValue(formDeadline);
@@ -3091,10 +3139,10 @@ export const ActivityScreen = ({ navigation, route }: any) => {
                           activeOpacity={0.8}
                         >
                           <View style={styles.selectTextRow}>
-                            <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                            <Text style={styles.formSelectText}>{formDeadline}</Text>
+                            <MaterialIcons name="event" size={16} color={isDark ? '#FBBF24' : "#B45309"} style={{ marginRight: 8 }} />
+                            <Text style={[styles.formSelectText, isDark && { color: appTheme.textPrimary }]}>{formDeadline}</Text>
                           </View>
-                          <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                          <MaterialIcons name="keyboard-arrow-down" size={20} color={isDark ? '#FBBF24' : "#B45309"} />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -7748,16 +7796,16 @@ export const ActivityScreen = ({ navigation, route }: any) => {
     );
   }
   return (
-    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 640 }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 640 }, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* 1. MOBILE HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+          <TouchableOpacity style={[styles.headerButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#003d9b" : appTheme.textPrimary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Assignments</Text>
-            <Text style={styles.headerSubtitle}>Manage & track all tasks</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Assignments</Text>
+            <Text style={[styles.headerSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Manage & track all tasks</Text>
           </View>
         </View>
 
@@ -7767,7 +7815,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#0066FF', '#003D9B']}
+            colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : appTheme.primaryGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.createBtnGradient}
@@ -7783,7 +7831,7 @@ export const ActivityScreen = ({ navigation, route }: any) => {
 
         {/* 2. PREMIUM HERO SUMMARY CARD */}
         <LinearGradient
-          colors={['#0A1F5C', '#003d9b', '#0052cc']}
+          colors={isDefaultTheme ? ['#0A1F5C', '#003d9b', '#0052cc'] : appTheme.bannerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}

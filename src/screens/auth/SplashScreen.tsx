@@ -1,16 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, Dimensions, Animated, Platform } from 'react-native';
+import { StyleSheet, Text, View, Animated, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const { width, height } = Dimensions.get('window');
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface SplashScreenProps {
   navigation: any;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
+  const { appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(20)).current;
   const logoScale = useRef(new Animated.Value(0.85)).current;
@@ -104,20 +105,20 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   });
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <StatusBar style={appTheme.isDark ? 'light' : 'dark'} />
 
       {/* Light Aesthetic Pastel Canvas Gradient */}
       <LinearGradient
-        colors={['#F8FAFC', '#EFF6FF', '#E0F2FE']}
+        colors={isDefaultTheme ? ['#F8FAFC', '#EFF6FF', '#E0F2FE'] : [appTheme.bg, appTheme.surface, appTheme.bg]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
       {/* Soft Ambient Light Glow Orbs */}
-      <View style={styles.glowOrbTop} pointerEvents="none" />
-      <View style={styles.glowOrbBottom} pointerEvents="none" />
+      <View style={[styles.glowOrbTop, !isDefaultTheme && { backgroundColor: appTheme.primary, opacity: 0.15 }]} pointerEvents="none" />
+      <View style={[styles.glowOrbBottom, !isDefaultTheme && { backgroundColor: appTheme.accent || appTheme.primary, opacity: 0.12 }]} pointerEvents="none" />
 
       {/* Main Glassmorphic Card Container */}
       <Animated.View 
@@ -134,44 +135,44 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
           {/* Animated Glowing Outer Ring */}
           <Animated.View style={[styles.glowingRing, { transform: [{ rotate: spin }] }]}>
             <LinearGradient
-              colors={['#0284C7', 'transparent', '#0052cc', 'transparent']}
+              colors={isDefaultTheme ? ['#0284C7', 'transparent', '#0052cc', 'transparent'] : [appTheme.primary, 'transparent', appTheme.accent || appTheme.primary, 'transparent']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
 
-          <View style={styles.logoGlassContainer}>
+          <View style={[styles.logoGlassContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, shadowColor: appTheme.primary }]}>
             <LinearGradient
-              colors={['#ffffff', '#f0f7ff']}
+              colors={isDefaultTheme ? ['#ffffff', '#f0f7ff'] : [appTheme.surface, appTheme.cardBg]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <MaterialIcons name="school" size={48} color="#0284C7" />
+              <MaterialIcons name="school" size={48} color={isDefaultTheme ? '#0284C7' : appTheme.primary} />
             </Animated.View>
           </View>
         </Animated.View>
 
         {/* Clean Typography */}
-        <Text style={styles.title}>Teacher Hub</Text>
-        <Text style={styles.subtitle}>Smart Academic Management</Text>
+        <Text style={[styles.title, !isDefaultTheme && { color: appTheme.textPrimary }]}>Teacher Hub</Text>
+        <Text style={[styles.subtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Smart Academic Management</Text>
       </Animated.View>
 
       {/* Premium Loader Ring */}
       <Animated.View style={[styles.loaderContainer, { opacity: fadeAnim }]}>
-        <View style={styles.loaderTrack}>
+        <View style={[styles.loaderTrack, !isDefaultTheme && { borderColor: appTheme.border }]}>
           <Animated.View style={[styles.loaderSpinner, { transform: [{ rotate: spin }] }]}>
             <LinearGradient
-              colors={['#0284C7', '#0052cc', 'transparent']}
+              colors={isDefaultTheme ? ['#0284C7', '#0052cc', 'transparent'] : [appTheme.primary, appTheme.accent || appTheme.primary, 'transparent']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
         </View>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={[styles.loadingText, !isDefaultTheme && { color: appTheme.textMuted }]}>Loading...</Text>
       </Animated.View>
     </View>
   );

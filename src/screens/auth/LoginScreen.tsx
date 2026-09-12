@@ -13,12 +13,15 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface LoginScreenProps {
   navigation: any;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+  const { appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -53,17 +56,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#F8FAFC', '#EEF2FF', '#E0E7FF']}
+      colors={isDefaultTheme ? ['#F8FAFC', '#EEF2FF', '#E0E7FF'] : [appTheme.bg, appTheme.surface, appTheme.bg]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBg}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]}>
+        <StatusBar style={appTheme.isDark ? 'light' : 'dark'} />
         
         {/* Glow backdrop shapes */}
-        <View style={styles.glowCircle1} />
-        <View style={styles.glowCircle2} />
+        <View style={[styles.glowCircle1, !isDefaultTheme && { backgroundColor: appTheme.primary, opacity: 0.15 }]} />
+        <View style={[styles.glowCircle2, !isDefaultTheme && { backgroundColor: appTheme.accent || appTheme.primary, opacity: 0.12 }]} />
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -77,27 +80,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             
             {/* Header (Top brand) */}
             <View style={styles.header}>
-              <View style={styles.logoContainer}>
+              <View style={[styles.logoContainer, !isDefaultTheme && { backgroundColor: appTheme.primary, shadowColor: appTheme.primary }]}>
                 <MaterialIcons name="school" size={22} color="#ffffff" />
               </View>
-              <Text style={styles.headerTitle}>Teacher Hub</Text>
+              <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Teacher Hub</Text>
             </View>
 
             {/* Form Card Container */}
-            <View style={styles.card}>
+            <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, shadowColor: appTheme.primary }]}>
               <View style={styles.titleContainer}>
-                <Text style={styles.welcomeTitle}>Sign In</Text>
+                <Text style={[styles.welcomeTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Sign In</Text>
               </View>
 
               {/* Identification ID Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Identification ID</Text>
-                <View style={styles.inputWrapper}>
-                  <MaterialIcons name="person" size={18} color="#0284C7" style={styles.inputIcon} />
+                <Text style={[styles.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Identification ID</Text>
+                <View style={[styles.inputWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="person" size={18} color={isDefaultTheme ? '#0284C7' : appTheme.primary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, !isDefaultTheme && { color: appTheme.textPrimary }]}
                     placeholder="Enter your Identification ID"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDefaultTheme ? '#94A3B8' : appTheme.textMuted}
                     value={identifier}
                     onChangeText={setIdentifier}
                     autoCapitalize="none"
@@ -107,13 +110,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
               {/* Password Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <MaterialIcons name="lock" size={18} color="#0284C7" style={styles.inputIcon} />
+                <Text style={[styles.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Password</Text>
+                <View style={[styles.inputWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="lock" size={18} color={isDefaultTheme ? '#0284C7' : appTheme.primary} style={styles.inputIcon} />
                   <TextInput
-                    style={[styles.input, { paddingRight: 36 }]}
+                    style={[styles.input, { paddingRight: 36 }, !isDefaultTheme && { color: appTheme.textPrimary }]}
                     placeholder="••••••••"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDefaultTheme ? '#94A3B8' : appTheme.textMuted}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
@@ -126,7 +129,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     <MaterialIcons 
                       name={showPassword ? "visibility" : "visibility-off"} 
                       size={18} 
-                      color="#94A3B8" 
+                      color={isDefaultTheme ? '#94A3B8' : appTheme.textMuted} 
                     />
                   </TouchableOpacity>
                 </View>
@@ -141,22 +144,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 >
                   <View style={[
                     styles.checkbox, 
-                    rememberMe && styles.checkboxChecked
+                    !isDefaultTheme && { borderColor: appTheme.border, backgroundColor: appTheme.surface },
+                    rememberMe && styles.checkboxChecked,
+                    rememberMe && !isDefaultTheme && { backgroundColor: appTheme.primary, borderColor: appTheme.primary }
                   ]}>
                     {rememberMe && <MaterialIcons name="check" size={10} color="#ffffff" />}
                   </View>
-                  <Text style={styles.rememberMeText}>Remember me</Text>
+                  <Text style={[styles.rememberMeText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Remember me</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Submit Button */}
               <TouchableOpacity 
-                style={styles.submitBtnContainer}
+                style={[styles.submitBtnContainer, !isDefaultTheme && { shadowColor: appTheme.primary }]}
                 onPress={handleLogin}
                 activeOpacity={0.9}
               >
                 <LinearGradient
-                  colors={['#0284C7', '#0369A1']}
+                  colors={isDefaultTheme ? ['#0284C7', '#0369A1'] : appTheme.primaryGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.submitButton}
@@ -184,6 +189,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     height: '100%',
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     overflow: 'hidden',
   },
   keyboardView: {

@@ -10,6 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Ellipse } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 type DayKey = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
 
@@ -23,6 +24,9 @@ const ROW_COLORS = [
 ];
 
 export const TimeTableScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   const [activeDay, setActiveDay] = useState<DayKey>('Wednesday');
   const daysList: DayKey[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -54,11 +58,11 @@ export const TimeTableScreen = ({ navigation }: any) => {
   const activeLectures = timetableSchedule[activeDay];
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
 
       {/* ── PREMIUM LIGHT GRADIENT BG ── */}
       <LinearGradient
-        colors={['#C7DCFF', '#D8E9FF', '#E8F2FF', '#F5F9FF']}
+        colors={isDefaultTheme ? ['#C7DCFF', '#D8E9FF', '#E8F2FF', '#F5F9FF'] : [appTheme.bg, appTheme.bg, appTheme.bg]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -77,24 +81,26 @@ export const TimeTableScreen = ({ navigation }: any) => {
         <Path d="M-40,320 Q160,200 380,340 T820,300" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
       </Svg>
 
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
 
         {/* ── APP BAR (glass) ── */}
-        <View style={styles.appBar}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.72)', 'rgba(255,255,255,0.58)']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+          {isDefaultTheme && (
+            <LinearGradient
+              colors={['rgba(255,255,255,0.72)', 'rgba(255,255,255,0.58)']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#1E293B" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color={appTheme.textPrimary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.headerTitle}>Time Table</Text>
+              <Text style={[styles.headerTitle, { color: appTheme.textPrimary }]}>Time Table</Text>
               <View style={styles.verifiedRow}>
                 <View style={styles.livePulse} />
-                <Text style={styles.verifiedText}>Official · Live Schedule</Text>
+                <Text style={[styles.verifiedText, { color: appTheme.textSecondary }]}>Official · Live Schedule</Text>
               </View>
             </View>
           </View>
@@ -108,14 +114,14 @@ export const TimeTableScreen = ({ navigation }: any) => {
               return (
                 <TouchableOpacity
                   key={day}
-                  style={[styles.dayTab, isSelected && styles.dayTabActive]}
+                  style={[styles.dayTab, isSelected && styles.dayTabActive, !isDefaultTheme && !isSelected && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                   onPress={() => setActiveDay(day)}
                   activeOpacity={0.85}
                 >
                   {isSelected ? (
                     <>
                       <LinearGradient
-                        colors={['#2563EB', '#1D4ED8']}
+                        colors={isDefaultTheme ? ['#2563EB', '#1D4ED8'] : appTheme.primaryGradient}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                         style={StyleSheet.absoluteFill}
                       />
@@ -127,15 +133,17 @@ export const TimeTableScreen = ({ navigation }: any) => {
                     </>
                   ) : (
                     <>
-                      <View style={styles.inactiveTabBg} />
-                      <LinearGradient
-                        colors={['rgba(255, 255, 255, 0.40)', 'rgba(255, 255, 255, 0.10)']}
-                        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
+                      <View style={[styles.inactiveTabBg, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]} />
+                      {isDefaultTheme && (
+                        <LinearGradient
+                          colors={['rgba(255, 255, 255, 0.40)', 'rgba(255, 255, 255, 0.10)']}
+                          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      )}
                     </>
                   )}
-                  <Text style={[styles.dayTabText, isSelected && styles.dayTabTextActive]}>
+                  <Text style={[styles.dayTabText, isSelected && styles.dayTabTextActive, !isDefaultTheme && !isSelected && { color: appTheme.textSecondary }]}>
                     {day.slice(0, 3)}
                   </Text>
                   {isSelected && <View style={styles.activeTabIndicator} />}
@@ -149,23 +157,27 @@ export const TimeTableScreen = ({ navigation }: any) => {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
           {/* ── GLASSMORPHIC TABLE CARD ── */}
-          <View style={styles.tableCard}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.82)', 'rgba(255,255,255,0.68)']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            {/* Top shine */}
-            <LinearGradient
-              colors={['rgba(255,255,255,0.60)', 'rgba(255,255,255,0)']}
-              start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-              style={[StyleSheet.absoluteFill, { height: 60 }]}
-              pointerEvents="none"
-            />
+          <View style={[styles.tableCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+            {isDefaultTheme && (
+              <>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.82)', 'rgba(255,255,255,0.68)']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Top shine */}
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.60)', 'rgba(255,255,255,0)']}
+                  start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                  style={[StyleSheet.absoluteFill, { height: 60 }]}
+                  pointerEvents="none"
+                />
+              </>
+            )}
 
             {/* ─ TABLE HEADER ─ */}
             <View style={styles.tableHeader}>
-              <LinearGradient colors={['#2563EB', '#1E40AF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={isDefaultTheme ? ['#2563EB', '#1E40AF'] : appTheme.primaryGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
               <LinearGradient
                 colors={['rgba(255,255,255,0.20)', 'rgba(255,255,255,0)']}
                 start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
@@ -181,20 +193,20 @@ export const TimeTableScreen = ({ navigation }: any) => {
             </View>
 
             {/* ─ COLUMN HEADERS ─ */}
-            <View style={styles.colHeaderRow}>
+            <View style={[styles.colHeaderRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
               <View style={[styles.colHeaderCell, { flex: 1.1 }]}>
-                <MaterialIcons name="schedule" size={13} color="#2563EB" />
-                <Text style={styles.colHeaderText}>TIME SLOT</Text>
+                <MaterialIcons name="schedule" size={13} color={isDefaultTheme ? '#2563EB' : appTheme.primary} />
+                <Text style={[styles.colHeaderText, !isDefaultTheme && { color: appTheme.textSecondary }]}>TIME SLOT</Text>
               </View>
-              <View style={styles.colDivider} />
+              <View style={[styles.colDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
               <View style={[styles.colHeaderCell, { flex: 1.4 }]}>
                 <MaterialIcons name="book" size={13} color="#059669" />
-                <Text style={styles.colHeaderText}>SUBJECT</Text>
+                <Text style={[styles.colHeaderText, !isDefaultTheme && { color: appTheme.textSecondary }]}>SUBJECT</Text>
               </View>
-              <View style={styles.colDivider} />
+              <View style={[styles.colDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
               <View style={[styles.colHeaderCell, { flex: 1 }]}>
                 <MaterialIcons name="class" size={13} color="#7C3AED" />
-                <Text style={styles.colHeaderText}>CLASS</Text>
+                <Text style={[styles.colHeaderText, !isDefaultTheme && { color: appTheme.textSecondary }]}>CLASS</Text>
               </View>
             </View>
 
@@ -232,18 +244,18 @@ export const TimeTableScreen = ({ navigation }: any) => {
                         <Text style={[styles.timeEnd, { color: p.accent + 'CC' }]}>{lecture.timeEnd}</Text>
                       </View>
 
-                      <View style={styles.vLine} />
+                      <View style={[styles.vLine, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                       {/* ── Subject Cell ── */}
                       <View style={[styles.cell, { flex: 1.4 }]}>
-                        <Text style={styles.subjectName}>{lecture.subject}</Text>
+                        <Text style={[styles.subjectName, !isDefaultTheme && { color: appTheme.textPrimary }]}>{lecture.subject}</Text>
                         <View style={styles.teacherRow}>
-                          <MaterialIcons name="person-outline" size={11} color="#94A3B8" />
-                          <Text style={styles.teacherName}>{lecture.teacher}</Text>
+                          <MaterialIcons name="person-outline" size={11} color={appTheme.textSecondary} />
+                          <Text style={[styles.teacherName, !isDefaultTheme && { color: appTheme.textSecondary }]}>{lecture.teacher}</Text>
                         </View>
                       </View>
 
-                      <View style={styles.vLine} />
+                      <View style={[styles.vLine, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                       {/* ── Class Badge Cell ── */}
                       <View style={[styles.cell, { flex: 1, alignItems: 'center' }]}>
@@ -282,7 +294,7 @@ export const TimeTableScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 },
 
   // ── ORBS ──
   orb1: {

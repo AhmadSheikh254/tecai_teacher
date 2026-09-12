@@ -10,17 +10,15 @@ import {
   TextInput,
   Modal,
   Alert,
-  Dimensions,
   Platform,
   KeyboardAvoidingView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Rect, Circle, Line, G, Path } from 'react-native-svg';
+import Svg, { Rect } from 'react-native-svg';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
-
-const { width } = Dimensions.get('window');
+import { useAppTheme } from '../../context/ThemeContext';
 
 const ViewportModal: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; zIndex?: number }> = ({ visible, onClose, children, zIndex = 999999 }) => {
   if (!visible) return null;
@@ -162,6 +160,9 @@ const INITIAL_PASSAGES = [
 ];
 
 export const ReadingCoachScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   const [passages, setPassages] = useState(INITIAL_PASSAGES);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,20 +206,13 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   const [formOwnText, setFormOwnText] = useState('');
 
   // Dropdowns for creation
-  const categoriesList = ['Stories', 'Science', 'History', 'Tech'];
-  const difficultyList = ['Beginner', 'Intermediate', 'Advanced'];
   const classesList = ['GRADE-II A', 'GRADE-V A', 'GRADE-IX A'];
   const sectionsList = ['Section A', 'Section B', 'Section C'];
-  const coursesList = ['English', 'Science', 'Computer', 'Social Studies'];
   const paragraphTypesList = ['AI Generated Paragraph', 'Own Paragraph'];
 
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false);
   const [showClassDropdown, setShowClassDropdown] = useState(false);
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
   const [showParagraphTypeDropdown, setShowParagraphTypeDropdown] = useState(false);
-
-  const categoriesFilter = ['All', 'Stories', 'Science', 'History', 'Tech'];
 
   // Render dynamic SVG audio waveform equalizer bars
   const renderVoiceWaves = (color = '#ffffff') => (
@@ -240,18 +234,6 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
     if (category === 'History') return '#B45309';    // Warm Amber
     if (category === 'Tech') return '#0284C7';       // Sky Blue
     return '#6D28D9';
-  };
-
-  const getDifficultyBg = (diff: string) => {
-    if (diff === 'Beginner') return '#DCFCE7';
-    if (diff === 'Intermediate') return '#FEF3C7';
-    return '#FEE2E2';
-  };
-
-  const getDifficultyColor = (diff: string) => {
-    if (diff === 'Beginner') return '#15803D';
-    if (diff === 'Intermediate') return '#B45309';
-    return '#B91C1C';
   };
 
   // Stats calculate
@@ -357,9 +339,9 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: AI COACH LIVE PRACTICE ──
   if (isCoachModalVisible && selectedPassage) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
-                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <SafeAreaView style={[{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 720 }, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top', 'bottom']}>
+        <View style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+          <View style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
             {selectedPassage && (() => {
               const accent = getCategoryColor(selectedPassage.category);
               return (
@@ -390,38 +372,38 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
                     {/* Passage text to read */}
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>📖  Read Aloud into Microphone</Text>
-                      <Text style={styles.passageFullText}>
+                    <View style={[styles.detailSection, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                      <Text style={[styles.detailSectionLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>📖  Read Aloud into Microphone</Text>
+                      <Text style={[styles.passageFullText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                         "{selectedPassage.previewText} Continued practice improves vocal clarity, pace, and natural expression across all reading formats."
                       </Text>
                     </View>
 
                     {/* Speech Feedback Box */}
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionLabel}>🎙  Real-Time Voice Analysis</Text>
-                      <View style={styles.practiceProgressBox}>
+                    <View style={[styles.detailSection, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                      <Text style={[styles.detailSectionLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>🎙  Real-Time Voice Analysis</Text>
+                      <View style={[styles.practiceProgressBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                         <View style={styles.progressTextRow}>
-                          <Text style={styles.progressLabel}>Fluency Accuracy</Text>
+                          <Text style={[styles.progressLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Fluency Accuracy</Text>
                           <Text style={[styles.progressVal, { color: accent }]}>{isRecording ? '96%' : 'Ready'}</Text>
                         </View>
-                        <View style={styles.progressBarTrack}>
+                        <View style={[styles.progressBarTrack, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
                           <View style={[styles.progressBarFill, { width: `${isRecording ? 88 : 0}%`, backgroundColor: accent }]} />
                         </View>
                       </View>
 
                       <View style={styles.practiceStatsGrid}>
-                        <View style={styles.practiceStatBox}>
-                          <Text style={styles.practiceStatNum}>{isRecording ? '118' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>WPM Speed</Text>
+                        <View style={[styles.practiceStatBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                          <Text style={[styles.practiceStatNum, !isDefaultTheme && { color: appTheme.textPrimary }]}>{isRecording ? '118' : '--'}</Text>
+                          <Text style={[styles.practiceStatLabel, !isDefaultTheme && { color: appTheme.textMuted }]}>WPM Speed</Text>
                         </View>
-                        <View style={styles.practiceStatBox}>
+                        <View style={[styles.practiceStatBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                           <Text style={[styles.practiceStatNum, { color: '#059669' }]}>{isRecording ? '98%' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>Pronunciation</Text>
+                          <Text style={[styles.practiceStatLabel, !isDefaultTheme && { color: appTheme.textMuted }]}>Pronunciation</Text>
                         </View>
-                        <View style={styles.practiceStatBox}>
+                        <View style={[styles.practiceStatBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                           <Text style={[styles.practiceStatNum, { color: '#3B4FD8' }]}>{isRecording ? '92%' : '--'}</Text>
-                          <Text style={styles.practiceStatLabel}>Expression</Text>
+                          <Text style={[styles.practiceStatLabel, !isDefaultTheme && { color: appTheme.textMuted }]}>Expression</Text>
                         </View>
                       </View>
                     </View>
@@ -435,7 +417,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                       >
                         <MaterialIcons name={isRecording ? "stop" : "mic"} size={28} color="#fff" />
                       </TouchableOpacity>
-                      <Text style={styles.micStatusText}>
+                      <Text style={[styles.micStatusText, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                         {isRecording ? 'Listening... Read paragraph aloud' : 'Tap Mic to Start Reading Session'}
                       </Text>
                     </View>
@@ -454,16 +436,16 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: CREATE READING PASSAGE ──
   if (isCreateModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
-                <KeyboardAvoidingView
+      <SafeAreaView style={[{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 720 }, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, backgroundColor: "#ffffff" }}
+          style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}
         >
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+          <View style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
 
             {/* Gradient Header: Reading Coach — New Assignment */}
             <LinearGradient
-              colors={['#003d9b', '#0052cc']}
+              colors={isDefaultTheme ? ['#003d9b', '#0052cc'] : appTheme.bannerGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
@@ -492,45 +474,45 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               <View style={styles.formContainer}>
 
                 {/* Academic Target: Class & Section */}
-                <View style={styles.formCard}>
+                <View style={[styles.formCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                   <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#EEF2FF' }]}>
-                      <MaterialIcons name="school" size={16} color="#003d9b" />
+                    <View style={[styles.formHeaderIconBox, isDefaultTheme ? { backgroundColor: '#EEF2FF' } : { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="school" size={16} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
                     </View>
-                    <Text style={styles.formCardHeader}>Target Class & Section</Text>
+                    <Text style={[styles.formCardHeader, !isDefaultTheme && { color: appTheme.textPrimary }]}>Target Class & Section</Text>
                   </View>
 
                   {/* Dropdown Class */}
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Class</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Class</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
                     <TouchableOpacity
-                      style={styles.formSelectBox}
+                      style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => setShowClassDropdown(!showClassDropdown)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.selectTextRow}>
-                        <MaterialIcons name="groups" size={16} color="#003d9b" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formClass}</Text>
+                        <MaterialIcons name="groups" size={16} color={isDefaultTheme ? "#003d9b" : appTheme.primary} style={{ marginRight: 8 }} />
+                        <Text style={[styles.formSelectText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{formClass}</Text>
                       </View>
-                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
+                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
                     </TouchableOpacity>
 
                     {showClassDropdown && (
-                      <View style={styles.formDropdownOptions}>
+                      <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                         {classesList.map(c => (
                           <TouchableOpacity
                             key={c}
-                            style={[styles.formDropdownItem, formClass === c && styles.formDropdownItemActive]}
+                            style={[styles.formDropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, formClass === c && (isDefaultTheme ? styles.formDropdownItemActive : { backgroundColor: appTheme.surface })]}
                             onPress={() => {
                               setFormClass(c);
                               setShowClassDropdown(false);
                             }}
                           >
-                            <Text style={[styles.formDropdownItemText, formClass === c && styles.formDropdownItemTextActive]}>{c}</Text>
-                            {formClass === c && <MaterialIcons name="check" size={16} color="#003d9b" />}
+                            <Text style={[styles.formDropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, formClass === c && (isDefaultTheme ? styles.formDropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{c}</Text>
+                            {formClass === c && <MaterialIcons name="check" size={16} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />}
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -540,28 +522,28 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   {/* Dropdown Section */}
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Section</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Section</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
                     <TouchableOpacity
-                      style={styles.formSelectBox}
+                      style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => setShowSectionDropdown(!showSectionDropdown)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.selectTextRow}>
-                        <MaterialIcons name="view-carousel" size={16} color="#003d9b" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formSection}</Text>
+                        <MaterialIcons name="view-carousel" size={16} color={isDefaultTheme ? "#003d9b" : appTheme.primary} style={{ marginRight: 8 }} />
+                        <Text style={[styles.formSelectText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{formSection}</Text>
                       </View>
-                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#003d9b" />
+                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
                     </TouchableOpacity>
 
                     {showSectionDropdown && (
-                      <View style={styles.formDropdownOptions}>
+                      <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                         {/* Select All Option */}
                         <TouchableOpacity
                           style={[
                             styles.formDropdownItem,
-                            { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                            { borderBottomWidth: 1, borderBottomColor: isDefaultTheme ? '#E2E8F0' : appTheme.border, backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.surface }
                           ]}
                           onPress={() => {
                             const currentList = formSection ? formSection.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -572,7 +554,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                             }
                           }}
                         >
-                          <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#003d9b' }]}>
+                          <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: isDefaultTheme ? '#003d9b' : appTheme.primary }]}>
                             {formSection && formSection.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
                           </Text>
                         </TouchableOpacity>
@@ -583,7 +565,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                           return (
                             <TouchableOpacity
                               key={sec}
-                              style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                              style={[styles.formDropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, isSelected && (isDefaultTheme ? styles.formDropdownItemActive : { backgroundColor: appTheme.surface })]}
                               onPress={() => {
                                 let updated: string[];
                                 if (isSelected) {
@@ -594,11 +576,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                                 setFormSection(updated.join(', '));
                               }}
                             >
-                              <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>{sec}</Text>
+                              <Text style={[styles.formDropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, isSelected && (isDefaultTheme ? styles.formDropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{sec}</Text>
                               <MaterialIcons 
                                 name={isSelected ? "check-box" : "check-box-outline-blank"} 
                                 size={18} 
-                                color={isSelected ? "#003d9b" : "#94A3B8"} 
+                                color={isSelected ? (isDefaultTheme ? "#003d9b" : appTheme.primary) : (isDefaultTheme ? "#94A3B8" : appTheme.textMuted)} 
                               />
                             </TouchableOpacity>
                           );
@@ -606,7 +588,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
                         <TouchableOpacity
                           style={{
-                            backgroundColor: '#003d9b',
+                            backgroundColor: isDefaultTheme ? '#003d9b' : appTheme.primary,
                             paddingVertical: 8,
                             alignItems: 'center',
                             marginTop: 4,
@@ -622,21 +604,21 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 </View>
 
                 {/* Timeline Setup Card: Start Date & Deadline */}
-                <View style={[styles.formCard, { borderLeftColor: '#B45309' }]}>
+                <View style={[styles.formCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, { borderLeftColor: '#B45309' }]}>
                   <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#FFFBEB' }]}>
-                      <MaterialIcons name="event" size={16} color="#B45309" />
+                    <View style={[styles.formHeaderIconBox, isDefaultTheme ? { backgroundColor: '#FFFBEB' } : { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="event" size={16} color={isDefaultTheme ? "#B45309" : appTheme.warning} />
                     </View>
-                    <Text style={[styles.formCardHeader, { color: '#B45309' }]}>Timeline Schedule</Text>
+                    <Text style={[styles.formCardHeader, { color: isDefaultTheme ? '#B45309' : appTheme.warning }]}>Timeline Schedule</Text>
                   </View>
 
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Start Date</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Start Date</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
                     <TouchableOpacity 
-                      style={styles.formSelectBox}
+                      style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => {
                         setDatePickerTarget('start');
                         setDatePickerValue(formStart);
@@ -646,20 +628,20 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                       activeOpacity={0.8}
                     >
                       <View style={styles.selectTextRow}>
-                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formStart}</Text>
+                        <MaterialIcons name="event" size={16} color={isDefaultTheme ? "#B45309" : appTheme.warning} style={{ marginRight: 8 }} />
+                        <Text style={[styles.formSelectText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{formStart}</Text>
                       </View>
-                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                      <MaterialIcons name="keyboard-arrow-down" size={20} color={isDefaultTheme ? "#B45309" : appTheme.warning} />
                     </TouchableOpacity>
                   </View>
 
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Deadline</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Deadline</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
                     <TouchableOpacity 
-                      style={styles.formSelectBox}
+                      style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => {
                         setDatePickerTarget('deadline');
                         setDatePickerValue(formDeadline);
@@ -669,78 +651,78 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                       activeOpacity={0.8}
                     >
                       <View style={styles.selectTextRow}>
-                        <MaterialIcons name="event" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formDeadline}</Text>
+                        <MaterialIcons name="event" size={16} color={isDefaultTheme ? "#B45309" : appTheme.warning} style={{ marginRight: 8 }} />
+                        <Text style={[styles.formSelectText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{formDeadline}</Text>
                       </View>
-                      <MaterialIcons name="keyboard-arrow-down" size={20} color="#B45309" />
+                      <MaterialIcons name="keyboard-arrow-down" size={20} color={isDefaultTheme ? "#B45309" : appTheme.warning} />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Story Image Upload Card */}
-                <View style={[styles.formCard, { borderLeftColor: '#0B8A7D' }]}>
+                <View style={[styles.formCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, { borderLeftColor: '#0B8A7D' }]}>
                   <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F0FDF4' }]}>
-                      <MaterialIcons name="image" size={16} color="#0B8A7D" />
+                    <View style={[styles.formHeaderIconBox, isDefaultTheme ? { backgroundColor: '#F0FDF4' } : { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="image" size={16} color={isDefaultTheme ? "#0B8A7D" : appTheme.success} />
                     </View>
-                    <Text style={[styles.formCardHeader, { color: '#0B8A7D' }]}>Story Image</Text>
+                    <Text style={[styles.formCardHeader, { color: isDefaultTheme ? '#0B8A7D' : appTheme.success }]}>Story Image</Text>
                   </View>
 
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Cover Illustration</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cover Illustration</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
-                    <View style={styles.fileUploadBox}>
-                      <TouchableOpacity style={styles.chooseFileBtn} onPress={handlePickImage} activeOpacity={0.8}>
-                        <MaterialIcons name="cloud-upload" size={14} color="#0B8A7D" style={{ marginRight: 6 }} />
-                        <Text style={styles.chooseFileText}>Choose File</Text>
+                    <View style={[styles.fileUploadBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <TouchableOpacity style={[styles.chooseFileBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} onPress={handlePickImage} activeOpacity={0.8}>
+                        <MaterialIcons name="cloud-upload" size={14} color={isDefaultTheme ? "#0B8A7D" : appTheme.success} style={{ marginRight: 6 }} />
+                        <Text style={[styles.chooseFileText, !isDefaultTheme && { color: appTheme.success }]}>Choose File</Text>
                       </TouchableOpacity>
-                      <Text style={styles.fileNameText} numberOfLines={1}>{formImageName}</Text>
+                      <Text style={[styles.fileNameText, !isDefaultTheme && { color: appTheme.textSecondary }]} numberOfLines={1}>{formImageName}</Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Paragraph Type Selector & Generator Card */}
-                <View style={[styles.formCard, { borderLeftColor: '#3B4FD8' }]}>
+                <View style={[styles.formCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, { borderLeftColor: '#3B4FD8' }]}>
                   <View style={styles.formCardHeaderRow}>
-                    <View style={[styles.formHeaderIconBox, { backgroundColor: '#F5F3FF' }]}>
-                      <MaterialIcons name="article" size={16} color="#3B4FD8" />
+                    <View style={[styles.formHeaderIconBox, isDefaultTheme ? { backgroundColor: '#F5F3FF' } : { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="article" size={16} color={isDefaultTheme ? "#3B4FD8" : appTheme.primary} />
                     </View>
-                    <Text style={[styles.formCardHeader, { color: '#3B4FD8' }]}>Paragraph Setup</Text>
+                    <Text style={[styles.formCardHeader, { color: isDefaultTheme ? '#3B4FD8' : appTheme.primary }]}>Paragraph Setup</Text>
                   </View>
 
                   {/* Paragraph Type Dropdown */}
                   <View style={styles.formField}>
                     <View style={styles.labelRow}>
-                      <Text style={styles.formLabel}>Paragraph Type</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Paragraph Type</Text>
                       <Text style={styles.requiredStar}>*</Text>
                     </View>
                     <TouchableOpacity
-                      style={styles.formSelectBox}
+                      style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => setShowParagraphTypeDropdown(!showParagraphTypeDropdown)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.selectTextRow}>
-                        <MaterialIcons name="tune" size={16} color="#3B4FD8" style={{ marginRight: 8 }} />
-                        <Text style={styles.formSelectText}>{formParagraphType}</Text>
+                        <MaterialIcons name="tune" size={16} color={isDefaultTheme ? "#3B4FD8" : appTheme.primary} style={{ marginRight: 8 }} />
+                        <Text style={[styles.formSelectText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{formParagraphType}</Text>
                       </View>
-                      <MaterialIcons name={showParagraphTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#3B4FD8" />
+                      <MaterialIcons name={showParagraphTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#3B4FD8" : appTheme.primary} />
                     </TouchableOpacity>
 
                     {showParagraphTypeDropdown && (
-                      <View style={styles.formDropdownOptions}>
+                      <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                         {paragraphTypesList.map(type => (
                           <TouchableOpacity
                             key={type}
-                            style={[styles.formDropdownItem, formParagraphType === type && styles.formDropdownItemActive]}
+                            style={[styles.formDropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, formParagraphType === type && (isDefaultTheme ? styles.formDropdownItemActive : { backgroundColor: appTheme.surface })]}
                             onPress={() => {
                               setFormParagraphType(type);
                               setShowParagraphTypeDropdown(false);
                             }}
                           >
-                            <Text style={[styles.formDropdownItemText, formParagraphType === type && styles.formDropdownItemTextActive]}>{type}</Text>
-                            {formParagraphType === type && <MaterialIcons name="check" size={16} color="#3B4FD8" />}
+                            <Text style={[styles.formDropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, formParagraphType === type && (isDefaultTheme ? styles.formDropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{type}</Text>
+                            {formParagraphType === type && <MaterialIcons name="check" size={16} color={isDefaultTheme ? "#3B4FD8" : appTheme.primary} />}
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -750,11 +732,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   {/* Dynamic Fields based on Paragraph Type */}
                   {formParagraphType === 'AI Generated Paragraph' ? (
                     <View style={styles.formField}>
-                      <Text style={styles.formLabel}>AI Topic / Story Prompt</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>AI Topic / Story Prompt</Text>
                       <TextInput
-                        style={styles.formInput}
+                        style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                         placeholder="e.g. Space Exploration & Solar Flares"
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                         value={formAiTopic}
                         onChangeText={setFormAiTopic}
                       />
@@ -769,11 +751,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                     </View>
                   ) : (
                     <View style={styles.formField}>
-                      <Text style={styles.formLabel}>Passage Title</Text>
+                      <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Passage Title</Text>
                       <TextInput
-                        style={styles.formInput}
+                        style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                         placeholder="e.g. The Whispering Forest"
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                         value={formTitle}
                         onChangeText={setFormTitle}
                       />
@@ -782,11 +764,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
                   {/* Paragraph Content Text Area */}
                   <View style={styles.formField}>
-                    <Text style={styles.formLabel}>Paragraph Content</Text>
+                    <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Paragraph Content</Text>
                     <TextInput
-                      style={[styles.formInput, { height: 90, textAlignVertical: 'top', paddingTop: 10 }]}
+                      style={[styles.formInput, { height: 90, textAlignVertical: 'top', paddingTop: 10 }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                       placeholder="Paragraph content text will appear here..."
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                       multiline={true}
                       value={formOwnText}
                       onChangeText={setFormOwnText}
@@ -797,11 +779,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 {/* Bottom Action Bar: Generate / Publish + Cancel */}
                 <View style={styles.formActionsRow}>
                   <TouchableOpacity
-                    style={styles.cancelBtn}
+                    style={[styles.cancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                     onPress={() => setIsCreateModalVisible(false)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.cancelBtnText}>CANCEL</Text>
+                    <Text style={[styles.cancelBtnText, !isDefaultTheme && { color: appTheme.textSecondary }]}>CANCEL</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -810,7 +792,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={['#008BA3', '#0066FF']}
+                      colors={isDefaultTheme ? ['#008BA3', '#0066FF'] : appTheme.primaryGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.postBtnGradient}
@@ -832,13 +814,13 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: READING COACH RESULT ──
   if (isResultModalVisible) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 640 }} edges={['top', 'bottom']}>
-                <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-          <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <SafeAreaView style={[{ flex: 1, backgroundColor: '#ffffff', alignSelf: 'center', width: '100%', maxWidth: 720 }, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top', 'bottom']}>
+        <View style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+          <View style={[{ flex: 1, backgroundColor: "#ffffff" }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
 
             {/* Gradient Header Bar */}
             <LinearGradient
-              colors={['#003d9b', '#0052cc']}
+              colors={isDefaultTheme ? ['#003d9b', '#0052cc'] : appTheme.bannerGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.createModalBand, { borderTopLeftRadius: 0, borderTopRightRadius: 0, paddingTop: 12 }]}
@@ -849,9 +831,9 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                     <MaterialIcons name="assessment" size={16} color="#ffffff" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.createModalTitle} numberOfLines={1}>Reading Coach Result</Text>
+                    <Text style={styles.createModalTitle} numberOfLines={1}>Reading Coach — Student Results</Text>
                     <Text style={styles.createModalSubtitle} numberOfLines={1}>
-                      {selectedPassage ? `Story: ${selectedPassage.title}` : 'Student Fluency Analytics'}
+                      {selectedPassage ? selectedPassage.title : 'Comprehensive passage performance'}
                     </Text>
                   </View>
                 </View>
@@ -866,15 +848,13 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
             <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
 
-
-
               {/* Result Search Input */}
-              <View style={[styles.searchBar, { marginBottom: 14, height: 44 }]}>
-                <MaterialIcons name="search" size={18} color="#003d9b" style={{ marginRight: 8 }} />
+              <View style={[styles.searchBar, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, { marginBottom: 14, height: 44 }]}>
+                <MaterialIcons name="search" size={18} color={isDefaultTheme ? "#003d9b" : appTheme.primary} style={{ marginRight: 8 }} />
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                   placeholder="Search student name..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                   value={resultSearchQuery}
                   onChangeText={setResultSearchQuery}
                 />
@@ -887,22 +867,22 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   const isHigh = accNum >= 75;
                   const isMed = accNum >= 50 && accNum < 75;
 
-                  const accBg = isHigh ? '#DCFCE7' : isMed ? '#FEF3C7' : '#FEE2E2';
-                  const accText = isHigh ? '#15803D' : isMed ? '#B45309' : '#B91C1C';
+                  const accBg = isHigh ? (isDefaultTheme ? '#DCFCE7' : appTheme.surface) : isMed ? (isDefaultTheme ? '#FEF3C7' : appTheme.surface) : (isDefaultTheme ? '#FEE2E2' : appTheme.surface);
+                  const accText = isHigh ? (isDefaultTheme ? '#15803D' : appTheme.success) : isMed ? (isDefaultTheme ? '#B45309' : appTheme.warning) : (isDefaultTheme ? '#B91C1C' : appTheme.danger);
 
                   return (
-                    <View key={row.sNo} style={styles.resultCardRow}>
-                      <View style={styles.resultSNoBox}>
-                        <Text style={styles.resultSNoText}>#{row.sNo}</Text>
+                    <View key={row.sNo} style={[styles.resultCardRow, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                      <View style={[styles.resultSNoBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                        <Text style={[styles.resultSNoText, !isDefaultTheme && { color: appTheme.primary }]}>#{row.sNo}</Text>
                       </View>
 
                       <View style={styles.resultMainInfo}>
-                        <Text style={styles.resultStudentName}>{row.studentName}</Text>
+                        <Text style={[styles.resultStudentName, !isDefaultTheme && { color: appTheme.textPrimary }]}>{row.studentName}</Text>
                         <View style={styles.resultMetaRow}>
-                          <View style={styles.resultClassPill}>
-                            <Text style={styles.resultClassText}>{row.class}</Text>
+                          <View style={[styles.resultClassPill, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                            <Text style={[styles.resultClassText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{row.class}</Text>
                           </View>
-                          <Text style={styles.resultStoryName} numberOfLines={1}>{selectedPassage?.title || row.storyName}</Text>
+                          <Text style={[styles.resultStoryName, !isDefaultTheme && { color: appTheme.textSecondary }]} numberOfLines={1}>{selectedPassage?.title || row.storyName}</Text>
                         </View>
                       </View>
 
@@ -910,7 +890,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                         <View style={[styles.accuracyBadgePill, { backgroundColor: accBg }]}>
                           <Text style={[styles.accuracyBadgeText, { color: accText }]}>{row.accuracy}</Text>
                         </View>
-                        <Text style={styles.readingTimeText}>{row.readingTime}</Text>
+                        <Text style={[styles.readingTimeText, !isDefaultTheme && { color: appTheme.textMuted }]}>{row.readingTime}</Text>
                       </View>
                     </View>
                   );
@@ -926,16 +906,16 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 640 }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* 1. HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+          <TouchableOpacity style={[styles.headerButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>AI Reading Coach</Text>
-            <Text style={styles.headerSubtitle}>Pronunciation & fluency trainer</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>AI Reading Coach</Text>
+            <Text style={[styles.headerSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Pronunciation & fluency trainer</Text>
           </View>
         </View>
 
@@ -945,7 +925,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#0066FF', '#003D9B']}
+            colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : appTheme.primaryGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.createBtnGradient}
@@ -961,15 +941,13 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
         {/* 2. HERO SUMMARY OVERVIEW CARD */}
         <LinearGradient
-          colors={['#0F172A', '#1E1B4B', '#312E81']}
+          colors={isDefaultTheme ? ['#0F172A', '#1E1B4B', '#312E81'] : appTheme.bannerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
         >
           <View style={[styles.bandCircle, { width: 160, height: 160, top: -60, right: -40, opacity: 0.1 }]} />
           <View style={[styles.bandCircle, { width: 90, height: 90, bottom: -30, left: -20, opacity: 0.08 }]} />
-
-
 
           {/* Stats Row */}
           <View style={styles.heroStatsRow}>
@@ -1001,27 +979,25 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           </View>
         </LinearGradient>
 
-
-
         {/* 5. READING PASSAGE CARDS LIST */}
         <View style={styles.listSection}>
           <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Reading Passages</Text>
-            <View style={styles.counterBadge}>
-              <Text style={styles.counterBadgeText}>{filteredPassages.length} Available</Text>
+            <Text style={[styles.listTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Reading Passages</Text>
+            <View style={[styles.counterBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <Text style={[styles.counterBadgeText, !isDefaultTheme && { color: appTheme.primary }]}>{filteredPassages.length} Available</Text>
             </View>
           </View>
 
           {filteredPassages.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <MaterialIcons name="auto-stories" size={44} color="#cadaff" />
-              <Text style={styles.emptyText}>No reading passages match your search</Text>
+              <MaterialIcons name="auto-stories" size={44} color={isDefaultTheme ? "#cadaff" : appTheme.textMuted} />
+              <Text style={[styles.emptyText, !isDefaultTheme && { color: appTheme.textMuted }]}>No reading passages match your search</Text>
             </View>
           ) : (
             filteredPassages.map(item => {
               const accent = getCategoryColor(item.category);
               return (
-                <View key={item.id} style={[styles.card, { borderColor: '#CBD5E1' }]}>
+                <View key={item.id} style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, isDefaultTheme && { borderColor: '#CBD5E1' }]}>
 
                   {/* ── Header Band (Title, Class, Listen AI Button) ── */}
                   <LinearGradient
@@ -1057,32 +1033,32 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   <View style={styles.cardBody}>
 
                     {/* STORY Content Excerpt with Left Accent Bar */}
-                    <View style={[styles.storyExcerptClean, { borderLeftColor: accent }]}>
+                    <View style={[styles.storyExcerptClean, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, { borderLeftColor: accent }]}>
                       <View style={styles.storyBoxTitleGroup}>
                         <MaterialIcons name="auto-stories" size={13} color={accent} style={{ marginRight: 5 }} />
                         <Text style={[styles.storyBoxLabel, { color: accent }]}>STORY PARAGRAPH</Text>
                       </View>
-                      <Text style={styles.previewTextClean} numberOfLines={3}>"{item.previewText}"</Text>
+                      <Text style={[styles.previewTextClean, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={3}>"{item.previewText}"</Text>
                     </View>
 
                     {/* START DATE & DEADLINE Row - Simple, High Contrast, No Line Wrap */}
-                    <View style={styles.compactDateRow}>
+                    <View style={[styles.compactDateRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={styles.dateColLeft}>
                         <View style={styles.dateHeaderRow}>
                           <MaterialIcons name="event-available" size={13} color="#059669" style={{ marginRight: 4 }} />
-                          <Text style={styles.dateLabelMini}>START DATE</Text>
+                          <Text style={[styles.dateLabelMini, !isDefaultTheme && { color: appTheme.textSecondary }]}>START DATE</Text>
                         </View>
-                        <Text style={styles.compactDateStart} numberOfLines={1}>{item.startDateTime}</Text>
+                        <Text style={[styles.compactDateStart, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{item.startDateTime}</Text>
                       </View>
 
-                      <View style={styles.dateDividerLine} />
+                      <View style={[styles.dateDividerLine, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                       <View style={styles.dateColRight}>
                         <View style={styles.dateHeaderRowRight}>
                           <Text style={[styles.dateLabelMini, { color: '#DC2626' }]}>DEADLINE</Text>
                           <MaterialIcons name="event-busy" size={13} color="#DC2626" style={{ marginLeft: 4 }} />
                         </View>
-                        <Text style={styles.compactDateDeadline} numberOfLines={1}>{item.deadline}</Text>
+                        <Text style={[styles.compactDateDeadline, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{item.deadline}</Text>
                       </View>
                     </View>
 
@@ -1094,7 +1070,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                         activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#0284C7', '#0369A1']}
+                          colors={isDefaultTheme ? ['#0284C7', '#0369A1'] : [appTheme.primary, appTheme.accent]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.actionBtnGradient}
@@ -1105,7 +1081,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={styles.btnDesktopEdit}
+                        style={[styles.btnDesktopEdit, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                         onPress={() => {
                           setEditingPassage(item);
                           setEditStartDateTime(item.startDateTime);
@@ -1113,12 +1089,12 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                         }}
                         activeOpacity={0.8}
                       >
-                        <MaterialIcons name="edit" size={13} color="#003d9b" style={{ marginRight: 4 }} />
-                        <Text style={styles.btnDesktopEditText}>Edit</Text>
+                        <MaterialIcons name="edit" size={13} color={isDefaultTheme ? "#003d9b" : appTheme.primary} style={{ marginRight: 4 }} />
+                        <Text style={[styles.btnDesktopEditText, !isDefaultTheme && { color: appTheme.primary }]}>Edit</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={styles.btnDesktopDelete}
+                        style={[styles.btnDesktopDelete, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                         onPress={() => setDeletingPassage(item)}
                         activeOpacity={0.8}
                       >
@@ -1131,7 +1107,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                         activeOpacity={0.85}
                       >
                         <LinearGradient
-                          colors={['#0066FF', '#003D9B']}
+                          colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : appTheme.primaryGradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.actionBtnGradient}
@@ -1151,7 +1127,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           {/* Bottom Status Pill Badge */}
           {passages.length > 0 && (
             <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 28 }}>
-              <View style={{
+              <View style={[{
                 backgroundColor: '#F8FAFC',
                 borderWidth: 1,
                 borderColor: '#E2E8F0',
@@ -1163,8 +1139,8 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 shadowOpacity: 0.04,
                 shadowRadius: 6,
                 elevation: 2,
-              }}>
-                <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+              }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <Text style={[{ fontSize: 13, fontWeight: '800', color: '#475569' }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                   All {passages.length} passages loaded
                 </Text>
               </View>
@@ -1176,7 +1152,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
       {/* EDIT SCHEDULE MODAL (ViewportModal) */}
       <ViewportModal visible={editingPassage !== null} onClose={() => setEditingPassage(null)}>
-        <View style={{
+        <View style={[{
           backgroundColor: '#ffffff',
           width: '100%',
           maxWidth: 420,
@@ -1187,10 +1163,10 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           shadowOpacity: 0.18,
           shadowRadius: 20,
           elevation: 10,
-        }}>
+        }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderWidth: 1 }]}>
           {/* Header Band */}
           <LinearGradient
-            colors={['#041B3C', '#003D9B', '#0052CC']}
+            colors={isDefaultTheme ? ['#041B3C', '#003D9B', '#0052CC'] : appTheme.bannerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -1244,14 +1220,14 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
             {/* Start Date & Time Field */}
             <View style={{ gap: 5 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <MaterialIcons name="access-time" size={15} color="#0052CC" />
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <MaterialIcons name="access-time" size={15} color={isDefaultTheme ? "#0052CC" : appTheme.primary} />
+                <Text style={[{ fontSize: 12, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                   Start Date & Time
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={{
+                style={[{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -1261,7 +1237,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   borderRadius: 12,
                   paddingHorizontal: 14,
                   height: 48,
-                }}
+                }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setDatePickerTarget('editStart');
                   setDatePickerValue(editStartDateTime);
@@ -1270,10 +1246,10 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#0F172A' }}>
+                <Text style={[{ fontSize: 14.5, fontWeight: '800', color: '#0F172A' }, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                   {editStartDateTime}
                 </Text>
-                <MaterialIcons name="calendar-today" size={17} color="#0052CC" />
+                <MaterialIcons name="calendar-today" size={17} color={isDefaultTheme ? "#0052CC" : appTheme.primary} />
               </TouchableOpacity>
             </View>
 
@@ -1287,7 +1263,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               </View>
 
               <TouchableOpacity
-                style={{
+                style={[{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -1297,7 +1273,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                   borderRadius: 12,
                   paddingHorizontal: 14,
                   height: 48,
-                }}
+                }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.danger }]}
                 onPress={() => {
                   setDatePickerTarget('editDeadline');
                   setDatePickerValue(editDeadline);
@@ -1306,7 +1282,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#C62828' }}>
+                <Text style={[{ fontSize: 14.5, fontWeight: '800', color: '#C62828' }, !isDefaultTheme && { color: appTheme.danger }]}>
                   {editDeadline}
                 </Text>
                 <MaterialIcons name="calendar-month" size={17} color="#C62828" />
@@ -1339,7 +1315,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#0052CC', '#003D9B']}
+                colors={isDefaultTheme ? ['#0052CC', '#003D9B'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -1382,7 +1358,7 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
 
       {/* CONFIRM DELETE MODAL (ViewportModal) */}
       <ViewportModal visible={deletingPassage !== null} onClose={() => setDeletingPassage(null)}>
-        <View style={{
+        <View style={[{
           backgroundColor: '#ffffff',
           width: '100%',
           maxWidth: 400,
@@ -1395,9 +1371,9 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
           elevation: 10,
           padding: 22,
           alignItems: 'center',
-        }}>
+        }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderWidth: 1 }]}>
           {/* Danger Icon Badge */}
-          <View style={{
+          <View style={[{
             width: 56,
             height: 56,
             borderRadius: 28,
@@ -1407,22 +1383,22 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 14,
-          }}>
+          }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.danger }]}>
             <MaterialIcons name="delete-forever" size={28} color="#DC2626" />
           </View>
 
-          <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A', textAlign: 'center', marginBottom: 6 }}>
+          <Text style={[{ fontSize: 18, fontWeight: '900', color: '#0F172A', textAlign: 'center', marginBottom: 6 }, !isDefaultTheme && { color: appTheme.textPrimary }]}>
             Confirm Delete
           </Text>
           
-          <Text style={{ fontSize: 13.5, fontWeight: '600', color: '#64748B', textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
-            Are you sure you want to delete <Text style={{ fontWeight: '800', color: '#0F172A' }}>"{deletingPassage?.title}"</Text>? This action cannot be undone.
+          <Text style={[{ fontSize: 13.5, fontWeight: '600', color: '#64748B', textAlign: 'center', lineHeight: 20, marginBottom: 20 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
+            Are you sure you want to delete <Text style={[{ fontWeight: '800', color: '#0F172A' }, !isDefaultTheme && { color: appTheme.textPrimary }]}>"{deletingPassage?.title}"</Text>? This action cannot be undone.
           </Text>
 
           {/* Action Buttons Row */}
           <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
             <TouchableOpacity
-              style={{
+              style={[{
                 flex: 1,
                 paddingVertical: 12,
                 borderRadius: 14,
@@ -1431,11 +1407,11 @@ export const ReadingCoachScreen = ({ navigation }: any) => {
                 backgroundColor: '#F8FAFC',
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}
+              }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
               onPress={() => setDeletingPassage(null)}
               activeOpacity={0.8}
             >
-              <Text style={{ fontSize: 14, fontWeight: '800', color: '#475569' }}>Cancel</Text>
+              <Text style={[{ fontSize: 14, fontWeight: '800', color: '#475569' }, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

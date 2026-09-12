@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface MCQsScreenProps {
@@ -150,7 +151,7 @@ const buildMockSet = (topic: string, fileName?: string): MCQSet => {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
-
+  const { appTheme, isDefaultTheme } = useAppTheme();
   const [requestInput, setRequestInput]   = useState('');
   const [fileName, setFileName]           = useState('');
   const [generating, setGenerating]       = useState(false);
@@ -205,7 +206,7 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* Ambient blobs */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
@@ -224,14 +225,14 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
 
       {/* ── HEADER ── */}
       <LinearGradient
-        colors={['#7F1D1D', '#B91C1C', '#D9534F']}
+        colors={isDefaultTheme ? ['#7F1D1D', '#B91C1C', '#D9534F'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={{ position: 'absolute', right: -28, top: -38, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(254,202,202,0.14)' }} />
         <View style={{ position: 'absolute', left: -18, bottom: -36, width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(252,165,165,0.10)' }} />
 
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, { maxWidth: 720, width: '100%', alignSelf: 'center' }]}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
             <View style={styles.backBtnInner}>
               <MaterialIcons name="arrow-back" size={20} color="#fff" />
@@ -248,22 +249,26 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#FCA5A5', '#D9534F', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient
+        colors={isDefaultTheme ? ['#FCA5A5', '#D9534F', '#B91C1C'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={styles.headerGlow}
+      />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { maxWidth: 720, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>
 
         {/* ── FORM CARD ── */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
           {/* YOUR REQUEST */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -274,33 +279,40 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
 
           {/* ATTACH FILE */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[
+              styles.fileBox,
+              fileName ? styles.fileBoxActive : null,
+              !isDefaultTheme && {
+                backgroundColor: appTheme.surface,
+                borderColor: fileName ? appTheme.primary : appTheme.border,
+              },
+            ]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#FEE2E2', '#FECACA'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#FEE2E2', '#FECACA'] : [appTheme.primaryLight, appTheme.surface]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.bg])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#D9534F' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#D9534F' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -309,7 +321,7 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#7F1D1D', '#B91C1C', '#D9534F']}
+                colors={isDefaultTheme ? ['#7F1D1D', '#B91C1C', '#D9534F'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -332,37 +344,37 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#D9534F" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingText}>Generating MCQs…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#D9534F" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.primary }]}>Generating MCQs…</Text>
             </View>
           )}
         </View>
 
         {/* ── PROGRESS LOADER ── */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#D9534F" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#D9534F" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#D9534F', '#FCA5A5']}
+                colors={isDefaultTheme ? ['#D9534F', '#FCA5A5'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textMuted }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* ── RESULTS SECTION HEADER ── */}
         {mcqSets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#D9534F', '#B91C1C']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View MCQs</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#D9534F', '#B91C1C'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View MCQs</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{mcqSets.length}</Text>
             </View>
           </View>
@@ -371,24 +383,24 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
         {/* ── MCQ RESULT CARDS ── */}
         <View style={{ gap: 18 }}>
           {mcqSets.map((set) => (
-            <View key={set.id} style={styles.resultCard}>
+            <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
               {/* Top accent strip */}
-              <LinearGradient colors={['#7F1D1D', '#D9534F', '#FCA5A5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+              <LinearGradient colors={isDefaultTheme ? ['#7F1D1D', '#D9534F', '#FCA5A5'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
               {/* Meta header */}
               <View style={styles.resultMeta}>
-                <LinearGradient colors={['#FEE2E2', '#FECACA']} style={styles.resultIconOrb}>
-                  <MaterialIcons name="quiz" size={17} color="#D9534F" />
+                <LinearGradient colors={isDefaultTheme ? ['#FEE2E2', '#FECACA'] : [appTheme.primaryLight, appTheme.surface]} style={styles.resultIconOrb}>
+                  <MaterialIcons name="quiz" size={17} color={isDefaultTheme ? "#D9534F" : appTheme.primary} />
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                  <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                  <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                  <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textMuted }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                 </View>
                 {/* Eye button */}
                 <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
-                  <View style={styles.eyeOuter}>
-                    <LinearGradient colors={['#D9534F', '#B91C1C']} style={styles.eyeCore}>
+                  <View style={[styles.eyeOuter, !isDefaultTheme && { borderColor: appTheme.border, backgroundColor: appTheme.surface }]}>
+                    <LinearGradient colors={isDefaultTheme ? ['#D9534F', '#B91C1C'] : appTheme.primaryGradient} style={styles.eyeCore}>
                       <View style={styles.eyeGloss} />
                       <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                     </LinearGradient>
@@ -401,20 +413,27 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
                 {set.questions.map((q) => (
                   <View key={q.id} style={styles.questionItem}>
                     <View style={styles.qLabelRow}>
-                      <LinearGradient colors={['#B91C1C', '#D9534F']} style={styles.qNumBadge}>
+                      <LinearGradient colors={isDefaultTheme ? ['#B91C1C', '#D9534F'] : appTheme.primaryGradient} style={styles.qNumBadge}>
                         <Text style={styles.qNumText}>Q{q.id}</Text>
                       </LinearGradient>
-                      <Text style={styles.qText}>{q.question}</Text>
+                      <Text style={[styles.qText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{q.question}</Text>
                     </View>
                     <View style={styles.optionsList}>
                       {q.options.map((opt, oi) => {
                         const isCorrect = revealedKeys[set.id] && oi === q.correctIndex;
                         return (
-                          <View key={oi} style={[styles.optRow, isCorrect && styles.optRowCorrect]}>
-                            <View style={[styles.optLabelBox, { backgroundColor: OPT_COLORS[opt.label] }]}>
+                          <View
+                            key={oi}
+                            style={[
+                              styles.optRow,
+                              isCorrect && styles.optRowCorrect,
+                              !isDefaultTheme && !isCorrect && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                            ]}
+                          >
+                            <View style={[styles.optLabelBox, { backgroundColor: isDefaultTheme ? OPT_COLORS[opt.label] : appTheme.primary }]}>
                               <Text style={styles.optLabelText}>{opt.label})</Text>
                             </View>
-                            <Text style={[styles.optText, isCorrect && styles.optTextCorrect]} numberOfLines={1}>
+                            <Text style={[styles.optText, isCorrect && styles.optTextCorrect, !isDefaultTheme && !isCorrect && { color: appTheme.textSecondary }]} numberOfLines={1}>
                               {opt.text}
                             </Text>
                             {isCorrect && <MaterialIcons name="check-circle" size={13} color="#16A34A" style={{ marginLeft: 4 }} />}
@@ -426,13 +445,13 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
                 ))}
 
                 {/* Answer Key block */}
-                <View style={styles.answerKeyBlock}>
-                  <Text style={styles.answerKeyTitle}>Answer Key:</Text>
+                <View style={[styles.answerKeyBlock, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <Text style={[styles.answerKeyTitle, !isDefaultTheme && { color: appTheme.accent }]}>Answer Key:</Text>
                   <View style={styles.answerKeyGrid}>
                     {set.questions.map((q) => (
                       <View key={q.id} style={styles.akItem}>
-                        <Text style={styles.akQLabel}>{q.id}.</Text>
-                        <View style={styles.akBadge}>
+                        <Text style={[styles.akQLabel, !isDefaultTheme && { color: appTheme.textMuted }]}>{q.id}.</Text>
+                        <View style={[styles.akBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                           <Text style={styles.akBadgeText}>{q.options[q.correctIndex].label}</Text>
                         </View>
                       </View>
@@ -448,7 +467,7 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#B91C1C', '#D9534F']}
+                  colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#B91C1C', '#D9534F'] : appTheme.primaryGradient)}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.copyMcqsBtnGrad}
                 >
@@ -465,20 +484,20 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
               </TouchableOpacity>
 
               {/* Footer toolbar */}
-              <View style={styles.resultFooter}>
+              <View style={[styles.resultFooter, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                  <MaterialIcons name="open-in-full" size={13} color="#D9534F" style={{ marginRight: 4 }} />
-                  <Text style={styles.footerBtnText}>Full View</Text>
+                  <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? "#D9534F" : appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => toggleKey(set.id)}>
-                  <MaterialIcons name={revealedKeys[set.id] ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerBtnText, { color: '#B45309' }]}>
+                  <MaterialIcons name={revealedKeys[set.id] ? 'visibility-off' : 'vpn-key'} size={13} color={isDefaultTheme ? "#B45309" : appTheme.warning} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#B45309' : appTheme.warning }]}>
                     {revealedKeys[set.id] ? 'Hide Key' : 'Show Key'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                  <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                  <MaterialIcons name="print" size={13} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} style={{ marginRight: 4 }} />
+                  <Text style={[styles.footerBtnText, { color: isDefaultTheme ? '#64748B' : appTheme.textMuted }]}>Print</Text>
                 </TouchableOpacity>
               </View>
 
@@ -490,14 +509,14 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
 
       {/* ── FULL VIEW MODAL ── */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
-            <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#D9534F" />
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetClose, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#D9534F" : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleCopy(activeSet); }}
               activeOpacity={0.8}
             >
@@ -516,10 +535,10 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
               {/* Doc header */}
-              <LinearGradient colors={['#7F1D1D', '#B91C1C']} style={styles.paperDocHeader}>
+              <LinearGradient colors={isDefaultTheme ? ['#7F1D1D', '#B91C1C'] : appTheme.bannerGradient} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="quiz" size={18} color="#fff" />
@@ -532,30 +551,37 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* All questions */}
               <View style={styles.fullQuestions}>
                 {activeSet?.questions.map((q) => (
-                  <View key={q.id} style={styles.fullQCard}>
-                    <View style={styles.fullQHeader}>
-                      <LinearGradient colors={['#B91C1C', '#D9534F']} style={styles.fullQBadge}>
+                  <View key={q.id} style={[styles.fullQCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                    <View style={[styles.fullQHeader, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#B91C1C', '#D9534F'] : appTheme.primaryGradient} style={styles.fullQBadge}>
                         <Text style={styles.fullQBadgeText}>Q{q.id}</Text>
                       </LinearGradient>
-                      <Text style={styles.fullQText}>{q.question}</Text>
+                      <Text style={[styles.fullQText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{q.question}</Text>
                     </View>
                     <View style={styles.fullOptionsList}>
                       {q.options.map((opt, oi) => {
                         const correct = oi === q.correctIndex;
                         return (
-                          <View key={oi} style={[styles.fullOptRow, correct && styles.fullOptRowCorrect]}>
-                            <View style={[styles.fullOptLabel, { backgroundColor: correct ? '#16A34A' : OPT_COLORS[opt.label] }]}>
+                          <View
+                            key={oi}
+                            style={[
+                              styles.fullOptRow,
+                              correct && styles.fullOptRowCorrect,
+                              !isDefaultTheme && !correct && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border },
+                            ]}
+                          >
+                            <View style={[styles.fullOptLabel, { backgroundColor: correct ? '#16A34A' : (isDefaultTheme ? OPT_COLORS[opt.label] : appTheme.primary) }]}>
                               <Text style={styles.fullOptLabelText}>{opt.label})</Text>
                             </View>
-                            <Text style={[styles.fullOptText, correct && styles.fullOptTextCorrect]}>{opt.text}</Text>
+                            <Text style={[styles.fullOptText, correct && styles.fullOptTextCorrect, !isDefaultTheme && !correct && { color: appTheme.textSecondary }]}>{opt.text}</Text>
                             {correct && <MaterialIcons name="check-circle" size={15} color="#16A34A" style={{ marginLeft: 8 }} />}
                           </View>
                         );
@@ -566,16 +592,16 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
               </View>
 
               {/* Answer Key Summary */}
-              <View style={styles.answerKeySummary}>
-                <LinearGradient colors={['#7F1D1D', '#B91C1C']} style={styles.akHeader}>
+              <View style={[styles.answerKeySummary, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#7F1D1D', '#B91C1C'] : appTheme.bannerGradient} style={styles.akHeader}>
                   <MaterialIcons name="vpn-key" size={15} color="#FECACA" style={{ marginRight: 8 }} />
                   <Text style={styles.akHeaderText}>Answer Key</Text>
                 </LinearGradient>
-                <View style={styles.akGridModal}>
+                <View style={[styles.akGridModal, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                   {activeSet?.questions.map((q) => (
                     <View key={q.id} style={styles.akItemModal}>
-                      <Text style={styles.akQNumModal}>{q.id}.</Text>
-                      <View style={styles.akBadgeModal}>
+                      <Text style={[styles.akQNumModal, !isDefaultTheme && { color: appTheme.textMuted }]}>{q.id}.</Text>
+                      <View style={[styles.akBadgeModal, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                         <Text style={styles.akBadgeModalText}>{q.options[q.correctIndex].label}</Text>
                       </View>
                     </View>
@@ -590,7 +616,7 @@ export const MCQsScreen: React.FC<MCQsScreenProps> = ({ navigation }) => {
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : ['#B91C1C', '#D9534F']}
+                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#B91C1C', '#D9534F'] : appTheme.primaryGradient)}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >

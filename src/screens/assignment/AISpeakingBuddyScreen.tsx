@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,9 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
   Alert,
-  Dimensions,
   Animated,
   Platform,
 } from 'react-native';
@@ -16,8 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Rect, Circle, Path, G, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-
-const { width } = Dimensions.get('window');
+import { useAppTheme } from '../../context/ThemeContext';
 
 const INITIAL_TOPICS = [
   { id: '1', topic: 'My School',   className: 'GRADE-V',   section: 'A' },
@@ -188,6 +185,8 @@ const CardWaveformAnalyzer = ({ color }: { color: string }) => {
 };
 
 export const AISpeakingBuddyScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   const [topics, setTopics]           = useState<TopicItem[]>(INITIAL_TOPICS);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -391,12 +390,12 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: PREVIEW AI SPEAKING SESSION ──
   if (previewVisible && previewItem) {
     return (
-      <SafeAreaView style={styles.previewFullScreen} edges={['top']}>
+      <SafeAreaView style={[styles.previewFullScreen, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
         {/* ── TOP HEADER BAR (Light Clean Aesthetic Header) ── */}
-        <View style={styles.previewHeaderBar}>
+        <View style={[styles.previewHeaderBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.previewHeaderLeft}>
             <TouchableOpacity
-              style={styles.previewBackBtn}
+              style={[styles.previewBackBtn, !isDefaultTheme && { backgroundColor: appTheme.surface }]}
               onPress={() => {
                 setPreviewVisible(false);
                 setIsListening(false);
@@ -404,12 +403,12 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
               }}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
 
             <View style={styles.previewBotAvatarWrapper}>
               <LinearGradient
-                colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                colors={isDefaultTheme ? ['#0066FF', '#6366F1', '#8B5CF6'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.previewBotAvatarGrad}
@@ -421,8 +420,8 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 
             <View style={{ marginLeft: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.previewBotTitle}>Echo AI</Text>
-                <View style={styles.onlineBadge}>
+                <Text style={[styles.previewBotTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Echo AI</Text>
+                <View style={[styles.onlineBadge, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                   <View style={styles.onlineDot} />
                   <Text style={styles.onlineBadgeText}>Online</Text>
                 </View>
@@ -432,7 +431,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
         </View>
 
         {/* ── COMPACT AI VOICE & STATUS STRIP ── */}
-        <View style={styles.previewStatusStrip}>
+        <View style={[styles.previewStatusStrip, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.statusIndicatorBox}>
             <View
               style={[
@@ -445,11 +444,11 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                       ? '#F59E0B'
                       : aiStatus === 'speaking'
                       ? '#10B981'
-                      : '#0066FF',
+                      : (isDefaultTheme ? '#0066FF' : appTheme.primary),
                 },
               ]}
             />
-            <Text style={styles.statusStripLabel}>
+            <Text style={[styles.statusStripLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>
               {aiStatus === 'listening'
                 ? 'Listening to your voice... Speak now!'
                 : aiStatus === 'thinking'
@@ -474,7 +473,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                         ? '#EF4444'
                         : aiStatus === 'speaking'
                         ? '#10B981'
-                        : '#94A3B8',
+                        : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted),
                   },
                 ]}
               />
@@ -503,7 +502,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 {isAI && (
                   <View style={styles.msgAiAvatarSmall}>
                     <LinearGradient
-                      colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                      colors={isDefaultTheme ? ['#0066FF', '#6366F1', '#8B5CF6'] : appTheme.primaryGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.msgAiAvatarSmallGrad}
@@ -514,26 +513,26 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 )}
 
                 {isAI ? (
-                  <View style={styles.msgBubbleCardAI}>
+                  <View style={[styles.msgBubbleCardAI, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     <View style={styles.msgBubbleHeaderAI}>
-                      <View style={styles.aiNameBadge}>
-                        <MaterialIcons name="graphic-eq" size={11} color="#0066FF" style={{ marginRight: 4 }} />
-                        <Text style={styles.aiNameBadgeText}>Echo AI</Text>
+                      <View style={[styles.aiNameBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                        <MaterialIcons name="graphic-eq" size={11} color={isDefaultTheme ? "#0066FF" : appTheme.primary} style={{ marginRight: 4 }} />
+                        <Text style={[styles.aiNameBadgeText, !isDefaultTheme && { color: appTheme.primary }]}>Echo AI</Text>
                       </View>
                       <View style={styles.aiMsgMetaRow}>
-                        {msg.time && <Text style={styles.msgTimeTextAI}>{msg.time}</Text>}
-                        <TouchableOpacity style={styles.audioPlayChip} activeOpacity={0.7}>
-                          <MaterialIcons name="volume-up" size={14} color="#0066FF" />
-                          <Text style={styles.audioPlayText}>Listen</Text>
+                        {msg.time && <Text style={[styles.msgTimeTextAI, !isDefaultTheme && { color: appTheme.textSecondary }]}>{msg.time}</Text>}
+                        <TouchableOpacity style={[styles.audioPlayChip, !isDefaultTheme && { backgroundColor: appTheme.surface }]} activeOpacity={0.7}>
+                          <MaterialIcons name="volume-up" size={14} color={isDefaultTheme ? "#0066FF" : appTheme.primary} />
+                          <Text style={[styles.audioPlayText, !isDefaultTheme && { color: appTheme.primary }]}>Listen</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
 
-                    <Text style={styles.msgBodyTextAI}>{msg.text}</Text>
+                    <Text style={[styles.msgBodyTextAI, !isDefaultTheme && { color: appTheme.textPrimary }]}>{msg.text}</Text>
                   </View>
                 ) : (
                   <LinearGradient
-                    colors={['#0066FF', '#0047CC', '#4338CA']}
+                    colors={isDefaultTheme ? ['#0066FF', '#0047CC', '#4338CA'] : appTheme.primaryGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.msgBubbleCardUser}
@@ -558,15 +557,15 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             <View style={[styles.msgBubbleRow, styles.msgBubbleRowAI]}>
               <View style={styles.msgAiAvatarSmall}>
                 <LinearGradient
-                  colors={['#0066FF', '#6366F1', '#8B5CF6']}
+                  colors={isDefaultTheme ? ['#0066FF', '#6366F1', '#8B5CF6'] : appTheme.primaryGradient}
                   style={styles.msgAiAvatarSmallGrad}
                 >
                   <MaterialIcons name="graphic-eq" size={14} color="#FFFFFF" />
                 </LinearGradient>
               </View>
-              <View style={styles.thinkingCard}>
-                <View style={styles.thinkingPulseDot} />
-                <Text style={styles.thinkingText}>
+              <View style={[styles.thinkingCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <View style={[styles.thinkingPulseDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+                <Text style={[styles.thinkingText, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                   Echo is composing a thoughtful reply...
                 </Text>
               </View>
@@ -576,36 +575,36 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
           {/* Quick Suggestion Prompt Chips */}
           <View style={styles.suggestionChipsSection}>
             <View style={styles.suggestionHeaderRow}>
-              <MaterialIcons name="stars" size={13} color="#6366F1" />
-              <Text style={styles.suggestionChipsHeading}>SUGGESTED PROMPTS</Text>
+              <MaterialIcons name="stars" size={13} color={isDefaultTheme ? "#6366F1" : appTheme.primary} />
+              <Text style={[styles.suggestionChipsHeading, !isDefaultTheme && { color: appTheme.textSecondary }]}>SUGGESTED PROMPTS</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
               <TouchableOpacity
-                style={styles.suggestionChip}
+                style={[styles.suggestionChip, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                 onPress={() => handleSendMessage(`My favorite thing about ${previewItem.topic} is...`)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.suggestionChipText}>
+                <Text style={[styles.suggestionChipText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                   💬 My favorite thing about {previewItem.topic} is...
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.suggestionChip}
+                style={[styles.suggestionChip, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                 onPress={() => handleSendMessage(`Can you ask me a question about ${previewItem.topic}?`)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.suggestionChipText}>
+                <Text style={[styles.suggestionChipText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                   ❓ Ask me a question about {previewItem.topic}
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.suggestionChip}
+                style={[styles.suggestionChip, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                 onPress={() => handleSendMessage(`How can I improve my English vocabulary for this topic?`)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.suggestionChipText}>
+                <Text style={[styles.suggestionChipText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                   ✨ Help me speak more fluently
                 </Text>
               </TouchableOpacity>
@@ -616,12 +615,12 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
         </ScrollView>
 
         {/* ── BOTTOM INPUT BAR (Matching reference image + enhanced polish) ── */}
-        <View style={styles.previewBottomControlBar}>
-          <View style={styles.previewInputBoxContainer}>
+        <View style={[styles.previewBottomControlBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}>
+          <View style={[styles.previewInputBoxContainer, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
             <TextInput
-              style={styles.previewTextInputField}
+              style={[styles.previewTextInputField, !isDefaultTheme && { color: appTheme.textPrimary }]}
               placeholder="Type your response..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
               value={chatInput}
               onChangeText={setChatInput}
               onSubmitEditing={() => handleSendMessage()}
@@ -633,6 +632,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
               style={[
                 styles.previewMicIconButton,
                 isListening && styles.previewMicIconButtonActive,
+                !isDefaultTheme && !isListening && { backgroundColor: appTheme.surfaceVariant },
               ]}
               onPress={handleMic}
               activeOpacity={0.8}
@@ -641,7 +641,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 <MaterialIcons
                   name={isListening ? 'mic-off' : 'mic'}
                   size={20}
-                  color={isListening ? '#FFFFFF' : '#0066FF'}
+                  color={isListening ? '#FFFFFF' : (isDefaultTheme ? '#0066FF' : appTheme.primary)}
                 />
               </Animated.View>
             </TouchableOpacity>
@@ -653,7 +653,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#0066FF', '#0047CC']}
+                colors={isDefaultTheme ? ['#0066FF', '#0047CC'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.previewSendBtnGrad}
@@ -671,28 +671,28 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: EDIT TOPIC SCREEN ──
   if (editVisible && editItem) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
         {/* ── EDIT SCREEN HEADER ── */}
-        <View style={styles.header}>
+        <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
-              style={styles.headerButton}
+              style={[styles.headerButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
               onPress={() => {
                 setEditVisible(false);
                 setEditItem(null);
               }}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.headerTitle}>Edit Conversation Topic</Text>
-              <Text style={styles.headerSubtitle}>Update Voice Practice Details</Text>
+              <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Edit Conversation Topic</Text>
+              <Text style={[styles.headerSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Update Voice Practice Details</Text>
             </View>
           </View>
-          <View style={styles.badgePill}>
-            <View style={[styles.badgeDot, { backgroundColor: '#0284C7' }]} />
-            <Text style={[styles.badgePillText, { color: '#0284C7' }]}>EDIT TOPIC</Text>
+          <View style={[styles.badgePill, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+            <View style={[styles.badgeDot, { backgroundColor: isDefaultTheme ? '#0284C7' : appTheme.primary }]} />
+            <Text style={[styles.badgePillText, { color: isDefaultTheme ? '#0284C7' : appTheme.primary }]}>EDIT TOPIC</Text>
           </View>
         </View>
 
@@ -704,17 +704,17 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Form Card */}
-          <View style={styles.createFormCard}>
+          <View style={[styles.createFormCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             {/* Topic Title */}
             <View style={styles.formField}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Topic Title</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Topic Title</Text>
                 <Text style={styles.requiredStar}>*</Text>
               </View>
               <TextInput
-                style={styles.formInput}
+                style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                 placeholder="Enter topic title..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                 value={editTitle}
                 onChangeText={setEditTitle}
               />
@@ -723,11 +723,11 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             {/* Class Selection */}
             <View style={[styles.formField, { marginTop: 18 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Target Class</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Target Class</Text>
                 <Text style={styles.requiredStar}>*</Text>
               </View>
               <TouchableOpacity
-                style={styles.formSelectBox}
+                style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setShowEditClassDD(!showEditClassDD);
                   setShowEditSectionDD(false);
@@ -735,32 +735,32 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.selectTextRow}>
-                  <MaterialIcons name="groups" size={18} color={editClass ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
-                  <Text style={[styles.formSelectText, !editClass && styles.formSelectPlaceholder]}>
+                  <MaterialIcons name="groups" size={18} color={editClass ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !editClass && styles.formSelectPlaceholder, !isDefaultTheme && { color: editClass ? appTheme.textPrimary : appTheme.textMuted }]}>
                     {editClass || 'Select a class...'}
                   </Text>
                 </View>
-                <MaterialIcons name={showEditClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+                <MaterialIcons name={showEditClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />
               </TouchableOpacity>
 
               {showEditClassDD && (
-                <View style={styles.formDropdownOptions}>
+                <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                   {CLASSES.map((c) => {
                     const isSelected = editClass === c;
                     return (
                       <TouchableOpacity
                         key={c}
-                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive, !isDefaultTheme && { backgroundColor: isSelected ? appTheme.cardBg : 'transparent' }]}
                         onPress={() => {
                           setEditClass(c);
                           setShowEditClassDD(false);
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive, !isDefaultTheme && { color: isSelected ? appTheme.primary : appTheme.textPrimary }]}>
                           {c}
                         </Text>
-                        {isSelected && <MaterialIcons name="check" size={18} color="#0047CC" />}
+                        {isSelected && <MaterialIcons name="check" size={18} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />}
                       </TouchableOpacity>
                     );
                   })}
@@ -771,16 +771,16 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             {/* Section Selection */}
             <View style={[styles.formField, { marginTop: 18 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Section(s)</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Section(s)</Text>
                 <Text style={styles.requiredStar}>*</Text>
                 {editSection ? (
-                  <Text style={styles.selectedCountText}>
+                  <Text style={[styles.selectedCountText, !isDefaultTheme && { color: appTheme.primary }]}>
                     {editSection.split(',').filter(Boolean).length} Selected
                   </Text>
                 ) : null}
               </View>
               <TouchableOpacity
-                style={styles.formSelectBox}
+                style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setShowEditSectionDD(!showEditSectionDD);
                   setShowEditClassDD(false);
@@ -788,21 +788,21 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.selectTextRow}>
-                  <MaterialIcons name="bookmark" size={18} color={editSection ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
-                  <Text style={[styles.formSelectText, !editSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                  <MaterialIcons name="bookmark" size={18} color={editSection ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !editSection && styles.formSelectPlaceholder, !isDefaultTheme && { color: editSection ? appTheme.textPrimary : appTheme.textMuted }]} numberOfLines={1}>
                     {editSection ? `Section ${editSection}` : 'Select section(s)...'}
                   </Text>
                 </View>
-                <MaterialIcons name={showEditSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+                <MaterialIcons name={showEditSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />
               </TouchableOpacity>
 
               {showEditSectionDD && (
-                <View style={styles.formDropdownOptions}>
+                <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                   {/* Select All Option */}
                   <TouchableOpacity
                     style={[
                       styles.formDropdownItem,
-                      { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' },
+                      { borderBottomWidth: 1, borderBottomColor: isDefaultTheme ? '#E2E8F0' : appTheme.border, backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.cardBg },
                     ]}
                     onPress={() => {
                       const currentList = editSection ? editSection.split(',').map((s) => s.trim()).filter(Boolean) : [];
@@ -813,7 +813,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                       }
                     }}
                   >
-                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0047CC' }]}>
+                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: isDefaultTheme ? '#0047CC' : appTheme.primary }]}>
                       {editSection && editSection.split(',').map((s) => s.trim()).filter(Boolean).length === SECTIONS.length
                         ? '✓ Deselect All'
                         : '✦ Select All Sections'}
@@ -826,7 +826,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                     return (
                       <TouchableOpacity
                         key={s}
-                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive, !isDefaultTheme && { backgroundColor: isSelected ? appTheme.cardBg : 'transparent' }]}
                         onPress={() => {
                           let updated: string[];
                           if (isSelected) {
@@ -838,24 +838,24 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive, !isDefaultTheme && { color: isSelected ? appTheme.primary : appTheme.textPrimary }]}>
                           Section {s}
                         </Text>
                         <MaterialIcons
                           name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                           size={19}
-                          color={isSelected ? '#0047CC' : '#94A3B8'}
+                          color={isSelected ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
                         />
                       </TouchableOpacity>
                     );
                   })}
 
                   <TouchableOpacity
-                    style={styles.doneSelectingBtn}
+                    style={[styles.doneSelectingBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}
                     onPress={() => setShowEditSectionDD(false)}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                    <Text style={[styles.doneSelectingText, !isDefaultTheme && { color: appTheme.primary }]}>Done Selecting</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -865,7 +865,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             <View style={[styles.modalBtnRow, { marginTop: 24 }]}>
               <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleSaveEdit} activeOpacity={0.85}>
                 <LinearGradient
-                  colors={['#0066FF', '#003D9B']}
+                  colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : [appTheme.primary, appTheme.accent]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.modalSubmitGrad}
@@ -875,14 +875,14 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setEditVisible(false);
                   setEditItem(null);
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -894,12 +894,12 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
   // ── EARLY FULL-SCREEN RETURN: CREATE TOPIC SCREEN ──
   if (isCreateVisible) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
         {/* ── CREATE SCREEN HEADER ── */}
-        <View style={styles.header}>
+        <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
-              style={styles.headerButton}
+              style={[styles.headerButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
               onPress={() => {
                 setIsCreateVisible(false);
                 setFormTopic('');
@@ -908,16 +908,16 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
               }}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.headerTitle}>Create Conversation Topic</Text>
-              <Text style={styles.headerSubtitle}>AI Voice Practice Setup</Text>
+              <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Create Conversation Topic</Text>
+              <Text style={[styles.headerSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>AI Voice Practice Setup</Text>
             </View>
           </View>
-          <View style={styles.badgePill}>
-            <View style={styles.badgeDot} />
-            <Text style={styles.badgePillText}>NEW TOPIC</Text>
+          <View style={[styles.badgePill, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+            <View style={[styles.badgeDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.badgePillText, !isDefaultTheme && { color: appTheme.primary }]}>NEW TOPIC</Text>
           </View>
         </View>
 
@@ -929,17 +929,17 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Form Card */}
-          <View style={styles.createFormCard}>
+          <View style={[styles.createFormCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             {/* Topic Title */}
             <View style={styles.formField}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Topic Title</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Topic Title</Text>
                 <Text style={styles.requiredStar}>*</Text>
               </View>
               <TextInput
-                style={styles.formInput}
+                style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                 placeholder="Enter topic title (e.g. My School, Family)..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                 value={formTopic}
                 onChangeText={setFormTopic}
               />
@@ -948,11 +948,11 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             {/* Class Selection */}
             <View style={[styles.formField, { marginTop: 18 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Target Class</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Target Class</Text>
                 <Text style={styles.requiredStar}>*</Text>
               </View>
               <TouchableOpacity
-                style={styles.formSelectBox}
+                style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setShowClassDD(!showClassDD);
                   setShowSectionDD(false);
@@ -960,32 +960,32 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.selectTextRow}>
-                  <MaterialIcons name="groups" size={18} color={formClass ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
-                  <Text style={[styles.formSelectText, !formClass && styles.formSelectPlaceholder]}>
+                  <MaterialIcons name="groups" size={18} color={formClass ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !formClass && styles.formSelectPlaceholder, !isDefaultTheme && { color: formClass ? appTheme.textPrimary : appTheme.textMuted }]}>
                     {formClass || 'Select a class...'}
                   </Text>
                 </View>
-                <MaterialIcons name={showClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+                <MaterialIcons name={showClassDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />
               </TouchableOpacity>
 
               {showClassDD && (
-                <View style={styles.formDropdownOptions}>
+                <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                   {CLASSES.map((c) => {
                     const isSelected = formClass === c;
                     return (
                       <TouchableOpacity
                         key={c}
-                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive, !isDefaultTheme && { backgroundColor: isSelected ? appTheme.cardBg : 'transparent' }]}
                         onPress={() => {
                           setFormClass(c);
                           setShowClassDD(false);
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive, !isDefaultTheme && { color: isSelected ? appTheme.primary : appTheme.textPrimary }]}>
                           {c}
                         </Text>
-                        {isSelected && <MaterialIcons name="check" size={18} color="#0047CC" />}
+                        {isSelected && <MaterialIcons name="check" size={18} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />}
                       </TouchableOpacity>
                     );
                   })}
@@ -996,16 +996,16 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             {/* Section Selection */}
             <View style={[styles.formField, { marginTop: 18 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.formLabel}>Section(s)</Text>
+                <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Section(s)</Text>
                 <Text style={styles.requiredStar}>*</Text>
                 {formSection ? (
-                  <Text style={styles.selectedCountText}>
+                  <Text style={[styles.selectedCountText, !isDefaultTheme && { color: appTheme.primary }]}>
                     {formSection.split(',').filter(Boolean).length} Selected
                   </Text>
                 ) : null}
               </View>
               <TouchableOpacity
-                style={styles.formSelectBox}
+                style={[styles.formSelectBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setShowSectionDD(!showSectionDD);
                   setShowClassDD(false);
@@ -1013,21 +1013,21 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.selectTextRow}>
-                  <MaterialIcons name="bookmark" size={18} color={formSection ? '#0047CC' : '#94A3B8'} style={{ marginRight: 8 }} />
-                  <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder]} numberOfLines={1}>
+                  <MaterialIcons name="bookmark" size={18} color={formSection ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)} style={{ marginRight: 8 }} />
+                  <Text style={[styles.formSelectText, !formSection && styles.formSelectPlaceholder, !isDefaultTheme && { color: formSection ? appTheme.textPrimary : appTheme.textMuted }]} numberOfLines={1}>
                     {formSection ? `Section ${formSection}` : 'Select section(s)...'}
                   </Text>
                 </View>
-                <MaterialIcons name={showSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color="#0047CC" />
+                <MaterialIcons name={showSectionDD ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={22} color={isDefaultTheme ? "#0047CC" : appTheme.primary} />
               </TouchableOpacity>
 
               {showSectionDD && (
-                <View style={styles.formDropdownOptions}>
+                <View style={[styles.formDropdownOptions, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                   {/* Select All Option */}
                   <TouchableOpacity
                     style={[
                       styles.formDropdownItem,
-                      { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' },
+                      { borderBottomWidth: 1, borderBottomColor: isDefaultTheme ? '#E2E8F0' : appTheme.border, backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.cardBg },
                     ]}
                     onPress={() => {
                       const currentList = formSection ? formSection.split(',').map((s) => s.trim()).filter(Boolean) : [];
@@ -1038,7 +1038,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                       }
                     }}
                   >
-                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: '#0047CC' }]}>
+                    <Text style={[styles.formDropdownItemText, { fontWeight: '900', color: isDefaultTheme ? '#0047CC' : appTheme.primary }]}>
                       {formSection && formSection.split(',').map((s) => s.trim()).filter(Boolean).length === SECTIONS.length
                         ? '✓ Deselect All'
                         : '✦ Select All Sections'}
@@ -1051,7 +1051,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                     return (
                       <TouchableOpacity
                         key={s}
-                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive]}
+                        style={[styles.formDropdownItem, isSelected && styles.formDropdownItemActive, !isDefaultTheme && { backgroundColor: isSelected ? appTheme.cardBg : 'transparent' }]}
                         onPress={() => {
                           let updated: string[];
                           if (isSelected) {
@@ -1063,24 +1063,24 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive]}>
+                        <Text style={[styles.formDropdownItemText, isSelected && styles.formDropdownItemTextActive, !isDefaultTheme && { color: isSelected ? appTheme.primary : appTheme.textPrimary }]}>
                           Section {s}
                         </Text>
                         <MaterialIcons
                           name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                           size={19}
-                          color={isSelected ? '#0047CC' : '#94A3B8'}
+                          color={isSelected ? (isDefaultTheme ? '#0047CC' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
                         />
                       </TouchableOpacity>
                     );
                   })}
 
                   <TouchableOpacity
-                    style={styles.doneSelectingBtn}
+                    style={[styles.doneSelectingBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderTopColor: appTheme.border }]}
                     onPress={() => setShowSectionDD(false)}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.doneSelectingText}>Done Selecting</Text>
+                    <Text style={[styles.doneSelectingText, !isDefaultTheme && { color: appTheme.primary }]}>Done Selecting</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1090,7 +1090,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             <View style={[styles.modalBtnRow, { marginTop: 24 }]}>
               <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleCreate} activeOpacity={0.85}>
                 <LinearGradient
-                  colors={['#0066FF', '#003D9B']}
+                  colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : [appTheme.primary, appTheme.accent]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.modalSubmitGrad}
@@ -1100,7 +1100,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => {
                   setIsCreateVisible(false);
                   setFormTopic('');
@@ -1109,7 +1109,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={[styles.modalCancelText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1119,21 +1119,21 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* ── HEADER ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+          <TouchableOpacity style={[styles.headerButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#003d9b" : appTheme.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>AI Speaking Buddy</Text>
-            <Text style={styles.headerSubtitle}>Voice practice management</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>AI Speaking Buddy</Text>
+            <Text style={[styles.headerSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Voice practice management</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.createButtonHeader} onPress={() => setIsCreateVisible(true)} activeOpacity={0.85}>
-          <LinearGradient colors={['#0066FF', '#003D9B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createBtnGradient}>
+          <LinearGradient colors={isDefaultTheme ? ['#0066FF', '#003D9B'] : [appTheme.primary, appTheme.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createBtnGradient}>
             <MaterialIcons name="add-circle" size={19} color="#ffffff" style={{ marginRight: 5 }} />
             <Text style={styles.createBtnText}>Create</Text>
           </LinearGradient>
@@ -1144,27 +1144,27 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 
         {/* ── MINIMAL LUXURY HERO CARD ── */}
         <LinearGradient 
-          colors={['#F8FAFC', '#F0F9FF', '#EEF2FF']} 
+          colors={isDefaultTheme ? ['#F8FAFC', '#F0F9FF', '#EEF2FF'] : [appTheme.cardBg, appTheme.surface, appTheme.cardBg]} 
           start={{ x: 0, y: 0 }} 
           end={{ x: 1, y: 0 }} 
-          style={styles.heroCard}
+          style={[styles.heroCard, !isDefaultTheme && { borderColor: appTheme.border }]}
         >
           {/* Floating glowing subtle spheres */}
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#38BDF8', width: 200, height: 200, top: -70, right: -40, opacity: 0.12 }]} />
-          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: '#10B981', width: 120, height: 120, bottom: -40, left: 10, opacity: 0.08 }]} />
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: isDefaultTheme ? '#38BDF8' : appTheme.primary, width: 200, height: 200, top: -70, right: -40, opacity: 0.12 }]} />
+          <View pointerEvents="none" style={[styles.heroAuroraSphere, { backgroundColor: isDefaultTheme ? '#10B981' : appTheme.accent, width: 120, height: 120, bottom: -40, left: 10, opacity: 0.08 }]} />
 
           {/* Sound waves vectors */}
           <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
             <Defs>
               <SvgLinearGradient id="siriWaveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#0284C7" stopOpacity={0} />
-                <Stop offset="50%" stopColor="#0284C7" stopOpacity={0.12} />
-                <Stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
+                <Stop offset="0%" stopColor={isDefaultTheme ? "#0284C7" : appTheme.primary} stopOpacity={0} />
+                <Stop offset="50%" stopColor={isDefaultTheme ? "#0284C7" : appTheme.primary} stopOpacity={0.12} />
+                <Stop offset="100%" stopColor={isDefaultTheme ? "#4F46E5" : appTheme.accent} stopOpacity={0} />
               </SvgLinearGradient>
               <SvgLinearGradient id="siriWaveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#10B981" stopOpacity={0} />
-                <Stop offset="50%" stopColor="#0284C7" stopOpacity={0.08} />
-                <Stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
+                <Stop offset="0%" stopColor={isDefaultTheme ? "#10B981" : appTheme.accent} stopOpacity={0} />
+                <Stop offset="50%" stopColor={isDefaultTheme ? "#0284C7" : appTheme.primary} stopOpacity={0.08} />
+                <Stop offset="100%" stopColor={isDefaultTheme ? "#4F46E5" : appTheme.accent} stopOpacity={0} />
               </SvgLinearGradient>
             </Defs>
             <Path d="M -20 50 Q 70 25 170 50 T 360 50 T 540 50" stroke="url(#siriWaveGrad1)" strokeWidth={2.4} fill="none" />
@@ -1176,7 +1176,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 
           {/* Hero Content Stack */}
           <View style={styles.heroBodyLayout}>
-            <Text style={styles.luxuryHeroTitle}>Vocal Studio</Text>
+            <Text style={[styles.luxuryHeroTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Vocal Studio</Text>
           </View>
         </LinearGradient>
 
@@ -1184,31 +1184,30 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 
         {/* ── LIST HEADER ── */}
         <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>Conversation Topics</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{filtered.length} Topics</Text>
+          <Text style={[styles.listTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Conversation Topics</Text>
+          <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+            <Text style={[styles.countText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{filtered.length} Topics</Text>
           </View>
         </View>
 
-        {/* ── TOPIC CARDS (WOW FACTOR REDESIGN) ── */}
-        {/* ── TOPIC CARDS (MINIMAL & TEACHER-FRIENDLY REDESIGN) ── */}
+        {/* ── TOPIC CARDS ── */}
         {filtered.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <MaterialIcons name="mic-off" size={40} color="#BFDBFE" />
-            <Text style={styles.emptyTitle}>No topics found</Text>
-            <Text style={styles.emptyDesc}>Tap Create to add a new speaking topic</Text>
+          <View style={[styles.emptyBox, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+            <MaterialIcons name="mic-off" size={40} color={isDefaultTheme ? "#BFDBFE" : appTheme.textMuted} />
+            <Text style={[styles.emptyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>No topics found</Text>
+            <Text style={[styles.emptyDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>Tap Create to add a new speaking topic</Text>
           </View>
         ) : (
           filtered.map((item) => {
             return (
-              <View key={item.id} style={styles.topicCard}>
+              <View key={item.id} style={[styles.topicCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                 <View style={styles.cardBody}>
                   {/* Card Header Row */}
                   <View style={styles.cardTopRow}>
                     <View style={styles.cardHeaderLeftGroup}>
                       <View style={styles.micIconBox}>
                         <LinearGradient
-                          colors={['#0066FF', '#0044B2']}
+                          colors={isDefaultTheme ? ['#0066FF', '#0044B2'] : [appTheme.primary, appTheme.accent]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                           style={styles.micIconGrad}
@@ -1218,43 +1217,43 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                       </View>
                       
                       <View style={{ marginLeft: 10, flex: 1 }}>
-                        <Text style={styles.cardTopicTitle} numberOfLines={1}>{item.topic}</Text>
+                        <Text style={[styles.cardTopicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{item.topic}</Text>
                       </View>
                     </View>
                     
                     {/* Equalizer Visualizer inside Pill Badge */}
-                    <View style={styles.waveformBadge}>
-                      <CardWaveformAnalyzer color="#0052cc" />
+                    <View style={[styles.waveformBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <CardWaveformAnalyzer color={isDefaultTheme ? "#0052cc" : appTheme.primary} />
                     </View>
                   </View>
 
                   {/* Inner Metadata Cards (Class & Section) */}
                   <View style={styles.fieldsRow}>
-                    <View style={styles.fieldChipClass}>
-                      <View style={styles.classOrbBox}>
-                        <MaterialIcons name="school" size={16} color="#0052cc" />
+                    <View style={[styles.fieldChipClass, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                      <View style={[styles.classOrbBox, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+                        <MaterialIcons name="school" size={16} color={isDefaultTheme ? "#0052cc" : appTheme.primary} />
                       </View>
                       <View style={{ marginLeft: 9, flex: 1 }}>
-                        <Text style={styles.fieldChipLabelClass}>CLASS</Text>
-                        <Text style={styles.fieldChipValue} numberOfLines={1}>{item.className}</Text>
+                        <Text style={[styles.fieldChipLabelClass, !isDefaultTheme && { color: appTheme.primary }]}>CLASS</Text>
+                        <Text style={[styles.fieldChipValue, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{item.className}</Text>
                       </View>
                     </View>
 
                     <View style={styles.fieldSep} />
 
-                    <View style={styles.fieldChipSection}>
-                      <View style={styles.sectionOrbBox}>
-                        <MaterialIcons name="meeting-room" size={16} color="#059669" />
+                    <View style={[styles.fieldChipSection, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                      <View style={[styles.sectionOrbBox, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+                        <MaterialIcons name="meeting-room" size={16} color={isDefaultTheme ? "#059669" : appTheme.success} />
                       </View>
                       <View style={{ marginLeft: 9, flex: 1 }}>
-                        <Text style={styles.fieldChipLabelSection}>SECTION</Text>
-                        <Text style={styles.fieldChipValue} numberOfLines={1}>Section {item.section}</Text>
+                        <Text style={[styles.fieldChipLabelSection, !isDefaultTheme && { color: appTheme.success }]}>SECTION</Text>
+                        <Text style={[styles.fieldChipValue, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>Section {item.section}</Text>
                       </View>
                     </View>
                   </View>
 
                   {/* Divider */}
-                  <View style={styles.cardDivider} />
+                  <View style={[styles.cardDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                   {/* Action Buttons */}
                   <View style={styles.actionsRow}>
@@ -1264,7 +1263,7 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                       activeOpacity={0.85}
                     >
                       <LinearGradient
-                        colors={['#0066FF', '#0044B2']}
+                        colors={isDefaultTheme ? ['#0066FF', '#0044B2'] : [appTheme.primary, appTheme.accent]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={StyleSheet.absoluteFill}
@@ -1274,12 +1273,12 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.btnEdit}
+                      style={[styles.btnEdit, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                       onPress={() => openEdit(item)}
                       activeOpacity={0.8}
                     >
-                      <MaterialIcons name="edit" size={15} color="#0052cc" style={{ marginRight: 4 }} />
-                      <Text style={styles.btnSecText}>Edit</Text>
+                      <MaterialIcons name="edit" size={15} color={isDefaultTheme ? "#0052cc" : appTheme.primary} style={{ marginRight: 4 }} />
+                      <Text style={[styles.btnSecText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Edit</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1300,20 +1299,11 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
         {/* Bottom Status Pill Badge */}
         {topics.length > 0 && (
           <View style={{ alignItems: 'center', marginTop: 16, marginBottom: 24 }}>
-            <View style={{
-              backgroundColor: '#F8FAFC',
-              borderWidth: 1,
-              borderColor: '#E2E8F0',
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20,
-              shadowColor: '#0F172A',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.04,
-              shadowRadius: 6,
-              elevation: 2,
-            }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+            <View style={[
+              styles.loadedBadgeBox,
+              !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }
+            ]}>
+              <Text style={[{ fontSize: 13, fontWeight: '800', color: '#475569' }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                 All {topics.length} topics loaded
               </Text>
             </View>
@@ -1331,16 +1321,16 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
             activeOpacity={1}
             onPress={() => setItemToDelete(null)}
           />
-          <View style={styles.deleteDialogBox}>
+          <View style={[styles.deleteDialogBox, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             {/* Red Alert Orb */}
             <View style={styles.deleteIconOrb}>
               <MaterialIcons name="delete-forever" size={32} color="#E11D48" />
             </View>
 
-            <Text style={styles.deleteDialogTitle}>Delete Topic?</Text>
-            <Text style={styles.deleteDialogMessage}>
+            <Text style={[styles.deleteDialogTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Delete Topic?</Text>
+            <Text style={[styles.deleteDialogMessage, !isDefaultTheme && { color: appTheme.textSecondary }]}>
               Are you sure you want to permanently delete{' '}
-              <Text style={{ fontWeight: '800', color: '#0F172A' }}>"{itemToDelete.topic}"</Text>? This action cannot be undone.
+              <Text style={[{ fontWeight: '800', color: '#0F172A' }, !isDefaultTheme && { color: appTheme.textPrimary }]}>"{itemToDelete.topic}"</Text>? This action cannot be undone.
             </Text>
 
             <View style={styles.deleteDialogActions}>
@@ -1365,11 +1355,11 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.deleteCancelBtn}
+                style={[styles.deleteCancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => setItemToDelete(null)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.deleteCancelText}>Cancel</Text>
+                <Text style={[styles.deleteCancelText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1380,15 +1370,34 @@ export const AISpeakingBuddyScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+  loadedBadgeBox: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
 
   // ── PREVIEW SCREEN STYLES (MATCHING REFERENCE IMAGE + ULTRA-PREMIUM CHATGPT/GEMINI POLISH) ──
   previewFullScreen: {
     flex: 1,
     backgroundColor: '#E6F4F8', // Soft crisp blue-tint canvas inspired by reference image
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   previewHeaderBar: {
     flexDirection: 'row',

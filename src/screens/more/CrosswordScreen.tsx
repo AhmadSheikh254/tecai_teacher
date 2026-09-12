@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface CrosswordScreenProps {
   navigation: any;
@@ -87,6 +88,9 @@ const formatText = (set: CrosswordSet): string => {
 };
 
 export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   const [requestInput, setRequestInput] = useState('');
   const [fileName, setFileName] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -137,25 +141,25 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Background decoration */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           <Defs>
             <SvgLinearGradient id="b1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#EC4899" stopOpacity={0.08} />
-              <Stop offset="100%" stopColor="#BE185D" stopOpacity={0.03} />
+              <Stop offset="0%" stopColor={isDefaultTheme ? "#EC4899" : appTheme.primary} stopOpacity={0.08} />
+              <Stop offset="100%" stopColor={isDefaultTheme ? "#BE185D" : appTheme.accent} stopOpacity={0.03} />
             </SvgLinearGradient>
           </Defs>
           <Circle cx="110%" cy="-6%" r="280" fill="url(#b1)" />
-          <Circle cx="-10%" cy="48%" r="240" fill="#EC4899" opacity={0.05} />
-          <Circle cx="88%" cy="95%" r="300" fill="#BE185D" opacity={0.04} />
+          <Circle cx="-10%" cy="48%" r="240" fill={isDefaultTheme ? "#EC4899" : appTheme.primary} opacity={0.05} />
+          <Circle cx="88%" cy="95%" r="300" fill={isDefaultTheme ? "#BE185D" : appTheme.accent} opacity={0.04} />
         </Svg>
       </View>
 
       {/* HEADER */}
       <LinearGradient
-        colors={['#500730', '#9D174D', '#EC4899']}
+        colors={isDefaultTheme ? ['#500730', '#9D174D', '#EC4899'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -178,19 +182,24 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#FBCFE8', '#EC4899', '#9D174D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient 
+        colors={isDefaultTheme ? ['#FBCFE8', '#EC4899', '#9D174D'] : [appTheme.primary, appTheme.accent, appTheme.primary]} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 0 }} 
+        style={[styles.headerGlow, !isDefaultTheme && { opacity: 0.3 }]} 
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* INPUT CARD */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -200,33 +209,33 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
           />
 
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: !isDefaultTheme ? appTheme.textSecondary : '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[styles.fileBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, fileName ? styles.fileBoxActive : null]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#FCE7F3', '#FBCFE8'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#FCE7F3', '#FBCFE8'] : [appTheme.surface, appTheme.cardBg]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.surface])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#EC4899' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#EC4899' : appTheme.primary) : (!isDefaultTheme ? appTheme.textSecondary : '#94A3B8')}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, !isDefaultTheme && { color: appTheme.textSecondary }, fileName ? (isDefaultTheme ? styles.fileTextActive : { color: appTheme.primary, fontWeight: '700' }) : null]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -234,7 +243,7 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#500730', '#9D174D', '#EC4899']}
+                colors={isDefaultTheme ? ['#500730', '#9D174D', '#EC4899'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -257,38 +266,38 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#EC4899" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingText}>Generating crossword puzzle outline…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#EC4899" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Generating crossword puzzle outline…</Text>
             </View>
           )}
         </View>
 
         {/* PROGRESS LOADER */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#EC4899" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#EC4899" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#9D174D', '#F472B6']}
+                colors={isDefaultTheme ? ['#9D174D', '#F472B6'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textSecondary }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* RESULTS HEADER */}
         {sets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#EC4899', '#9D174D']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Crossword</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{sets.length}</Text>
+            <LinearGradient colors={isDefaultTheme ? ['#EC4899', '#9D174D'] : [appTheme.primary, appTheme.accent]} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Crossword</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+              <Text style={[styles.countBadgeText, !isDefaultTheme && { color: appTheme.primary }]}>{sets.length}</Text>
             </View>
           </View>
         )}
@@ -299,21 +308,21 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
             const revealed = !!revealedIds[set.id];
             const allClues = [...set.across, ...set.down].sort((a, b) => a.num - b.num);
             return (
-              <View key={set.id} style={styles.resultCard}>
-                <LinearGradient colors={['#500730', '#EC4899', '#F472B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+              <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#500730', '#EC4899', '#F472B6'] : [appTheme.primary, appTheme.accent, appTheme.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
                 {/* Meta header */}
-                <View style={styles.resultMeta}>
-                  <LinearGradient colors={['#FCE7F3', '#FBCFE8']} style={styles.resultIconOrb}>
-                    <MaterialIcons name="grid-on" size={17} color="#EC4899" />
+                <View style={[styles.resultMeta, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <LinearGradient colors={isDefaultTheme ? ['#FCE7F3', '#FBCFE8'] : [appTheme.surface, appTheme.surface]} style={styles.resultIconOrb}>
+                    <MaterialIcons name="grid-on" size={17} color={isDefaultTheme ? "#EC4899" : appTheme.primary} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                    <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                    <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                    <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textSecondary }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                   </View>
                   <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
                     <View style={styles.eyeOuter}>
-                      <LinearGradient colors={['#EC4899', '#9D174D']} style={styles.eyeCore}>
+                      <LinearGradient colors={isDefaultTheme ? ['#EC4899', '#9D174D'] : [appTheme.primary, appTheme.accent]} style={styles.eyeCore}>
                         <View style={styles.eyeGloss} />
                         <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                       </LinearGradient>
@@ -323,18 +332,18 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
 
                 {/* Across & Down Section */}
                 <View style={styles.puzzleBlock}>
-                  <Text style={styles.puzzleTitle}>{set.title}</Text>
+                  <Text style={[styles.puzzleTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{set.title}</Text>
                   
                   {/* Across */}
                   <View style={styles.clueGroup}>
-                    <Text style={styles.clueGroupTitle}>ACROSS</Text>
+                    <Text style={[styles.clueGroupTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>ACROSS</Text>
                     {set.across.map((c) => (
                       <View key={c.num} style={styles.clueRow}>
-                        <LinearGradient colors={['#9D174D', '#EC4899']} style={styles.clueNumBadge}>
+                        <LinearGradient colors={isDefaultTheme ? ['#9D174D', '#EC4899'] : [appTheme.primary, appTheme.accent]} style={styles.clueNumBadge}>
                           <Text style={styles.clueNumText}>{c.num}</Text>
                         </LinearGradient>
-                        <Text style={styles.clueText}>
-                          {c.text} <Text style={styles.clueLengthText}>({c.length})</Text>
+                        <Text style={[styles.clueText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
+                          {c.text} <Text style={[styles.clueLengthText, !isDefaultTheme && { color: appTheme.textSecondary }]}>({c.length})</Text>
                         </Text>
                       </View>
                     ))}
@@ -342,14 +351,14 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
 
                   {/* Down */}
                   <View style={styles.clueGroup}>
-                    <Text style={styles.clueGroupTitle}>DOWN</Text>
+                    <Text style={[styles.clueGroupTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>DOWN</Text>
                     {set.down.map((c) => (
                       <View key={c.num} style={styles.clueRow}>
-                        <LinearGradient colors={['#500730', '#9D174D']} style={styles.clueNumBadge}>
+                        <LinearGradient colors={isDefaultTheme ? ['#500730', '#9D174D'] : [appTheme.primary, appTheme.accent]} style={styles.clueNumBadge}>
                           <Text style={styles.clueNumText}>{c.num}</Text>
                         </LinearGradient>
-                        <Text style={styles.clueText}>
-                          {c.text} <Text style={styles.clueLengthText}>({c.length})</Text>
+                        <Text style={[styles.clueText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
+                          {c.text} <Text style={[styles.clueLengthText, !isDefaultTheme && { color: appTheme.textSecondary }]}>({c.length})</Text>
                         </Text>
                       </View>
                     ))}
@@ -357,14 +366,14 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                 </View>
 
                 {/* Answer Key */}
-                <View style={styles.answerKeyBlock}>
-                  <Text style={styles.answerKeyTitle}>Answer Key:</Text>
+                <View style={[styles.answerKeyBlock, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <Text style={[styles.answerKeyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Answer Key:</Text>
                   <View style={styles.answerKeyGrid}>
                     {allClues.map((c) => (
                       <View key={c.num} style={styles.akRow}>
-                        <Text style={styles.akNumText}>{c.num}.</Text>
-                        <View style={[styles.akWordChip, revealed && styles.akWordChipRevealed]}>
-                          <Text style={[styles.akWordText, revealed && styles.akWordTextRevealed]}>
+                        <Text style={[styles.akNumText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{c.num}.</Text>
+                        <View style={[styles.akWordChip, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, revealed && styles.akWordChipRevealed]}>
+                          <Text style={[styles.akWordText, !isDefaultTheme && { color: appTheme.textPrimary }, revealed && styles.akWordTextRevealed]}>
                             {revealed ? c.answer : '••••••••'}
                           </Text>
                         </View>
@@ -380,7 +389,7 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#9D174D', '#EC4899']}
+                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#9D174D', '#EC4899'] : [appTheme.primary, appTheme.accent])}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.copyBtnGrad}
                   >
@@ -395,10 +404,10 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                 </TouchableOpacity>
 
                 {/* Footer toolbar */}
-                <View style={styles.resultFooter}>
+                <View style={[styles.resultFooter, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                    <MaterialIcons name="open-in-full" size={13} color="#EC4899" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerBtnText}>Full View</Text>
+                    <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? "#EC4899" : appTheme.primary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => toggleReveal(set.id)}>
                     <MaterialIcons name={revealed ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
@@ -407,8 +416,8 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                    <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                    <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                    <MaterialIcons name="print" size={13} color={!isDefaultTheme ? appTheme.textSecondary : "#64748B"} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, { color: !isDefaultTheme ? appTheme.textSecondary : '#64748B' }]}>Print</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -419,14 +428,14 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
 
       {/* FULL VIEW MODAL */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
             <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#EC4899" />
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#EC4899" : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleCopy(activeSet); }}
               activeOpacity={0.8}
             >
@@ -438,15 +447,15 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                 {activeSet && copiedId === activeSet.id ? 'Copied!' : 'Copy'}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetPrintBtn} onPress={() => Alert.alert('Print', 'Sent to print queue.')} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.sheetPrintBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} onPress={() => Alert.alert('Print', 'Sent to print queue.')} activeOpacity={0.8}>
               <MaterialIcons name="print" size={14} color="#fff" style={{ marginRight: 4 }} />
               <Text style={styles.sheetPrintText}>Print</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
-              <LinearGradient colors={['#500730', '#9D174D']} style={styles.paperDocHeader}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#500730', '#9D174D'] : [appTheme.primary, appTheme.accent]} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="grid-on" size={18} color="#fff" />
@@ -459,33 +468,33 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* Clues */}
               <View style={styles.modalCluesBlock}>
-                <Text style={styles.modalHeading}>Across Clues</Text>
+                <Text style={[styles.modalHeading, !isDefaultTheme && { color: appTheme.textPrimary }]}>Across Clues</Text>
                 {activeSet?.across.map((c) => (
                   <View key={c.num} style={styles.modalClueRow}>
-                    <Text style={styles.modalClueLabel}>{c.num}.</Text>
-                    <Text style={styles.modalClueText}>{c.text} ({c.length})</Text>
+                    <Text style={[styles.modalClueLabel, !isDefaultTheme && { color: appTheme.primary }]}>{c.num}.</Text>
+                    <Text style={[styles.modalClueText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{c.text} ({c.length})</Text>
                   </View>
                 ))}
 
-                <Text style={[styles.modalHeading, { marginTop: 20 }]}>Down Clues</Text>
+                <Text style={[styles.modalHeading, { marginTop: 20 }, !isDefaultTheme && { color: appTheme.textPrimary }]}>Down Clues</Text>
                 {activeSet?.down.map((c) => (
                   <View key={c.num} style={styles.modalClueRow}>
-                    <Text style={styles.modalClueLabel}>{c.num}.</Text>
-                    <Text style={styles.modalClueText}>{c.text} ({c.length})</Text>
+                    <Text style={[styles.modalClueLabel, !isDefaultTheme && { color: appTheme.primary }]}>{c.num}.</Text>
+                    <Text style={[styles.modalClueText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{c.text} ({c.length})</Text>
                   </View>
                 ))}
               </View>
 
               {/* Answer Key */}
-              <View style={styles.modalAnswerKeySection}>
-                <LinearGradient colors={['#500730', '#9D174D']} style={styles.akHeader}>
+              <View style={[styles.modalAnswerKeySection, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#500730', '#9D174D'] : [appTheme.primary, appTheme.accent]} style={styles.akHeader}>
                   <MaterialIcons name="vpn-key" size={15} color="#FBCFE8" style={{ marginRight: 8 }} />
                   <Text style={styles.akHeaderText}>Answer Key</Text>
                 </LinearGradient>
@@ -494,9 +503,9 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                     .sort((a, b) => a.num - b.num)
                     .map((c) => (
                       <View key={c.num} style={styles.modalAkItem}>
-                        <Text style={styles.modalAkNum}>{c.num}.</Text>
-                        <View style={styles.modalAkBadge}>
-                          <Text style={styles.modalAkBadgeText}>{c.answer}</Text>
+                        <Text style={[styles.modalAkNum, !isDefaultTheme && { color: appTheme.textSecondary }]}>{c.num}.</Text>
+                        <View style={[styles.modalAkBadge, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                          <Text style={[styles.modalAkBadgeText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{c.answer}</Text>
                         </View>
                       </View>
                     ))}
@@ -510,7 +519,7 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : ['#9D174D', '#EC4899']}
+                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#9D174D', '#EC4899'] : [appTheme.primary, appTheme.accent])}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >
@@ -532,7 +541,7 @@ export const CrosswordScreen: React.FC<CrosswordScreenProps> = ({ navigation }) 
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF5F7' },
+  safeArea: { flex: 1, backgroundColor: '#FFF5F7', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -837,7 +846,7 @@ const styles = StyleSheet.create({
   footerBtn: { flexDirection: 'row', alignItems: 'center' },
   footerBtnText: { fontSize: 11.5, fontWeight: '800', color: '#9D174D' },
 
-  sheetSafe: { flex: 1, backgroundColor: '#FFF5F7' },
+  sheetSafe: { flex: 1, backgroundColor: '#FFF5F7', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

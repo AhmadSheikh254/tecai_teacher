@@ -6,25 +6,23 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Image, 
-  Animated,
-  useWindowDimensions,
-  Alert
+  Animated
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Svg, { Circle, Line, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { theme } from '../../theme';
+import Svg, { Circle, Line } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
+import { MyAttendanceScreen } from '../more/MyAttendanceScreen';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface HomeScreenProps {
   navigation: any;
 }
 
 const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { width } = useWindowDimensions();
-  const isSmallScreen = width < 340;
+  const { theme: appTheme } = useAppTheme();
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'assessments' | 'myLogs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'assessments' | 'myAttendance'>('overview');
   const [selectedGrade, setSelectedGrade] = useState('GRADE-II');
   const [selectedSection, setSelectedSection] = useState('A');
   const [selectedSubject, setSelectedSubject] = useState('English');
@@ -43,22 +41,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     pulse.start();
     return () => pulse.stop();
   }, []);
-
-  // 1. Stats
-  const stats = [
-    { id: 'students', count: '148', label: 'Total Students', icon: 'school', change: '+1.8%', changeBg: 'rgba(76, 175, 80, 0.12)', changeColor: '#4CAF50' },
-    { id: 'teachers', count: '182', label: 'Total Teachers', icon: 'groups', change: '+2.4%', changeBg: 'rgba(76, 175, 80, 0.12)', changeColor: '#4CAF50' },
-    { id: 'attendance', count: '94%', label: 'Daily Attendance', icon: 'how-to-reg', change: null },
-  ];
-
-  // 2. Quick navigation helpers
-  const quickActions = [
-    { label: 'Homework', icon: 'menu-book', target: 'Homework' },
-    { label: 'Assign', icon: 'assignment', target: 'Assignment' },
-    { label: 'Attend', icon: 'fact-check', target: 'More', params: { screen: 'Attendance' } },
-    { label: 'Lesson', icon: 'import-contacts', target: 'More', params: { screen: 'LessonPlan' } },
-    { label: 'Exam', icon: 'description', target: 'More', params: { screen: 'Exam' } },
-  ];
 
   // 3. Academic progress list
   const progressData = [
@@ -99,19 +81,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     { id: '3', title: 'Parent Teacher Meeting', category: 'Meeting', date: '08 Aug 2026', details: 'PTM for Grade-II sections to discuss Academic Progress results.', badgeBg: 'rgba(37, 99, 235, 0.12)', badgeColor: '#2563EB' },
   ];
 
-  // 9. My Attendance Logs
-  const myAttendance = [
-    { date: 'Aug 06, 2026', checkIn: '07:45 AM', checkOut: '02:30 PM', status: 'On Time', color: '#4CAF50' },
-    { date: 'Aug 05, 2026', checkIn: '07:42 AM', checkOut: '02:35 PM', status: 'On Time', color: '#4CAF50' },
-    { date: 'Aug 04, 2026', checkIn: '07:48 AM', checkOut: '02:30 PM', status: 'On Time', color: '#4CAF50' },
-    { date: 'Aug 03, 2026', checkIn: '07:55 AM', checkOut: '02:30 PM', status: 'Late Check-in', color: '#FFB300' },
-  ];
-
-  // Avatar accent colors per initial
-  const avatarColors: Record<string, string> = {
-    MM: '#0052cc', HT: '#0077b6', AA: '#2563EB', FF: '#4CAF50', HN: '#9c27b0',
-  };
-
   // ===== PREMIUM SVG Attendance Donut Chart =====
   const renderAttendanceChart = () => {
     const size = 104;
@@ -119,25 +88,24 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const presentOffset = circumference - (circumference * 94) / 100;
-    const absentOffset  = circumference - (circumference * 6)  / 100;
 
     return (
       <TouchableOpacity 
-        style={styles.premiumCard}
+        style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}
         activeOpacity={0.9}
         onPress={() => navigation.navigate('More', { screen: 'Attendance' })}
       >
         {/* Header */}
         <View style={styles.premiumCardHeader}>
           <View style={styles.premiumCardTitleRow}>
-            <View style={styles.premiumCardIconBox}>
-              <MaterialIcons name="how-to-reg" size={14} color="#0052cc" />
+            <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+              <MaterialIcons name="how-to-reg" size={14} color={appTheme.primary} />
             </View>
-            <Text style={styles.premiumCardTitle}>Student Attendance</Text>
+            <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Student Attendance</Text>
           </View>
-          <View style={styles.todayPill}>
-            <MaterialIcons name="today" size={11} color="#0052cc" style={{ marginRight: 3 }} />
-            <Text style={styles.todayPillText}>Today</Text>
+          <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+            <MaterialIcons name="today" size={11} color={appTheme.primary} style={{ marginRight: 3 }} />
+            <Text style={[styles.todayPillText, { color: appTheme.primary }]}>Today</Text>
           </View>
         </View>
 
@@ -148,51 +116,51 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
               {/* Track */}
               <Circle cx={size/2} cy={size/2} r={radius}
-                stroke="rgba(0,82,204,0.07)" strokeWidth={strokeWidth} fill="none" />
+                stroke={appTheme.isDark ? 'rgba(255,255,255,0.08)' : `${appTheme.primary}18`} strokeWidth={strokeWidth} fill="none" />
               {/* Present arc */}
               <Circle cx={size/2} cy={size/2} r={radius}
-                stroke="#0052cc" strokeWidth={strokeWidth}
+                stroke={appTheme.primary} strokeWidth={strokeWidth}
                 strokeDasharray={circumference} strokeDashoffset={presentOffset}
                 strokeLinecap="round" fill="none" />
             </Svg>
             <View style={styles.donutCenter}>
-              <Text style={styles.donutPct}>94%</Text>
-              <Text style={styles.donutLabel}>Present</Text>
+              <Text style={[styles.donutPct, { color: appTheme.textPrimary }]}>94%</Text>
+              <Text style={[styles.donutLabel, { color: appTheme.textMuted }]}>Present</Text>
             </View>
           </View>
 
           {/* Legend tiles */}
           <View style={styles.legendStack}>
             {/* Present */}
-            <View style={styles.legendTile}>
-              <View style={[styles.legendTileIcon, { backgroundColor: 'rgba(0,82,204,0.1)' }]}>
-                <MaterialIcons name="person" size={14} color="#0052cc" />
+            <View style={[styles.legendTile, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderWidth: 1 }]}>
+              <View style={[styles.legendTileIcon, { backgroundColor: appTheme.accentBg }]}>
+                <MaterialIcons name="person" size={14} color={appTheme.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.legendTileTop}>
-                  <Text style={styles.legendTileTitle}>Present</Text>
-                  <Text style={[styles.legendTilePct, { color: '#0052cc' }]}>94%</Text>
+                  <Text style={[styles.legendTileTitle, { color: appTheme.textPrimary }]}>Present</Text>
+                  <Text style={[styles.legendTilePct, { color: appTheme.primary }]}>94%</Text>
                 </View>
-                <View style={styles.legendBarTrack}>
-                  <View style={[styles.legendBarFill, { width: '94%', backgroundColor: '#0052cc' }]} />
+                <View style={[styles.legendBarTrack, { backgroundColor: `${appTheme.primary}20` }]}>
+                  <View style={[styles.legendBarFill, { width: '94%', backgroundColor: appTheme.primary }]} />
                 </View>
-                <Text style={styles.legendTileCount}>139 Students</Text>
+                <Text style={[styles.legendTileCount, { color: appTheme.textMuted }]}>139 Students</Text>
               </View>
             </View>
             {/* Absent */}
-            <View style={styles.legendTile}>
+            <View style={[styles.legendTile, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderWidth: 1 }]}>
               <View style={[styles.legendTileIcon, { backgroundColor: 'rgba(239,68,68,0.1)' }]}>
                 <MaterialIcons name="person-off" size={14} color="#ef4444" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.legendTileTop}>
-                  <Text style={styles.legendTileTitle}>Absent</Text>
+                  <Text style={[styles.legendTileTitle, { color: appTheme.textPrimary }]}>Absent</Text>
                   <Text style={[styles.legendTilePct, { color: '#ef4444' }]}>6%</Text>
                 </View>
                 <View style={styles.legendBarTrack}>
                   <View style={[styles.legendBarFill, { width: '6%', backgroundColor: '#ef4444' }]} />
                 </View>
-                <Text style={styles.legendTileCount}>9 Students</Text>
+                <Text style={[styles.legendTileCount, { color: appTheme.textMuted }]}>9 Students</Text>
               </View>
             </View>
           </View>
@@ -204,40 +172,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Event lookup helper for Real Working Teacher's Calendar
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const getCalendarEventForDay = (year: number, monthIdx: number, d: number) => {
-    const dt = new Date(year, monthIdx, d);
-    const dayOfWeek = dt.getDay(); // 0 = Sunday
-
-    if (dayOfWeek === 0) {
-      return { title: 'Sunday Holiday 🌴', details: 'School Closed • Have a great weekend!', color: '#EF4444', icon: 'weekend', bg: '#FEF2F2' };
-    }
-    if (monthIdx === 7 && d === 14) {
-      return { title: 'Independence Day 🇵🇰', details: 'National Holiday • Flag Hoisting Ceremony (08:00 AM)', color: '#10B981', icon: 'flag', bg: '#ECFDF5' };
-    }
-    if (d === 6) {
-      return { title: 'Grade-II English & Staff Meeting', details: '08:00 AM: English Lecture • 01:30 PM: Departmental Meeting', color: '#0284C7', icon: 'import-contacts', bg: '#F0F9FF' };
-    }
-    if (d === 7) {
-      return { title: 'Grade-II English Quiz', details: '09:15 AM: Vocabulary Quiz • 11:30 AM: Paper Checking', color: '#0052cc', icon: 'stars', bg: '#EEF2FF' };
-    }
-    if (d === 12) {
-      return { title: 'School Assembly & Prep', details: '10:00 AM: Student Assembly & Rehearsal', color: '#D97706', icon: 'event', bg: '#FEF3C7' };
-    }
-    if (d === 18) {
-      return { title: 'Mid-Term Exam Invigilation', details: '08:30 AM: Hall B Invigilation Duty (English Paper)', color: '#7C3AED', icon: 'assignment-turned-in', bg: '#F3E8FF' };
-    }
-    if (d === 25) {
-      return { title: 'Parent Teacher Meeting', details: '10:00 AM - 01:00 PM: PTM for Grade-II Sections', color: '#DB2777', icon: 'groups', bg: '#FCE7F3' };
-    }
-    return {
-      title: `Regular Classes (${monthNames[monthIdx]} ${d})`,
-      details: '08:00 AM - 01:30 PM: Grade-II Lectures & Activity Sessions',
-      color: '#0284C7',
-      icon: 'class',
-      bg: '#F0F9FF',
-    };
-  };
-
   // ===== REAL WORKING Teacher's Calendar =====
   const renderCalendar = () => {
     const calYear = calDate.getFullYear();
@@ -247,8 +181,6 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const totalDays = new Date(calYear, calMonthIndex + 1, 0).getDate();
     const startOffset = new Date(calYear, calMonthIndex, 1).getDay();
-
-    const activeEvt = getCalendarEventForDay(calYear, calMonthIndex, selectedCalendarDay);
 
     const handlePrevMonth = () => {
       setCalDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -273,15 +205,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.calDay,
-              isToday && !isSel && styles.calDayToday,
-              isSel && styles.calDaySelected,
+              isToday && !isSel && [styles.calDayToday, { backgroundColor: appTheme.accentBg, borderColor: appTheme.primary }],
+              isSel && [styles.calDaySelected, { backgroundColor: appTheme.primary, shadowColor: appTheme.primary }],
             ]}
             onPress={() => setSelectedCalendarDay(d)}
             activeOpacity={0.75}
           >
             <Text style={[
               styles.calDayText,
-              isToday && !isSel && styles.calDayTextToday,
+              { color: appTheme.textPrimary },
+              isToday && !isSel && [styles.calDayTextToday, { color: appTheme.primary }],
               isSel && styles.calDayTextSel,
             ]}>
               {d}
@@ -292,18 +225,18 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
 
     return (
-      <View style={styles.premiumCard}>
+      <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
         {/* Header with Month Nav Controls */}
         <View style={styles.premiumCardHeader}>
           <View style={styles.premiumCardTitleRow}>
-            <View style={styles.premiumCardIconBox}>
-              <MaterialIcons name="calendar-month" size={14} color="#0052cc" />
+            <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+              <MaterialIcons name="calendar-month" size={14} color={appTheme.primary} />
             </View>
-            <Text style={styles.premiumCardTitle}>Teacher's Calendar</Text>
+            <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Teacher's Calendar</Text>
           </View>
 
           {/* Real Interactive Month Switcher Pill */}
-          <View style={styles.monthPillRow}>
+          <View style={[styles.monthPillRow, { backgroundColor: appTheme.primary }]}>
             <TouchableOpacity onPress={handlePrevMonth} activeOpacity={0.7} style={styles.monthNavBtn}>
               <MaterialIcons name="chevron-left" size={16} color="#ffffff" />
             </TouchableOpacity>
@@ -315,10 +248,10 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
 
         {/* Weekday header row */}
-        <View style={styles.calWeekRow}>
+        <View style={[styles.calWeekRow, { borderBottomColor: appTheme.border }]}>
           {daysOfWeek.map((d, i) => (
             <View key={i} style={styles.calWeekCell}>
-              <Text style={[styles.calWeekText, (i === 0 || i === 6) && { color: '#EF4444' }]}>{d}</Text>
+              <Text style={[styles.calWeekText, { color: appTheme.textMuted }, (i === 0 || i === 6) && { color: '#EF4444' }]}>{d}</Text>
             </View>
           ))}
         </View>
@@ -330,41 +263,57 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f0f4ff', width: '100%' }}>
-      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: appTheme.bg, width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: appTheme.bg, alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* Premium Top App Bar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
         <View style={styles.appBarLeft}>
-          <TouchableOpacity style={styles.appBarButton} activeOpacity={0.7}>
-            <MaterialIcons name="menu" size={20} color="#0052cc" />
+          <TouchableOpacity 
+            style={[styles.appBarButton, { backgroundColor: appTheme.surfaceVariant }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More')}
+          >
+            <MaterialIcons name="menu" size={20} color={appTheme.primary} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <View style={styles.logoBadge}>
+            <View style={[styles.logoBadge, { backgroundColor: appTheme.primary }]}>
               <Text style={styles.logoBadgeText}>AE</Text>
             </View>
             <View style={{ marginLeft: 2 }}>
-              <Text style={styles.appBarTitle} numberOfLines={1}>XYZ School</Text>
-              <Text style={styles.appBarSubtitle}>Academic Portal</Text>
+              <Text style={[styles.appBarTitle, { color: appTheme.textPrimary }]} numberOfLines={1}>XYZ School</Text>
+              <Text style={[styles.appBarSubtitle, { color: appTheme.textMuted }]}>Academic Portal</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.appBarRight}>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
-            <MaterialIcons name="search" size={19} color="#0052cc" />
+          <TouchableOpacity 
+            style={[styles.appBarIconBtn, { backgroundColor: appTheme.surfaceVariant }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'AIToolkit' })}
+          >
+            <MaterialIcons name="auto-awesome" size={18} color={appTheme.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.appBarIconBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={[styles.appBarIconBtn, { backgroundColor: appTheme.surfaceVariant }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'Notice' })}
+          >
             <View style={styles.notificationWrapper}>
-              <MaterialIcons name="notifications-none" size={20} color="#0052cc" />
+              <MaterialIcons name="notifications-none" size={20} color={appTheme.primary} />
               <View style={styles.notificationDot} />
             </View>
           </TouchableOpacity>
-          <View style={styles.avatarBorderRing}>
+          <TouchableOpacity 
+            style={styles.avatarBorderRing} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('More', { screen: 'ThemeSettings' })}
+          >
             <Image 
               source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCP8Fes6Wf9DdkJS-k33oTvc53T3DDc43ixr_T8hwh_pr7sY__yCD2W_7u82_wSOmxr5bh8BWjPCpfyruGFXgrPxwBnxu3LTADJnrW1Pyal-Qu22X6blXtzKTJ1Qq9MSu3lKFCjAiSBqPq2uZCCOWWLFfJ_afO1UosCa0JnsAyjMZTLqPq-T2HkOCTCMpG_U0QCY9cje_vqA6rxLx33tk9UUSBSy0TQyKocGDGSGQPP-eLL9BRYsDjQTw' }}
               style={styles.profilePic}
             />
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -375,7 +324,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
       >
         {/* ====== ULTRA-PREMIUM HERO DASHBOARD CARD ====== */}
         <ExpoLinearGradient
-          colors={['#0A1F5C', '#003D9B', '#0052CC']}
+          colors={appTheme.bannerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.welcomeBanner}
@@ -389,11 +338,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={{ flex: 1, marginRight: 8, justifyContent: 'center' }}>
               <Text style={styles.welcomeTitle} numberOfLines={1}>Suman Iqbal</Text>
             </View>
-            <View style={styles.datePill}>
-              <View style={styles.datePillIconBox}>
-                <MaterialIcons name="calendar-today" size={13} color="#2563EB" />
+            <View style={[styles.datePill, { backgroundColor: appTheme.surface, shadowColor: appTheme.isDark ? '#000' : '#071E6E' }]}>
+              <View style={[styles.datePillIconBox, { backgroundColor: appTheme.accentBg }]}>
+                <MaterialIcons name="calendar-today" size={13} color={appTheme.primary} />
               </View>
-              <Text style={styles.datePillText}>Thursday, August 6, 2026</Text>
+              <Text style={[styles.datePillText, { color: appTheme.textSecondary }]}>Thursday, August 6, 2026</Text>
             </View>
           </View>
 
@@ -401,10 +350,10 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.heroStatsRow}>
 
             {/* Students */}
-            <View style={[styles.statCardRef, { borderTopColor: '#2563EB' }]}>
+            <View style={[styles.statCardRef, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderTopColor: appTheme.primary }]}>
               <View style={styles.statHeaderRow}>
-                <View style={[styles.statIconSquare, { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }]}>
-                  <MaterialIcons name="school" size={16} color="#2563EB" />
+                <View style={[styles.statIconSquare, { backgroundColor: appTheme.primaryLight, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="school" size={16} color={appTheme.primary} />
                 </View>
                 <View style={styles.statPercentBadge}>
                   <MaterialIcons name="trending-up" size={12} color="#059669" style={{ marginRight: 2 }} />
@@ -412,20 +361,20 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </View>
               </View>
               <View style={styles.statContentBlock}>
-                <Text style={styles.statCountText}>31</Text>
-                <Text style={styles.statLabelText}>Students</Text>
+                <Text style={[styles.statCountText, { color: appTheme.textPrimary }]}>31</Text>
+                <Text style={[styles.statLabelText, { color: appTheme.textMuted }]}>Students</Text>
               </View>
             </View>
 
             {/* Guardians */}
             <TouchableOpacity 
-              style={[styles.statCardRef, { borderTopColor: '#00A8CC' }]} 
+              style={[styles.statCardRef, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderTopColor: appTheme.accent }]} 
               activeOpacity={0.8}
               onPress={() => navigation.navigate('More', { screen: 'Attendance' })}
             >
               <View style={styles.statHeaderRow}>
-                <View style={[styles.statIconSquare, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
-                  <MaterialIcons name="groups" size={16} color="#059669" />
+                <View style={[styles.statIconSquare, { backgroundColor: appTheme.accentBg, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="groups" size={16} color={appTheme.accent} />
                 </View>
                 <View style={styles.statPercentBadge}>
                   <MaterialIcons name="trending-up" size={12} color="#059669" style={{ marginRight: 2 }} />
@@ -433,8 +382,8 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </View>
               </View>
               <View style={styles.statContentBlock}>
-                <Text style={styles.statCountText}>30</Text>
-                <Text style={styles.statLabelText}>Guardians</Text>
+                <Text style={[styles.statCountText, { color: appTheme.textPrimary }]}>30</Text>
+                <Text style={[styles.statLabelText, { color: appTheme.textMuted }]}>Guardians</Text>
               </View>
             </TouchableOpacity>
 
@@ -444,29 +393,38 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* Premium Segmented Tab Bar */}
         <View style={styles.tabContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
-            {(['overview', 'academics', 'assessments', 'myLogs'] as const).map((tab) => {
+            {(['overview', 'academics', 'assessments', 'myAttendance'] as const).map((tab) => {
               const tabLabels = {
                 overview: 'Overview',
                 academics: 'Academics',
                 assessments: 'Assessments & Tasks',
-                myLogs: 'My Profile Logs',
+                myAttendance: 'My Attendance',
               };
               const tabIcons: Record<string, any> = {
                 overview: 'dashboard',
                 academics: 'school',
                 assessments: 'assignment',
-                myLogs: 'person',
+                myAttendance: 'event-available',
               };
               const isActive = activeTab === tab;
               return (
                 <TouchableOpacity
                   key={tab}
-                  style={[styles.tabButton, isActive && styles.tabButtonActive]}
+                  style={[
+                    styles.tabButton,
+                    { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border },
+                    isActive && [styles.tabButtonActive, { backgroundColor: appTheme.primary, borderColor: appTheme.primary, shadowColor: appTheme.primary }]
+                  ]}
                   onPress={() => setActiveTab(tab)}
                   activeOpacity={0.8}
                 >
-                  <MaterialIcons name={tabIcons[tab]} size={14} color={isActive ? '#fff' : theme.colors.onSurfaceVariant} style={{ marginRight: 5 }} />
-                  <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                  <MaterialIcons
+                    name={tabIcons[tab]}
+                    size={14}
+                    color={isActive ? '#fff' : appTheme.textMuted}
+                    style={{ marginRight: 5 }}
+                  />
+                  <Text style={[styles.tabText, { color: appTheme.textMuted }, isActive && styles.tabTextActive]}>
                     {tabLabels[tab]}
                   </Text>
                 </TouchableOpacity>
@@ -479,11 +437,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         {activeTab === 'overview' && (
           <View style={styles.tabContent}>
             {/* Schedule Alert Banner */}
-            <View style={styles.errorBanner}>
+            <View style={[styles.errorBanner, { backgroundColor: appTheme.isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)', borderColor: 'rgba(239, 68, 68, 0.2)' }]}>
               <View style={styles.errorBannerIconCircle}>
                 <MaterialIcons name="error-outline" size={18} color="#ef4444" />
               </View>
-              <Text style={styles.errorText}>No schedule fixed yet for you today.</Text>
+              <Text style={[styles.errorText, { color: appTheme.isDark ? '#FCA5A5' : '#DC2626' }]}>No schedule fixed yet for you today.</Text>
             </View>
 
             {/* Attendance Donut Chart */}
@@ -493,16 +451,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             {renderCalendar()}
 
             {/* Notice Board */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="campaign" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="campaign" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>Notice Board</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Notice Board</Text>
                 </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>Bulletins</Text>
+                <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+                  <Text style={[styles.todayPillText, { color: appTheme.primary }]}>Bulletins</Text>
                 </View>
               </View>
 
@@ -510,7 +468,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 {notices.map((notice) => {
                   const categoryIcon = notice.category === 'Events' ? 'event' : notice.category === 'Exams' ? 'assignment' : 'groups';
                   return (
-                    <View key={notice.id} style={[styles.noticeCard, { shadowColor: notice.badgeColor }]}>
+                    <View key={notice.id} style={[styles.noticeCard, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, shadowColor: notice.badgeColor }]}>
                       <View style={[styles.noticeCardAccent, { backgroundColor: notice.badgeColor }]} />
                       <View style={styles.noticeCardBody}>
                         {/* Faint background watermark icon */}
@@ -525,11 +483,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                               <Text style={[styles.noticeCategory, { color: notice.badgeColor }]}>{notice.category}</Text>
                             </View>
                           </View>
-                          <Text style={styles.noticeDate}>{notice.date}</Text>
+                          <Text style={[styles.noticeDate, { color: appTheme.textMuted }]}>{notice.date}</Text>
                         </View>
                         
-                        <Text style={styles.noticeTitle}>{notice.title}</Text>
-                        <Text style={styles.noticeDetails}>{notice.details}</Text>
+                        <Text style={[styles.noticeTitle, { color: appTheme.textPrimary }]}>{notice.title}</Text>
+                        <Text style={[styles.noticeDetails, { color: appTheme.textSecondary }]}>{notice.details}</Text>
                       </View>
                     </View>
                   );
@@ -543,16 +501,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         {activeTab === 'academics' && (
           <View style={styles.tabContent}>
             {/* Grade Distribution Pie Chart Card */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="analytics" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="analytics" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>Grade Distribution</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Grade Distribution</Text>
                 </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>Summary</Text>
+                <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+                  <Text style={[styles.todayPillText, { color: appTheme.primary }]}>Summary</Text>
                 </View>
               </View>
 
@@ -560,7 +518,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 {/* SVG Multi-segment Donut Pie Chart with instrumentation radar lines */}
                 <View style={styles.pieWrapper}>
                   <Svg width={120} height={120} style={{ transform: [{ rotate: '-90deg' }] }}>
-                    <Circle cx={60} cy={60} r={54} stroke="rgba(0,82,204,0.06)" strokeWidth={1} fill="none" />
+                    <Circle cx={60} cy={60} r={54} stroke={appTheme.isDark ? 'rgba(255,255,255,0.08)' : `${appTheme.primary}18`} strokeWidth={1} fill="none" />
                     
                     {/* Segment A (40%): pastel green #A7F3D0 */}
                     <Circle cx={60} cy={60} r={25} stroke="#A7F3D0" strokeWidth={50}
@@ -587,11 +545,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 {/* Premium Legend Tiles */}
                 <View style={styles.pieLegendList}>
                   {/* Grade A */}
-                  <View style={styles.pieLegendTile}>
+                  <View style={[styles.pieLegendTile, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderWidth: 1 }]}>
                     <View style={[styles.pieTileDot, { backgroundColor: '#34D399' }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.pieTileTitle}>Grade A</Text>
-                      <Text style={styles.pieTileSub}>2 Students</Text>
+                      <Text style={[styles.pieTileTitle, { color: appTheme.textPrimary }]}>Grade A</Text>
+                      <Text style={[styles.pieTileSub, { color: appTheme.textMuted }]}>2 Students</Text>
                     </View>
                     <View style={[styles.pieTileBadge, { backgroundColor: 'rgba(52,211,153,0.1)' }]}>
                       <Text style={[styles.pieTileBadgeText, { color: '#059669' }]}>40%</Text>
@@ -599,11 +557,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </View>
 
                   {/* Grade B */}
-                  <View style={styles.pieLegendTile}>
+                  <View style={[styles.pieLegendTile, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderWidth: 1 }]}>
                     <View style={[styles.pieTileDot, { backgroundColor: '#60A5FA' }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.pieTileTitle}>Grade B</Text>
-                      <Text style={styles.pieTileSub}>1 Student</Text>
+                      <Text style={[styles.pieTileTitle, { color: appTheme.textPrimary }]}>Grade B</Text>
+                      <Text style={[styles.pieTileSub, { color: appTheme.textMuted }]}>1 Student</Text>
                     </View>
                     <View style={[styles.pieTileBadge, { backgroundColor: 'rgba(96,165,250,0.1)' }]}>
                       <Text style={[styles.pieTileBadgeText, { color: '#2563EB' }]}>20%</Text>
@@ -611,11 +569,11 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </View>
 
                   {/* Grade C */}
-                  <View style={styles.pieLegendTile}>
+                  <View style={[styles.pieLegendTile, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderWidth: 1 }]}>
                     <View style={[styles.pieTileDot, { backgroundColor: '#FBBF24' }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.pieTileTitle}>Grade C</Text>
-                      <Text style={styles.pieTileSub}>2 Students</Text>
+                      <Text style={[styles.pieTileTitle, { color: appTheme.textPrimary }]}>Grade C</Text>
+                      <Text style={[styles.pieTileSub, { color: appTheme.textMuted }]}>2 Students</Text>
                     </View>
                     <View style={[styles.pieTileBadge, { backgroundColor: 'rgba(251,191,36,0.1)' }]}>
                       <Text style={[styles.pieTileBadgeText, { color: '#D97706' }]}>40%</Text>
@@ -626,35 +584,59 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Academic Progress Card */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="school" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="school" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>Academic Progress</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Academic Progress</Text>
                 </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>GRADE-II · A</Text>
+                <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+                  <Text style={[styles.todayPillText, { color: appTheme.primary }]}>GRADE-II · A</Text>
                 </View>
               </View>
 
               {/* Styled filter pills row */}
               <View style={styles.acFiltersRow}>
-                <TouchableOpacity style={styles.acFilterBtn}>
-                  <MaterialIcons name="class" size={13} color="#0052cc" style={{ marginRight: 4 }} />
-                  <Text style={styles.acFilterBtnText}>{selectedGrade}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={14} color="#0052cc" />
+                <TouchableOpacity 
+                  style={[styles.acFilterBtn, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    const grades = ['GRADE-I', 'GRADE-II', 'GRADE-III', 'GRADE-IV', 'GRADE-V'];
+                    const nextIdx = (grades.indexOf(selectedGrade) + 1) % grades.length;
+                    setSelectedGrade(grades[nextIdx]);
+                  }}
+                >
+                  <MaterialIcons name="class" size={13} color={appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.acFilterBtnText, { color: appTheme.primary }]}>{selectedGrade}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={14} color={appTheme.primary} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.acFilterBtn}>
-                  <MaterialIcons name="group" size={13} color="#0052cc" style={{ marginRight: 4 }} />
-                  <Text style={styles.acFilterBtnText}>Sec {selectedSection}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={14} color="#0052cc" />
+                <TouchableOpacity 
+                  style={[styles.acFilterBtn, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    const secs = ['A', 'B', 'C'];
+                    const nextIdx = (secs.indexOf(selectedSection) + 1) % secs.length;
+                    setSelectedSection(secs[nextIdx]);
+                  }}
+                >
+                  <MaterialIcons name="group" size={13} color={appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.acFilterBtnText, { color: appTheme.primary }]}>Sec {selectedSection}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={14} color={appTheme.primary} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.acFilterBtn}>
-                  <MaterialIcons name="menu-book" size={13} color="#0052cc" style={{ marginRight: 4 }} />
-                  <Text style={styles.acFilterBtnText}>{selectedSubject}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={14} color="#0052cc" />
+                <TouchableOpacity 
+                  style={[styles.acFilterBtn, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    const subs = ['English', 'Mathematics', 'Science', 'Computer'];
+                    const nextIdx = (subs.indexOf(selectedSubject) + 1) % subs.length;
+                    setSelectedSubject(subs[nextIdx]);
+                  }}
+                >
+                  <MaterialIcons name="menu-book" size={13} color={appTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.acFilterBtnText, { color: appTheme.primary }]}>{selectedSubject}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={14} color={appTheme.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -665,7 +647,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                   const scoreColor = isHigh ? '#16a34a' : '#d97706';
                   const scoreBg = isHigh ? 'rgba(22,163,74,0.08)' : 'rgba(217,119,6,0.08)';
                   return (
-                    <View key={student.id} style={styles.studentProgressCard}>
+                    <View key={student.id} style={[styles.studentProgressCard, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}>
                       <View style={[styles.studentCardAccent, { backgroundColor: student.color }]} />
                       <View style={styles.studentCardInner}>
                         <View style={styles.studentHeader}>
@@ -675,8 +657,8 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                               <Text style={[styles.avatarText, { color: student.color }]}>{student.code}</Text>
                             </View>
                             <View>
-                              <Text style={styles.studentName}>{student.name}</Text>
-                              <Text style={styles.studentDetails}>ID: {student.idNum} • {student.grade}</Text>
+                              <Text style={[styles.studentName, { color: appTheme.textPrimary }]}>{student.name}</Text>
+                              <Text style={[styles.studentDetails, { color: appTheme.textMuted }]}>ID: {student.idNum} • {student.grade}</Text>
                             </View>
                           </View>
                           <View style={[styles.scoreBadge, { backgroundColor: scoreBg }]}>
@@ -685,7 +667,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                         </View>
                         <View style={styles.progressRow}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={styles.progressText}>132/5 completed</Text>
+                            <Text style={[styles.progressText, { color: appTheme.textMuted }]}>132/5 completed</Text>
                             <Text style={[styles.progressPctText, { color: student.color }]}>{Math.round(student.progress * 100)}%</Text>
                           </View>
                           <View style={styles.progressBarBg}>
@@ -700,13 +682,13 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Reading Coach Results Card */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="record-voice-over" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="record-voice-over" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>Reading Coach Results</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Reading Coach Results</Text>
                 </View>
                 <View style={[styles.todayPill, { backgroundColor: 'rgba(124,58,237,0.07)', borderColor: 'rgba(124,58,237,0.1)' }]}>
                   <Text style={[styles.todayPillText, { color: '#7c3aed' }]}>Level II</Text>
@@ -715,14 +697,14 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
 
               <View style={{ gap: 12 }}>
                 {readingCoachData.map((student) => (
-                  <View key={student.id} style={styles.acMetricCard}>
+                  <View key={student.id} style={[styles.acMetricCard, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]}>
                     <View style={styles.acMetricCardTop}>
-                      <View style={[styles.avatar, { backgroundColor: 'rgba(0,82,204,0.08)' }]}>
-                        <Text style={[styles.avatarText, { color: '#0052cc' }]}>{student.code}</Text>
+                      <View style={[styles.avatar, { backgroundColor: `${appTheme.primary}15` }]}>
+                        <Text style={[styles.avatarText, { color: appTheme.primary }]}>{student.code}</Text>
                       </View>
                       <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={styles.rowMainName}>{student.name}</Text>
-                        <Text style={styles.rowSubName}>{student.grade} • {student.level}</Text>
+                        <Text style={[styles.rowMainName, { color: appTheme.textPrimary }]}>{student.name}</Text>
+                        <Text style={[styles.rowSubName, { color: appTheme.textMuted }]}>{student.grade} • {student.level}</Text>
                       </View>
                     </View>
                     <View style={styles.acMetricPills}>
@@ -730,9 +712,9 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                         <Text style={styles.acMetricKey}>Accuracy</Text>
                         <Text style={[styles.acMetricVal, { color: '#16a34a' }]}>{student.accuracy}</Text>
                       </View>
-                      <View style={[styles.acMetricPill, { backgroundColor: 'rgba(0,82,204,0.07)' }]}>
+                      <View style={[styles.acMetricPill, { backgroundColor: appTheme.accentBg }]}>
                         <Text style={styles.acMetricKey}>Speed</Text>
-                        <Text style={[styles.acMetricVal, { color: '#0052cc' }]}>{student.speed}</Text>
+                        <Text style={[styles.acMetricVal, { color: appTheme.primary }]}>{student.speed}</Text>
                       </View>
                     </View>
                   </View>
@@ -746,16 +728,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
         {activeTab === 'assessments' && (
           <View style={styles.tabContent}>
             {/* Timeline Homework Progress Card */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="timeline" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="timeline" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>Homework Timeline</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>Homework Timeline</Text>
                 </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>GRADE-II · A</Text>
+                <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+                  <Text style={[styles.todayPillText, { color: appTheme.primary }]}>GRADE-II · A</Text>
                 </View>
               </View>
 
@@ -764,7 +746,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                 {homeworkProgressData.map((item, index) => {
                   const isGraded = item.status === 'Graded';
                   const isPending = item.status === 'Pending';
-                  const stateColor = isGraded ? '#16a34a' : isPending ? '#d97706' : '#0052cc';
+                  const stateColor = isGraded ? '#16a34a' : isPending ? '#d97706' : appTheme.primary;
                   const isLast = index === homeworkProgressData.length - 1;
 
                   return (
@@ -774,18 +756,18 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                         <View style={[styles.timelineNode, { borderColor: stateColor }]}>
                           <View style={[styles.timelineNodeInner, { backgroundColor: stateColor }]} />
                         </View>
-                        {!isLast && <View style={[styles.timelineLine, { backgroundColor: 'rgba(0,82,204,0.12)' }]} />}
+                        {!isLast && <View style={[styles.timelineLine, { backgroundColor: appTheme.border }]} />}
                       </View>
                       
                       {/* Right: details */}
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineBodyHeader}>
-                          <Text style={styles.timelineTitle}>{item.name}</Text>
+                          <Text style={[styles.timelineTitle, { color: appTheme.textPrimary }]}>{item.name}</Text>
                           <View style={[styles.timelineBadge, { backgroundColor: `${stateColor}10` }]}>
                             <Text style={[styles.timelineBadgeText, { color: stateColor }]}>{item.status}</Text>
                           </View>
                         </View>
-                        <Text style={styles.timelineSubtitle}>{item.grade} • {item.date}</Text>
+                        <Text style={[styles.timelineSubtitle, { color: appTheme.textMuted }]}>{item.grade} • {item.date}</Text>
                       </View>
                     </View>
                   );
@@ -794,16 +776,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Grid Exam Marks Card */}
-            <View style={styles.premiumCard}>
+            <View style={[styles.premiumCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, borderBottomColor: appTheme.border }]}>
               <View style={styles.premiumCardHeader}>
                 <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="grid-view" size={16} color="#0052cc" />
+                  <View style={[styles.premiumCardIconBox, { backgroundColor: appTheme.accentBg }]}>
+                    <MaterialIcons name="grid-view" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.premiumCardTitle}>First Term Exam Marks</Text>
+                  <Text style={[styles.premiumCardTitle, { color: appTheme.textPrimary }]}>First Term Exam Marks</Text>
                 </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>English</Text>
+                <View style={[styles.todayPill, { backgroundColor: appTheme.accentBg, borderColor: `${appTheme.primary}25` }]}>
+                  <Text style={[styles.todayPillText, { color: appTheme.primary }]}>English</Text>
                 </View>
               </View>
 
@@ -813,10 +795,10 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                   const percentageVal = parseFloat(exam.percentage);
                   const isHigh = percentageVal >= 90;
                   const isMid = percentageVal >= 80 && !isHigh;
-                  const accentColor = isHigh ? '#16a34a' : isMid ? '#0052cc' : '#d97706';
+                  const accentColor = isHigh ? '#16a34a' : isMid ? appTheme.primary : '#d97706';
 
                   return (
-                    <View key={exam.id} style={[styles.examGridCard, { borderTopColor: accentColor }]}>
+                    <View key={exam.id} style={[styles.examGridCard, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border, borderTopColor: accentColor }]}>
                       {/* Initials & rank badge */}
                       <View style={styles.examGridHeader}>
                         <View style={[styles.avatar, { backgroundColor: `${accentColor}12` }]}>
@@ -824,16 +806,16 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
                             {exam.name.split(' ').map(n => n[0]).join('')}
                           </Text>
                         </View>
-                        <View style={styles.examGridRank}>
-                          <Text style={styles.examGridRankText}>#{index + 1}</Text>
+                        <View style={[styles.examGridRank, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                          <Text style={[styles.examGridRankText, { color: appTheme.textPrimary }]}>#{index + 1}</Text>
                         </View>
                       </View>
                       
-                      <Text style={styles.examGridName} numberOfLines={1}>{exam.name}</Text>
+                      <Text style={[styles.examGridName, { color: appTheme.textPrimary }]} numberOfLines={1}>{exam.name}</Text>
                       
                       {/* Marks label & micro progress */}
                       <View style={styles.examGridScoreRow}>
-                        <Text style={styles.examGridMarks}>{exam.marks}</Text>
+                        <Text style={[styles.examGridMarks, { color: appTheme.textMuted }]}>{exam.marks}</Text>
                         <Text style={[styles.examGridPct, { color: accentColor }]}>{exam.percentage}</Text>
                       </View>
                       
@@ -848,58 +830,10 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         )}
 
-        {/* -------------------- TAB 4: MY PROFILE LOGS -------------------- */}
-        {activeTab === 'myLogs' && (
+        {/* -------------------- TAB: MY ATTENDANCE -------------------- */}
+        {activeTab === 'myAttendance' && (
           <View style={styles.tabContent}>
-            {/* Calendar Strip Attendance Logs Card */}
-            <View style={styles.premiumCard}>
-              <View style={styles.premiumCardHeader}>
-                <View style={styles.premiumCardTitleRow}>
-                  <View style={styles.premiumCardIconBox}>
-                    <MaterialIcons name="event-available" size={16} color="#0052cc" />
-                  </View>
-                  <Text style={styles.premiumCardTitle}>My Attendance Details</Text>
-                </View>
-                <View style={styles.todayPill}>
-                  <Text style={styles.todayPillText}>Teacher Log</Text>
-                </View>
-              </View>
-
-              <View style={{ gap: 12 }}>
-                {myAttendance.map((log, index) => {
-                  const isOnTime = log.status === 'On Time';
-                  const statusColor = isOnTime ? '#16a34a' : '#d97706';
-                  const dateParts = log.date.replace(',', '').split(' '); // ['Aug', '06', '2026']
-                  const month = dateParts[0];
-                  const day = dateParts[1];
-
-                  return (
-                    <View key={index} style={styles.calStripRow}>
-                      {/* Desk calendar sheet */}
-                      <View style={styles.calSheet}>
-                        <View style={styles.calSheetHeader}>
-                          <Text style={styles.calSheetMonth}>{month.toUpperCase()}</Text>
-                        </View>
-                        <View style={styles.calSheetBody}>
-                          <Text style={styles.calSheetDay}>{day}</Text>
-                        </View>
-                      </View>
-
-                      {/* Log details */}
-                      <View style={styles.calStripBody}>
-                        <Text style={styles.calStripInTime}>In: <Text style={{ color: '#0d1b3e', fontWeight: '700' }}>{log.checkIn}</Text></Text>
-                        <Text style={styles.calStripOutTime}>Out: <Text style={{ color: '#0d1b3e', fontWeight: '700' }}>{log.checkOut}</Text></Text>
-                      </View>
-
-                      {/* Status */}
-                      <View style={[styles.calStripStatus, { backgroundColor: isOnTime ? 'rgba(22,163,74,0.08)' : 'rgba(217,119,6,0.08)' }]}>
-                        <Text style={[styles.calStripStatusText, { color: statusColor }]}>{log.status}</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
+            <MyAttendanceScreen navigation={navigation} embedded={true} />
           </View>
         )}
       </ScrollView>
@@ -911,7 +845,7 @@ const HomeScreenComponent: React.FC<HomeScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f4ff', // Premium cool off-white blue tint background
+    backgroundColor: 'transparent',
   },
 
   // ===== PREMIUM APP BAR =====

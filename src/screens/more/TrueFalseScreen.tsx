@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface TrueFalseScreenProps {
   navigation: any;
@@ -82,18 +83,10 @@ const buildSet = (topic: string, fileName?: string): TFSet => {
   };
 };
 
-// ── THEME COLORS ─────────────────────────────────────────────────────────────
-const C = {
-  primary:   '#0D9488',
-  dark:      '#134E4A',
-  mid:       '#0F766E',
-  light:     '#CCFBF1',
-  lighter:   '#F0FDFA',
-  border:    'rgba(13,148,136,0.18)',
-};
-
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   const [requestInput, setRequestInput]       = useState('');
   const [fileName, setFileName]               = useState('');
   const [generating, setGenerating]           = useState(false);
@@ -145,26 +138,28 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* Ambient blobs */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
-        <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <Defs>
-            <SvgLinearGradient id="b1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#0D9488" stopOpacity={0.07} />
-              <Stop offset="100%" stopColor="#0891B2" stopOpacity={0.03} />
-            </SvgLinearGradient>
-          </Defs>
-          <Circle cx="108%" cy="-6%" r="270" fill="url(#b1)" />
-          <Circle cx="-10%" cy="50%" r="230" fill="#0D9488" opacity={0.05} />
-          <Circle cx="88%" cy="94%" r="290" fill="#134E4A" opacity={0.04} />
-        </Svg>
-      </View>
+      {isDefaultTheme && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
+          <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <Defs>
+              <SvgLinearGradient id="b1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <Stop offset="0%" stopColor="#0D9488" stopOpacity={0.07} />
+                <Stop offset="100%" stopColor="#0891B2" stopOpacity={0.03} />
+              </SvgLinearGradient>
+            </Defs>
+            <Circle cx="108%" cy="-6%" r="270" fill="url(#b1)" />
+            <Circle cx="-10%" cy="50%" r="230" fill="#0D9488" opacity={0.05} />
+            <Circle cx="88%" cy="94%" r="290" fill="#134E4A" opacity={0.04} />
+          </Svg>
+        </View>
+      )}
 
       {/* ── HEADER ── */}
       <LinearGradient
-        colors={['#134E4A', '#0F766E', '#0D9488']}
+        colors={isDefaultTheme ? ['#134E4A', '#0F766E', '#0D9488'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -187,22 +182,22 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#99F6E4', '#0D9488', '#0F766E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient colors={isDefaultTheme ? ['#99F6E4', '#0D9488', '#0F766E'] : [appTheme.primary, appTheme.accent, appTheme.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── FORM CARD ── */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
           {/* YOUR REQUEST */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -213,33 +208,33 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
 
           {/* ATTACH FILE */}
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[styles.fileBox, fileName ? styles.fileBoxActive : null, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: fileName ? appTheme.primary : appTheme.border }]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#CCFBF1', '#99F6E4'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#CCFBF1', '#99F6E4'] : [appTheme.surface, appTheme.cardBg]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.cardBg])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#0D9488' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#0D9488' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -248,7 +243,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#134E4A', '#0F766E', '#0D9488']}
+                colors={isDefaultTheme ? ['#134E4A', '#0F766E', '#0D9488'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -271,37 +266,37 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#0D9488" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingText}>Generating exercise…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.primary }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#0D9488" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.primary }]}>Generating exercise…</Text>
             </View>
           )}
         </View>
 
         {/* ── PROGRESS LOADER ── */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#0D9488" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#0D9488" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#0F766E', '#5EEAD4']}
+                colors={isDefaultTheme ? ['#0F766E', '#5EEAD4'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textSecondary }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* ── RESULTS HEADER ── */}
         {sets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View True False</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#0D9488', '#0F766E'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View True False</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{sets.length}</Text>
             </View>
           </View>
@@ -312,23 +307,23 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
           {sets.map((set) => {
             const revealed = !!revealedIds[set.id];
             return (
-              <View key={set.id} style={styles.resultCard}>
+              <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
                 {/* Top strip */}
-                <LinearGradient colors={['#134E4A', '#0D9488', '#5EEAD4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+                <LinearGradient colors={isDefaultTheme ? ['#134E4A', '#0D9488', '#5EEAD4'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
                 {/* Meta header */}
                 <View style={styles.resultMeta}>
-                  <LinearGradient colors={['#CCFBF1', '#99F6E4']} style={styles.resultIconOrb}>
-                    <MaterialIcons name="fact-check" size={17} color="#0D9488" />
+                  <LinearGradient colors={isDefaultTheme ? ['#CCFBF1', '#99F6E4'] : [appTheme.surface, appTheme.cardBg]} style={styles.resultIconOrb}>
+                    <MaterialIcons name="fact-check" size={17} color={isDefaultTheme ? '#0D9488' : appTheme.primary} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                    <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                    <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                    <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textSecondary }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                   </View>
                   <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
-                    <View style={styles.eyeOuter}>
-                      <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.eyeCore}>
+                    <View style={[styles.eyeOuter, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#0D9488', '#0F766E'] : appTheme.primaryGradient} style={styles.eyeCore}>
                         <View style={styles.eyeGloss} />
                         <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                       </LinearGradient>
@@ -337,8 +332,8 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                 </View>
 
                 {/* Passage */}
-                <View style={styles.passageBox}>
-                  <Text style={styles.passageText}>{set.passage}</Text>
+                <View style={[styles.passageBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.primary }]}>
+                  <Text style={[styles.passageText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{set.passage}</Text>
                 </View>
 
                 {/* Statements list */}
@@ -353,6 +348,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                           styles.statementRow,
                           showAnswer && isTrue  && styles.statementRowTrue,
                           showAnswer && !isTrue && styles.statementRowFalse,
+                          !isDefaultTheme && !showAnswer && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
                         ]}
                       >
                         {/* Number badge */}
@@ -360,7 +356,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                           colors={showAnswer
                             ? isTrue  ? ['#047857', '#059669']
                                       : ['#B91C1C', '#DC2626']
-                            : ['#0F766E', '#0D9488']}
+                            : (isDefaultTheme ? ['#0F766E', '#0D9488'] : appTheme.primaryGradient)}
                           style={styles.statNumBadge}
                         >
                           <Text style={styles.statNumText}>{s.id}</Text>
@@ -370,6 +366,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                           styles.statementText,
                           showAnswer && isTrue  && styles.statementTextTrue,
                           showAnswer && !isTrue && styles.statementTextFalse,
+                          !isDefaultTheme && !showAnswer && { color: appTheme.textPrimary },
                         ]}>
                           {s.text}
                         </Text>
@@ -391,7 +388,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
 
                 {/* Answer Key */}
                 <View style={styles.answerKeyBlock}>
-                  <Text style={styles.answerKeyTitle}>Answer Key:</Text>
+                  <Text style={[styles.answerKeyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Answer Key:</Text>
                   <View style={styles.answerKeyWrap}>
                     {set.statements.map((s) => (
                       <View
@@ -416,7 +413,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#0F766E', '#0D9488']}
+                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#0F766E', '#0D9488'] : [appTheme.primary, appTheme.accent])}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.copyBtnGrad}
                   >
@@ -431,10 +428,10 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                 </TouchableOpacity>
 
                 {/* Footer toolbar */}
-                <View style={styles.resultFooter}>
+                <View style={[styles.resultFooter, !isDefaultTheme && { backgroundColor: appTheme.surface, borderTopColor: appTheme.border }]}>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                    <MaterialIcons name="open-in-full" size={13} color="#0D9488" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerBtnText}>Full View</Text>
+                    <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? '#0D9488' : appTheme.primary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => toggleReveal(set.id)}>
                     <MaterialIcons name={revealed ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
@@ -443,8 +440,8 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                    <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                    <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                    <MaterialIcons name="print" size={13} color={isDefaultTheme ? '#64748B' : appTheme.textMuted} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.textMuted }]}>Print</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -457,14 +454,14 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
 
       {/* ── FULL VIEW MODAL ── */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
-            <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#0D9488" />
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetClose, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? '#0D9488' : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleCopy(activeSet); }}
               activeOpacity={0.8}
             >
@@ -483,9 +480,9 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
-              <LinearGradient colors={['#134E4A', '#0F766E']} style={styles.paperDocHeader}>
+              <LinearGradient colors={isDefaultTheme ? ['#134E4A', '#0F766E'] : appTheme.primaryGradient} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="fact-check" size={18} color="#fff" />
@@ -498,26 +495,26 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
               </LinearGradient>
 
               {/* Topic */}
-              <View style={styles.topicRow}>
-                <Text style={styles.topicLabel}>TOPIC</Text>
-                <Text style={styles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[styles.topicRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.topicLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOPIC</Text>
+                <Text style={[styles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* Passage */}
-              <View style={styles.modalPassageBox}>
-                <Text style={styles.modalPassageTitle}>PASSAGE</Text>
-                <Text style={styles.modalPassageText}>{activeSet?.passage}</Text>
+              <View style={[styles.modalPassageBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, borderLeftColor: appTheme.primary }]}>
+                <Text style={[styles.modalPassageTitle, !isDefaultTheme && { color: appTheme.primary }]}>PASSAGE</Text>
+                <Text style={[styles.modalPassageText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.passage}</Text>
               </View>
 
               {/* Statements (with T/F label at end) */}
               <View style={styles.modalStatements}>
-                <Text style={styles.modalStatementsTitle}>Statements</Text>
+                <Text style={[styles.modalStatementsTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Statements</Text>
                 {activeSet?.statements.map((s) => (
-                  <View key={s.id} style={styles.modalStatRow}>
-                    <LinearGradient colors={['#0F766E', '#0D9488']} style={styles.modalStatBadge}>
+                  <View key={s.id} style={[styles.modalStatRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                    <LinearGradient colors={isDefaultTheme ? ['#0F766E', '#0D9488'] : appTheme.primaryGradient} style={styles.modalStatBadge}>
                       <Text style={styles.modalStatBadgeText}>{s.id}</Text>
                     </LinearGradient>
-                    <Text style={styles.modalStatText}>{s.text}</Text>
+                    <Text style={[styles.modalStatText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{s.text}</Text>
                     <View style={[styles.modalTfTag, s.answer === 'True' ? styles.modalTfTagTrue : styles.modalTfTagFalse]}>
                       <Text style={[styles.modalTfTagText, s.answer === 'True' ? styles.modalTfTagTextTrue : styles.modalTfTagTextFalse]}>
                         {s.answer}
@@ -528,15 +525,15 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
               </View>
 
               {/* Answer Key */}
-              <View style={styles.modalAnswerKeySection}>
-                <LinearGradient colors={['#134E4A', '#0F766E']} style={styles.akHeader}>
+              <View style={[styles.modalAnswerKeySection, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#134E4A', '#0F766E'] : appTheme.primaryGradient} style={styles.akHeader}>
                   <MaterialIcons name="vpn-key" size={15} color="#99F6E4" style={{ marginRight: 8 }} />
                   <Text style={styles.akHeaderText}>Answer Key</Text>
                 </LinearGradient>
-                <View style={styles.akGrid}>
+                <View style={[styles.akGrid, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                   {activeSet?.statements.map((s) => (
                     <View key={s.id} style={styles.akItem}>
-                      <Text style={styles.akNum}>{s.id}.</Text>
+                      <Text style={[styles.akNum, !isDefaultTheme && { color: appTheme.textSecondary }]}>{s.id}.</Text>
                       <View style={[styles.akBadge, s.answer === 'True' ? styles.akBadgeTrue : styles.akBadgeFalse]}>
                         <Text style={styles.akBadgeText}>{s.answer}</Text>
                       </View>
@@ -552,7 +549,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : ['#0F766E', '#0D9488']}
+                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#0F766E', '#0D9488'] : [appTheme.primary, appTheme.accent])}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >
@@ -577,7 +574,7 @@ export const TrueFalseScreen: React.FC<TrueFalseScreenProps> = ({ navigation }) 
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F0FDFA' },
+  safeArea: { flex: 1, backgroundColor: '#F0FDFA', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -827,7 +824,7 @@ const styles = StyleSheet.create({
   footerBtnText: { fontSize: 11, fontWeight: '800', color: '#0D9488' },
 
   // MODAL
-  sheetSafe: { flex: 1, backgroundColor: '#F8FAFC' },
+  sheetSafe: { flex: 1, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

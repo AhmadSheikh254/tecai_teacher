@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Modal, Platform, Alert, Dimensions, ActivityIndicator,
+  StyleSheet, Modal, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Rect, Circle, Path, Line, Defs, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import Svg, { Rect, Circle, Defs, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
-
-const { width } = Dimensions.get('window');
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MCQItem {
   id: string;
@@ -66,6 +65,9 @@ const INITIAL_ASSESSMENTS: Assessment[] = [
 ];
 
 export const MCQBuilderScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
   const [cls, setCls] = useState('GRADE-II');
   const [section, setSection] = useState('Section A');
@@ -220,44 +222,46 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
   const steps = ['Upload Doc', 'Define SLOs', 'Review MCQs', 'Publish'];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+    <View style={[{ flex: 1, backgroundColor: '#F8FAFC' }, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
       {/* Light, airy, minimal ambient background */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-          <Defs>
-            <SvgLinearGradient id="softMintGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#10B981" stopOpacity={0.06} />
-              <Stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
-            </SvgLinearGradient>
-            <SvgLinearGradient id="softBlueGlow" x1="100%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor="#6366F1" stopOpacity={0.05} />
-              <Stop offset="100%" stopColor="#10B981" stopOpacity={0.01} />
-            </SvgLinearGradient>
-          </Defs>
-          <Circle cx="15%" cy="18%" r="140" fill="url(#softMintGlow)" />
-          <Circle cx="88%" cy="45%" r="180" fill="url(#softBlueGlow)" />
-          <Circle cx="35%" cy="80%" r="160" fill="url(#softMintGlow)" />
-        </Svg>
-      </View>
+      {isDefaultTheme && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+            <Defs>
+              <SvgLinearGradient id="softMintGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <Stop offset="0%" stopColor="#10B981" stopOpacity={0.06} />
+                <Stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
+              </SvgLinearGradient>
+              <SvgLinearGradient id="softBlueGlow" x1="100%" y1="0%" x2="0%" y2="100%">
+                <Stop offset="0%" stopColor="#6366F1" stopOpacity={0.05} />
+                <Stop offset="100%" stopColor="#10B981" stopOpacity={0.01} />
+              </SvgLinearGradient>
+            </Defs>
+            <Circle cx="15%" cy="18%" r="140" fill="url(#softMintGlow)" />
+            <Circle cx="88%" cy="45%" r="180" fill="url(#softBlueGlow)" />
+            <Circle cx="35%" cy="80%" r="160" fill="url(#softMintGlow)" />
+          </Svg>
+        </View>
+      )}
       <SafeAreaView style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: 720 }} edges={['top']}>
 
         {/* ── Top Header ── */}
-        <View style={S.header}>
-          <TouchableOpacity style={S.backBtn} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={18} color="#0F172A" />
+        <View style={[S.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+          <TouchableOpacity style={[S.backBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={18} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={S.headerTitle}>MCQ Builder</Text>
-            <Text style={S.headerSub}>AI-powered smart quiz generator</Text>
+            <Text style={[S.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>MCQ Builder</Text>
+            <Text style={[S.headerSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>AI-powered smart quiz generator</Text>
           </View>
-          <View style={S.generatorBadge}>
+          <View style={[S.generatorBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
             <View style={S.generatorDot} />
-            <Text style={S.generatorBadgeText}>GENERATOR</Text>
+            <Text style={[S.generatorBadgeText, !isDefaultTheme && { color: appTheme.success }]}>GENERATOR</Text>
           </View>
         </View>
 
         {/* ── Progress Tracker (Identical to Image Design) ── */}
-        <View style={S.progressContainer}>
+        <View style={[S.progressContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={S.progressInner}>
             {steps.map((s, i) => {
               const step = i + 1;
@@ -268,14 +272,14 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   <View style={{ alignItems: 'center', flex: 1 }}>
                     {isDone ? (
                       <LinearGradient
-                        colors={['#10B981', '#059669']}
+                        colors={isDefaultTheme ? ['#10B981', '#059669'] : [appTheme.success, appTheme.success]}
                         style={[S.stepDot, { borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.4)' }]}
                       >
                         <MaterialIcons name="check" size={16} color="#fff" />
                       </LinearGradient>
                     ) : isActive ? (
                       <LinearGradient
-                        colors={['#4F46E5', '#4338CA']}
+                        colors={isDefaultTheme ? ['#4F46E5', '#4338CA'] : appTheme.primaryGradient}
                         style={[S.stepDot, { borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.5)' }]}
                       >
                         <MaterialIcons 
@@ -286,28 +290,28 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       </LinearGradient>
                     ) : (
                       <View style={[S.stepDot, { 
-                        backgroundColor: '#F1F5F9', 
+                        backgroundColor: isDefaultTheme ? '#F1F5F9' : appTheme.surface, 
                         borderWidth: 1.5, 
-                        borderColor: '#CBD5E1',
+                        borderColor: isDefaultTheme ? '#CBD5E1' : appTheme.border,
                         shadowOpacity: 0.03, 
                         elevation: 1 
                       }]}>
                         <MaterialIcons 
                           name={step === 1 ? "cloud-upload" : step === 2 ? "track-changes" : step === 3 ? "quiz" : "publish"} 
                           size={15} 
-                          color="#64748B" 
+                          color={isDefaultTheme ? "#64748B" : appTheme.textMuted} 
                         />
                       </View>
                     )}
                     <Text style={[
                       S.stepLabel, 
-                      isDone ? S.stepLabelDone : isActive ? S.stepLabelActive : S.stepLabelInactive
+                      isDone ? (isDefaultTheme ? S.stepLabelDone : { color: appTheme.success }) : isActive ? (isDefaultTheme ? S.stepLabelActive : { color: appTheme.primary }) : (isDefaultTheme ? S.stepLabelInactive : { color: appTheme.textMuted })
                     ]}>
                       {s}
                     </Text>
                   </View>
                   {i < steps.length - 1 && (
-                    <View style={[S.stepLine, isDone ? S.stepLineDone : S.stepLineInactive]} />
+                    <View style={[S.stepLine, isDone ? (isDefaultTheme ? S.stepLineDone : { backgroundColor: appTheme.success }) : (isDefaultTheme ? S.stepLineInactive : { backgroundColor: appTheme.border })]} />
                   )}
                 </React.Fragment>
               );
@@ -321,32 +325,32 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {wizardStep === 1 && (
             <>
               {/* Hero MCQ Builder Banner Card */}
-              <View style={S.heroBanner}>
-                <LinearGradient colors={['#ECFDF5', '#F0FDF4', '#EFF6FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.heroGrad}>
+              <View style={[S.heroBanner, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#ECFDF5', '#F0FDF4', '#EFF6FF'] : [appTheme.cardBg, appTheme.surface, appTheme.bg]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.heroGrad}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                    <LinearGradient colors={['#FFFFFF', '#F0FDF4']} style={S.heroIconBox}>
-                      <MaterialIcons name="quiz" size={28} color="#059669" />
+                    <LinearGradient colors={isDefaultTheme ? ['#FFFFFF', '#F0FDF4'] : [appTheme.surface, appTheme.cardBg]} style={[S.heroIconBox, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                      <MaterialIcons name="quiz" size={28} color={isDefaultTheme ? "#059669" : appTheme.primary} />
                     </LinearGradient>
-                    <View style={S.heroTag}>
+                    <View style={[S.heroTag, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={S.heroTagDot} />
-                      <Text style={S.heroTagText}>GENERATOR</Text>
+                      <Text style={[S.heroTagText, !isDefaultTheme && { color: appTheme.success }]}>GENERATOR</Text>
                     </View>
                   </View>
 
-                  <Text style={S.heroTitle}>MCQ Builder</Text>
-                  <Text style={S.heroSub}>Smart quiz &amp; paper generator tool</Text>
+                  <Text style={[S.heroTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>MCQ Builder</Text>
+                  <Text style={[S.heroSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>Smart quiz &amp; paper generator tool</Text>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
-                    <View style={S.activeChip}>
+                    <View style={[S.activeChip, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={S.activeDot} />
-                      <Text style={S.activeText}>{assessments.length} Active Assessments</Text>
+                      <Text style={[S.activeText, !isDefaultTheme && { color: appTheme.success }]}>{assessments.length} Active Assessments</Text>
                     </View>
                   </View>
 
                   {/* Decorative SVG doc */}
                   <View style={{ position: 'absolute', right: 18, bottom: 14, opacity: 0.18 }}>
                     <Svg width={74} height={74} viewBox="0 0 64 64">
-                      <Rect x="8" y="4" width="40" height="52" rx="7" fill="#059669" />
+                      <Rect x="8" y="4" width="40" height="52" rx="7" fill={isDefaultTheme ? "#059669" : appTheme.primary} />
                       <Rect x="14" y="14" width="28" height="4" rx="2" fill="white" />
                       <Rect x="14" y="24" width="22" height="4" rx="2" fill="white" />
                       <Rect x="14" y="34" width="26" height="4" rx="2" fill="white" />
@@ -357,22 +361,22 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               </View>
 
               {/* ── Upload Form Card ── */}
-              <View style={S.card}>
+              <View style={[S.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                 <View style={S.cardHeader}>
-                  <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={S.cardHeaderIcon}>
-                    <MaterialIcons name="description" size={20} color="#4F46E5" />
+                  <LinearGradient colors={isDefaultTheme ? ['#EEF2FF', '#E0E7FF'] : [appTheme.surface, appTheme.cardBg]} style={S.cardHeaderIcon}>
+                    <MaterialIcons name="description" size={20} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />
                   </LinearGradient>
                   <View>
-                    <Text style={S.cardTitle}>Study Material Info</Text>
-                    <Text style={S.cardSub}>Fill in the details below</Text>
+                    <Text style={[S.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Study Material Info</Text>
+                    <Text style={[S.cardSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>Fill in the details below</Text>
                   </View>
                 </View>
 
                 <View style={S.formRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={S.label}>Class</Text>
+                    <Text style={[S.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Class</Text>
                     <TouchableOpacity 
-                      style={S.inputWrap} 
+                      style={[S.inputWrap, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                       onPress={() => {
                         setShowClassDropdown(!showClassDropdown);
                         setShowSectionDropdown(false);
@@ -380,16 +384,16 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MaterialIcons name="school" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
-                      <Text style={[S.input, !cls && { color: '#64748B' }]} numberOfLines={1}>{cls || 'Select Class'}</Text>
-                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
+                      <MaterialIcons name="school" size={18} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} style={{ marginRight: 8 }} />
+                      <Text style={[S.input, !cls ? { color: isDefaultTheme ? '#64748B' : appTheme.textMuted } : (!isDefaultTheme && { color: appTheme.textPrimary })]} numberOfLines={1}>{cls || 'Select Class'}</Text>
+                      <MaterialIcons name={showClassDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
                     </TouchableOpacity>
                     {showClassDropdown && (
-                      <View style={S.dropdownContainer}>
+                      <View style={[S.dropdownContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                         {classesList.map(c => (
-                          <TouchableOpacity key={c} style={[S.dropdownItem, cls === c && S.dropdownItemActive]} onPress={() => { setCls(c); setShowClassDropdown(false); }}>
-                            <Text style={[S.dropdownItemText, cls === c && S.dropdownItemTextActive]}>{c}</Text>
-                            {cls === c && <MaterialIcons name="check" size={16} color="#4F46E5" />}
+                          <TouchableOpacity key={c} style={[S.dropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, cls === c && (isDefaultTheme ? S.dropdownItemActive : { backgroundColor: appTheme.surface })]} onPress={() => { setCls(c); setShowClassDropdown(false); }}>
+                            <Text style={[S.dropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, cls === c && (isDefaultTheme ? S.dropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{c}</Text>
+                            {cls === c && <MaterialIcons name="check" size={16} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />}
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -397,9 +401,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   </View>
                   <View style={{ width: 12 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={S.label}>Section</Text>
+                    <Text style={[S.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Section</Text>
                     <TouchableOpacity 
-                      style={S.inputWrap} 
+                      style={[S.inputWrap, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                       onPress={() => {
                         setShowSectionDropdown(!showSectionDropdown);
                         setShowClassDropdown(false);
@@ -407,17 +411,17 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MaterialIcons name="people" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
-                      <Text style={[S.input, !section && { color: '#64748B' }]} numberOfLines={1}>{section || 'Select Section'}</Text>
-                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
+                      <MaterialIcons name="people" size={18} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} style={{ marginRight: 8 }} />
+                      <Text style={[S.input, !section ? { color: isDefaultTheme ? '#64748B' : appTheme.textMuted } : (!isDefaultTheme && { color: appTheme.textPrimary })]} numberOfLines={1}>{section || 'Select Section'}</Text>
+                      <MaterialIcons name={showSectionDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
                     </TouchableOpacity>
                     {showSectionDropdown && (
-                      <View style={S.dropdownContainer}>
+                      <View style={[S.dropdownContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                         {/* Select All Option */}
                         <TouchableOpacity
                           style={[
                             S.dropdownItem,
-                            { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#F8FAFC' }
+                            { borderBottomWidth: 1, borderBottomColor: isDefaultTheme ? '#E2E8F0' : appTheme.border, backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.surface }
                           ]}
                           onPress={() => {
                             const currentList = section ? section.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -428,7 +432,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                             }
                           }}
                         >
-                          <Text style={[S.dropdownItemText, { fontWeight: '900', color: '#4F46E5' }]}>
+                          <Text style={[S.dropdownItemText, { fontWeight: '900', color: isDefaultTheme ? '#4F46E5' : appTheme.primary }]}>
                             {section && section.split(',').map(s => s.trim()).filter(Boolean).length === sectionsList.length ? '✓ Deselect All' : '✦ Select All Sections'}
                           </Text>
                         </TouchableOpacity>
@@ -439,7 +443,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                           return (
                             <TouchableOpacity 
                               key={s} 
-                              style={[S.dropdownItem, isSelected && S.dropdownItemActive]} 
+                              style={[S.dropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, isSelected && (isDefaultTheme ? S.dropdownItemActive : { backgroundColor: appTheme.surface })]} 
                               onPress={() => {
                                 let updated: string[];
                                 if (isSelected) {
@@ -450,11 +454,11 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                                 setSection(updated.join(', '));
                               }}
                             >
-                              <Text style={[S.dropdownItemText, isSelected && S.dropdownItemTextActive]}>{s}</Text>
+                              <Text style={[S.dropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, isSelected && (isDefaultTheme ? S.dropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{s}</Text>
                               <MaterialIcons 
                                 name={isSelected ? "check-box" : "check-box-outline-blank"} 
                                 size={18} 
-                                color={isSelected ? "#4F46E5" : "#94A3B8"} 
+                                color={isSelected ? (isDefaultTheme ? "#4F46E5" : appTheme.primary) : (isDefaultTheme ? "#94A3B8" : appTheme.textMuted)} 
                               />
                             </TouchableOpacity>
                           );
@@ -462,7 +466,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
                         <TouchableOpacity
                           style={{
-                            backgroundColor: '#4F46E5',
+                            backgroundColor: isDefaultTheme ? '#4F46E5' : appTheme.primary,
                             paddingVertical: 9,
                             alignItems: 'center',
                             marginTop: 6,
@@ -477,9 +481,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   </View>
                 </View>
 
-                <Text style={S.label}>Subject / Course</Text>
+                <Text style={[S.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Subject / Course</Text>
                 <TouchableOpacity 
-                  style={S.inputWrap} 
+                  style={[S.inputWrap, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                   onPress={() => {
                     setShowCourseDropdown(!showCourseDropdown);
                     setShowClassDropdown(false);
@@ -487,61 +491,61 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   }}
                   activeOpacity={0.8}
                 >
-                  <MaterialIcons name="book" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
-                  <Text style={[S.input, !course && { color: '#64748B' }]}>{course || 'Select Course'}</Text>
-                  <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="#64748B" />
+                  <MaterialIcons name="book" size={18} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} style={{ marginRight: 8 }} />
+                  <Text style={[S.input, !course ? { color: isDefaultTheme ? '#64748B' : appTheme.textMuted } : (!isDefaultTheme && { color: appTheme.textPrimary })]}>{course || 'Select Course'}</Text>
+                  <MaterialIcons name={showCourseDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={isDefaultTheme ? "#64748B" : appTheme.textMuted} />
                 </TouchableOpacity>
                 {showCourseDropdown && (
-                  <View style={S.dropdownContainer}>
+                  <View style={[S.dropdownContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {coursesList.map(c => (
-                      <TouchableOpacity key={c} style={[S.dropdownItem, course === c && S.dropdownItemActive]} onPress={() => { setCourse(c); setShowCourseDropdown(false); }}>
-                        <Text style={[S.dropdownItemText, course === c && S.dropdownItemTextActive]}>{c}</Text>
-                        {course === c && <MaterialIcons name="check" size={16} color="#4F46E5" />}
+                      <TouchableOpacity key={c} style={[S.dropdownItem, !isDefaultTheme && { borderBottomColor: appTheme.border }, course === c && (isDefaultTheme ? S.dropdownItemActive : { backgroundColor: appTheme.surface })]} onPress={() => { setCourse(c); setShowCourseDropdown(false); }}>
+                        <Text style={[S.dropdownItemText, !isDefaultTheme && { color: appTheme.textSecondary }, course === c && (isDefaultTheme ? S.dropdownItemTextActive : { color: appTheme.primary, fontWeight: '900' })]}>{c}</Text>
+                        {course === c && <MaterialIcons name="check" size={16} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />}
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
 
-                <Text style={S.label}>Assessment Title <Text style={{ color: '#EF4444' }}>*</Text></Text>
-                <View style={[S.inputWrap, { borderColor: title ? '#4F46E5' : '#CBD5E1' }]}>
-                  <MaterialIcons name="title" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                <Text style={[S.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Assessment Title <Text style={{ color: '#EF4444' }}>*</Text></Text>
+                <View style={[S.inputWrap, !isDefaultTheme && { backgroundColor: appTheme.surface }, { borderColor: title ? (isDefaultTheme ? '#4F46E5' : appTheme.primary) : (isDefaultTheme ? '#CBD5E1' : appTheme.border) }]}>
+                  <MaterialIcons name="title" size={18} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} style={{ marginRight: 8 }} />
                   <TextInput 
-                    style={S.input} 
+                    style={[S.input, !isDefaultTheme && { color: appTheme.textPrimary }]} 
                     value={title} 
                     onChangeText={setTitle} 
                     placeholder="e.g. States of Matter Quiz" 
-                    placeholderTextColor="#94A3B8" 
+                    placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} 
                   />
                 </View>
 
                 {/* Upload Zone */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, marginBottom: 6 }}>
-                  <Text style={S.label}>Upload Study Material</Text>
-                  <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>PDF, JPG, PNG • Max 10MB</Text>
+                  <Text style={[S.label, !isDefaultTheme && { color: appTheme.textSecondary }]}>Upload Study Material</Text>
+                  <Text style={{ fontSize: 11, color: isDefaultTheme ? '#64748B' : appTheme.textMuted, fontWeight: '600' }}>PDF, JPG, PNG • Max 10MB</Text>
                 </View>
 
-                <TouchableOpacity style={S.uploadZone} onPress={handlePickDocument} activeOpacity={0.85}>
-                  <LinearGradient colors={['#F8FAFC', '#F0F9FF', '#F1F5F9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.uploadGrad}>
-                    <View style={S.uploadIconCircle}>
-                      <MaterialIcons name="cloud-upload" size={32} color="#0284C7" />
+                <TouchableOpacity style={[S.uploadZone, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={handlePickDocument} activeOpacity={0.85}>
+                  <LinearGradient colors={isDefaultTheme ? ['#F8FAFC', '#F0F9FF', '#F1F5F9'] : [appTheme.cardBg, appTheme.surface, appTheme.cardBg]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={S.uploadGrad}>
+                    <View style={[S.uploadIconCircle, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                      <MaterialIcons name="cloud-upload" size={32} color={isDefaultTheme ? "#0284C7" : appTheme.primary} />
                     </View>
                     {docName ? (
                       <View style={{ alignItems: 'center', gap: 4 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <MaterialIcons name="insert-drive-file" size={20} color="#059669" />
-                          <Text style={{ fontSize: 14, fontWeight: '800', color: '#059669' }}>{docName}</Text>
+                          <MaterialIcons name="insert-drive-file" size={20} color={isDefaultTheme ? "#059669" : appTheme.success} />
+                          <Text style={{ fontSize: 14, fontWeight: '800', color: isDefaultTheme ? '#059669' : appTheme.success }}>{docName}</Text>
                         </View>
-                        <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>Tap to change file</Text>
+                        <Text style={{ fontSize: 12, color: isDefaultTheme ? '#64748B' : appTheme.textMuted, fontWeight: '600' }}>Tap to change file</Text>
                       </View>
                     ) : (
                       <>
-                        <Text style={S.uploadTitle}>Tap to Upload Document</Text>
-                        <Text style={S.uploadSub}>or choose from sample files below</Text>
+                        <Text style={[S.uploadTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Tap to Upload Document</Text>
+                        <Text style={[S.uploadSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>or choose from sample files below</Text>
                         <View style={S.sampleRow}>
                           {['class 2 study material.pdf', 'mateerr.PNG'].map(f => (
-                            <TouchableOpacity key={f} style={S.sampleChip} onPress={() => setDocName(f)}>
-                              <MaterialIcons name="insert-drive-file" size={13} color="#2563EB" />
-                              <Text style={S.sampleChipText}>{f}</Text>
+                            <TouchableOpacity key={f} style={[S.sampleChip, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setDocName(f)}>
+                              <MaterialIcons name="insert-drive-file" size={13} color={isDefaultTheme ? "#2563EB" : appTheme.primary} />
+                              <Text style={[S.sampleChipText, !isDefaultTheme && { color: appTheme.primary }]}>{f}</Text>
                             </TouchableOpacity>
                           ))}
                         </View>
@@ -555,7 +559,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               <View style={{ marginBottom: 16, alignItems: 'flex-end' }}>
                 <TouchableOpacity onPress={handleNext} activeOpacity={0.88}>
                   <LinearGradient
-                    colors={['#4F46E5', '#3730A3']}
+                    colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={{
                       flexDirection: 'row',
@@ -580,26 +584,26 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               </View>
 
               {/* ── Assessments Dashboard ── */}
-              <View style={S.card}>
+              <View style={[S.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                 <View style={S.cardHeader}>
-                  <LinearGradient colors={['#FEF3C7', '#FDE68A']} style={S.cardHeaderIcon}>
-                    <MaterialIcons name="bar-chart" size={20} color="#D97706" />
+                  <LinearGradient colors={isDefaultTheme ? ['#FEF3C7', '#FDE68A'] : [appTheme.surface, appTheme.cardBg]} style={S.cardHeaderIcon}>
+                    <MaterialIcons name="bar-chart" size={20} color={isDefaultTheme ? "#D97706" : appTheme.warning} />
                   </LinearGradient>
                   <View>
-                    <Text style={S.cardTitle}>Assessments Dashboard</Text>
-                    <Text style={S.cardSub}>All your generated MCQ assessments</Text>
+                    <Text style={[S.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Assessments Dashboard</Text>
+                    <Text style={[S.cardSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>All your generated MCQ assessments</Text>
                   </View>
                 </View>
 
                 {/* Metric Cards */}
                 <View style={S.metricsRow}>
                   {[
-                    { label: 'TOTAL', value: assessments.length, color: '#4F46E5', bg: ['#EEF2FF', '#E0E7FF'] as [string, string] },
-                    { label: 'PUBLISHED', value: assessments.filter(a => a.status === 'Published').length, color: '#059669', bg: ['#ECFDF5', '#D1FAE5'] as [string, string] },
-                    { label: 'SUBMITTED', value: 3, color: '#D97706', bg: ['#FFFBEB', '#FEF3C7'] as [string, string] },
-                    { label: 'AVG SCORE', value: '78%', color: '#0284C7', bg: ['#E0F2FE', '#BAE6FD'] as [string, string] },
+                    { label: 'TOTAL', value: assessments.length, color: isDefaultTheme ? '#4F46E5' : appTheme.primary, bg: (isDefaultTheme ? ['#EEF2FF', '#E0E7FF'] : [appTheme.surface, appTheme.surface]) as [string, string] },
+                    { label: 'PUBLISHED', value: assessments.filter(a => a.status === 'Published').length, color: isDefaultTheme ? '#059669' : appTheme.success, bg: (isDefaultTheme ? ['#ECFDF5', '#D1FAE5'] : [appTheme.surface, appTheme.surface]) as [string, string] },
+                    { label: 'SUBMITTED', value: 3, color: isDefaultTheme ? '#D97706' : appTheme.warning, bg: (isDefaultTheme ? ['#FFFBEB', '#FEF3C7'] : [appTheme.surface, appTheme.surface]) as [string, string] },
+                    { label: 'AVG SCORE', value: '78%', color: isDefaultTheme ? '#0284C7' : appTheme.accent, bg: (isDefaultTheme ? ['#E0F2FE', '#BAE6FD'] : [appTheme.surface, appTheme.surface]) as [string, string] },
                   ].map(m => (
-                    <LinearGradient key={m.label} colors={m.bg} style={S.metricCard}>
+                    <LinearGradient key={m.label} colors={m.bg} style={[S.metricCard, !isDefaultTheme && { borderColor: appTheme.border }]}>
                       <Text style={[S.metricValue, { color: m.color }]}>{m.value}</Text>
                       <Text style={[S.metricLabel, { color: m.color }]}>{m.label}</Text>
                     </LinearGradient>
@@ -614,7 +618,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       return (
                         <TouchableOpacity key={t} onPress={() => setFilterTab(t)} activeOpacity={0.9}>
                           <LinearGradient 
-                            colors={['#4F46E5', '#3730A3']} 
+                            colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient} 
                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                             style={S.filterTabActiveGrad}
                           >
@@ -624,8 +628,8 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                       );
                     }
                     return (
-                      <TouchableOpacity key={t} onPress={() => setFilterTab(t)} style={S.filterTabInactive} activeOpacity={0.8}>
-                        <Text style={S.filterTabText}>{t}</Text>
+                      <TouchableOpacity key={t} onPress={() => setFilterTab(t)} style={[S.filterTabInactive, !isDefaultTheme && { backgroundColor: appTheme.surface }]} activeOpacity={0.8}>
+                        <Text style={[S.filterTabText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{t}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -633,32 +637,32 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
                 {/* Assessment Rows */}
                 {filteredAssessments.map((a, idx) => (
-                  <View key={a.id} style={[S.assessRow, idx === 0 && { borderTopWidth: 0 }]}>
-                    <LinearGradient colors={a.status === 'Published' ? ['#ECFDF5', '#D1FAE5'] : ['#FFFBEB', '#FEF3C7']} style={S.assessIconBox}>
-                      <MaterialIcons name="quiz" size={18} color={a.status === 'Published' ? '#059669' : '#D97706'} />
+                  <View key={a.id} style={[S.assessRow, idx === 0 && { borderTopWidth: 0 }, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
+                    <LinearGradient colors={a.status === 'Published' ? (isDefaultTheme ? ['#ECFDF5', '#D1FAE5'] : [appTheme.surface, appTheme.surface]) : (isDefaultTheme ? ['#FFFBEB', '#FEF3C7'] : [appTheme.surface, appTheme.surface])} style={S.assessIconBox}>
+                      <MaterialIcons name="quiz" size={18} color={a.status === 'Published' ? (isDefaultTheme ? '#059669' : appTheme.success) : (isDefaultTheme ? '#D97706' : appTheme.warning)} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
-                      <Text style={S.assessTitle} numberOfLines={1}>{a.title}</Text>
-                      <Text style={S.assessMeta}>{a.class} • {a.course} • {a.slosCount} SLOs</Text>
+                      <Text style={[S.assessTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{a.title}</Text>
+                      <Text style={[S.assessMeta, !isDefaultTheme && { color: appTheme.textSecondary }]}>{a.class} • {a.course} • {a.slosCount} SLOs</Text>
                     </View>
-                    <View style={[S.statusPill, { backgroundColor: a.status === 'Published' ? '#ECFDF5' : '#FEF3C7', borderColor: a.status === 'Published' ? '#6EE7B7' : '#FDE68A' }]}>
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: a.status === 'Published' ? '#059669' : '#D97706', marginRight: 4 }} />
-                      <Text style={[S.statusText, { color: a.status === 'Published' ? '#059669' : '#92400E' }]}>{a.status}</Text>
+                    <View style={[S.statusPill, { backgroundColor: a.status === 'Published' ? (isDefaultTheme ? '#ECFDF5' : appTheme.surface) : (isDefaultTheme ? '#FEF3C7' : appTheme.surface), borderColor: a.status === 'Published' ? (isDefaultTheme ? '#6EE7B7' : appTheme.success) : (isDefaultTheme ? '#FDE68A' : appTheme.warning) }]}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: a.status === 'Published' ? (isDefaultTheme ? '#059669' : appTheme.success) : (isDefaultTheme ? '#D97706' : appTheme.warning), marginRight: 4 }} />
+                      <Text style={[S.statusText, { color: a.status === 'Published' ? (isDefaultTheme ? '#059669' : appTheme.success) : (isDefaultTheme ? '#92400E' : appTheme.warning) }]}>{a.status}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', gap: 6, marginLeft: 8 }}>
                       <TouchableOpacity 
-                        style={S.assessAction} 
+                        style={[S.assessAction, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                         onPress={() => handleViewAssessment(a)}
                         activeOpacity={0.7}
                       >
-                        <MaterialIcons name="visibility" size={17} color="#4F46E5" />
+                        <MaterialIcons name="visibility" size={17} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        style={[S.assessAction, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]} 
+                        style={[S.assessAction, isDefaultTheme ? { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' } : { backgroundColor: appTheme.surface, borderColor: appTheme.danger }]} 
                         onPress={() => handleDeleteAssessment(a.id, a.title)}
                         activeOpacity={0.7}
                       >
-                        <MaterialIcons name="delete-outline" size={17} color="#EF4444" />
+                        <MaterialIcons name="delete-outline" size={17} color={isDefaultTheme ? "#EF4444" : appTheme.danger} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -669,24 +673,24 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
           {/* ═══════════ STEP 2: SLOs ═══════════ */}
           {wizardStep === 2 && (
-            <View style={S.card}>
+            <View style={[S.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               <View style={S.cardHeader}>
-                <LinearGradient colors={['#EDE9FE', '#DDD6FE']} style={S.cardHeaderIcon}>
-                  <MaterialIcons name="flag" size={20} color="#7C3AED" />
+                <LinearGradient colors={isDefaultTheme ? ['#EDE9FE', '#DDD6FE'] : [appTheme.surface, appTheme.cardBg]} style={S.cardHeaderIcon}>
+                  <MaterialIcons name="flag" size={20} color={isDefaultTheme ? "#7C3AED" : appTheme.primary} />
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
-                  <Text style={S.cardTitle}>Student Learning Outcomes</Text>
-                  <Text style={S.cardSub}>Define 2–6 objectives. AI targets MCQs to these.</Text>
+                  <Text style={[S.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Student Learning Outcomes</Text>
+                  <Text style={[S.cardSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>Define 2–6 objectives. AI targets MCQs to these.</Text>
                 </View>
               </View>
 
               {slos.map((slo, i) => (
                 <View key={i} style={S.sloRow}>
-                  <View style={S.sloIndex}>
-                    <Text style={S.sloIndexText}>{i + 1}</Text>
+                  <View style={[S.sloIndex, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                    <Text style={[S.sloIndexText, !isDefaultTheme && { color: appTheme.primary }]}>{i + 1}</Text>
                   </View>
                   <TextInput
-                    style={S.sloInput}
+                    style={[S.sloInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                     value={slo}
                     onChangeText={v => setSlos(prev => { const c = [...prev]; c[i] = v; return c; })}
                     multiline
@@ -697,32 +701,32 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                           ? "e.g. Explain solubility and factors affecting it"
                           : "Enter learning outcome..."
                     }
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                   />
                   <TouchableOpacity 
-                    style={S.sloDelete} 
+                    style={[S.sloDelete, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                     onPress={() => handleDeleteSlo(i)}
                   >
-                    <MaterialIcons name="close" size={17} color="#EF4444" />
+                    <MaterialIcons name="close" size={17} color={isDefaultTheme ? "#EF4444" : appTheme.danger} />
                   </TouchableOpacity>
                 </View>
               ))}
 
               {slos.length < 6 && (
                 <View style={S.addSloRow}>
-                  <View style={[S.inputWrap, { flex: 1, borderColor: '#CBD5E1', marginBottom: 0 }]}>
-                    <MaterialIcons name="add" size={18} color="#4F46E5" style={{ marginRight: 8 }} />
+                  <View style={[S.inputWrap, { flex: 1, borderColor: isDefaultTheme ? '#CBD5E1' : appTheme.border, marginBottom: 0 }, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                    <MaterialIcons name="add" size={18} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} style={{ marginRight: 8 }} />
                     <TextInput 
-                      style={S.input} 
+                      style={[S.input, !isDefaultTheme && { color: appTheme.textPrimary }]} 
                       value={newSloText} 
                       onChangeText={setNewSloText} 
                       placeholder="Type new SLO..." 
-                      placeholderTextColor="#94A3B8" 
+                      placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} 
                       onSubmitEditing={addSlo} 
                     />
                   </View>
                   <TouchableOpacity onPress={addSlo} activeOpacity={0.8}>
-                    <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.addSloBtn}>
+                    <LinearGradient colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient} style={S.addSloBtn}>
                       <MaterialIcons name="add" size={22} color="#fff" />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -730,9 +734,9 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               )}
 
               {/* Info tip box */}
-              <View style={{ borderRadius: 14, padding: 14, marginTop: 16, flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: '#EFF6FF', borderWidth: 1.2, borderColor: '#BFDBFE' }}>
-                <MaterialIcons name="lightbulb" size={20} color="#2563EB" />
-                <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: '#1E40AF', lineHeight: 20 }}>
+              <View style={[{ borderRadius: 14, padding: 14, marginTop: 16, flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: '#EFF6FF', borderWidth: 1.2, borderColor: '#BFDBFE' }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                <MaterialIcons name="lightbulb" size={20} color={isDefaultTheme ? "#2563EB" : appTheme.primary} />
+                <Text style={[{ flex: 1, fontSize: 13, fontWeight: '600', color: '#1E40AF', lineHeight: 20 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                   Well-defined SLOs help the AI generate more targeted and relevant MCQ questions for your students.
                 </Text>
               </View>
@@ -741,19 +745,19 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
           {/* ═══════════ STEP 3: REVIEW MCQs ═══════════ */}
           {wizardStep === 3 && (
-            <View style={S.card}>
+            <View style={[S.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <View style={S.cardHeader}>
-                  <LinearGradient colors={['#ECFDF5', '#D1FAE5']} style={S.cardHeaderIcon}>
-                    <MaterialIcons name="auto-awesome" size={20} color="#059669" />
+                  <LinearGradient colors={isDefaultTheme ? ['#ECFDF5', '#D1FAE5'] : [appTheme.surface, appTheme.cardBg]} style={S.cardHeaderIcon}>
+                    <MaterialIcons name="auto-awesome" size={20} color={isDefaultTheme ? "#059669" : appTheme.success} />
                   </LinearGradient>
                   <View>
-                    <Text style={S.cardTitle}>Review Questions</Text>
-                    <Text style={S.cardSub}>{mcqs.length} MCQs generated • Edit freely</Text>
+                    <Text style={[S.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Review Questions</Text>
+                    <Text style={[S.cardSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>{mcqs.length} MCQs generated • Edit freely</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={addMcq} activeOpacity={0.85}>
-                  <LinearGradient colors={['#4F46E5', '#3730A3']} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12 }}>
+                  <LinearGradient colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12 }}>
                     <MaterialIcons name="add" size={16} color="#fff" />
                     <Text style={{ fontSize: 13, fontWeight: '900', color: '#fff' }}>Add MCQ</Text>
                   </LinearGradient>
@@ -761,50 +765,50 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
               </View>
 
               {mcqs.map((mcq, qi) => (
-                <View key={mcq.id} style={S.mcqCard}>
+                <View key={mcq.id} style={[S.mcqCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                   {/* MCQ Header */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                      <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.qBadge}>
+                      <LinearGradient colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient} style={S.qBadge}>
                         <Text style={S.qBadgeText}>Q{qi + 1}</Text>
                       </LinearGradient>
-                      <View style={[S.bloomBadge, { backgroundColor: bloomBg(mcq.bloom), borderColor: bloomColor(mcq.bloom) + '50' }]}>
+                      <View style={[S.bloomBadge, { backgroundColor: isDefaultTheme ? bloomBg(mcq.bloom) : appTheme.cardBg, borderColor: bloomColor(mcq.bloom) + '50' }]}>
                         <Text style={[S.bloomText, { color: bloomColor(mcq.bloom) }]}>{mcq.bloom}</Text>
                       </View>
                     </View>
                     <TouchableOpacity 
-                      style={S.deleteBtn} 
+                      style={[S.deleteBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                       onPress={() => handleDeleteMcq(mcq.id, qi)}
                     >
-                      <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
+                      <MaterialIcons name="delete-outline" size={18} color={isDefaultTheme ? "#EF4444" : appTheme.danger} />
                     </TouchableOpacity>
                   </View>
 
                   {/* Question Input */}
                   <TextInput
-                    style={S.mcqQuestionInput}
+                    style={[S.mcqQuestionInput, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                     value={mcq.question}
                     onChangeText={v => updateMcq(mcq.id, 'question', v)}
                     multiline
                     placeholder="Question text..."
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
                   />
 
                   {/* Options */}
                   {mcq.options.map((opt, oi) => {
                     const isCorrect = mcq.correctAnswer === oi;
                     return (
-                      <TouchableOpacity key={oi} style={[S.optionRow, isCorrect && S.optionRowCorrect]} onPress={() => updateMcq(mcq.id, 'correctAnswer', oi)} activeOpacity={0.7}>
-                        <View style={[S.optionRadio, isCorrect && S.optionRadioCorrect]}>
+                      <TouchableOpacity key={oi} style={[S.optionRow, !isDefaultTheme && !isCorrect && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }, isCorrect && S.optionRowCorrect]} onPress={() => updateMcq(mcq.id, 'correctAnswer', oi)} activeOpacity={0.7}>
+                        <View style={[S.optionRadio, !isDefaultTheme && !isCorrect && { borderColor: appTheme.border }, isCorrect && S.optionRadioCorrect]}>
                           {isCorrect && <View style={S.optionRadioInner} />}
                         </View>
-                        <Text style={[S.optionLetter, { color: isCorrect ? '#059669' : '#4F46E5' }]}>{String.fromCharCode(65 + oi)})</Text>
+                        <Text style={[S.optionLetter, { color: isCorrect ? '#059669' : (isDefaultTheme ? '#4F46E5' : appTheme.primary) }]}>{String.fromCharCode(65 + oi)})</Text>
                         <TextInput 
-                          style={S.optionInput} 
+                          style={[S.optionInput, !isDefaultTheme && { color: appTheme.textPrimary }]} 
                           value={opt} 
                           onChangeText={v => updateMcqOption(mcq.id, oi, v)} 
                           placeholder={`Option ${String.fromCharCode(65 + oi)}`} 
-                          placeholderTextColor="#94A3B8" 
+                          placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} 
                         />
                         {isCorrect && <MaterialIcons name="check-circle" size={18} color="#059669" />}
                       </TouchableOpacity>
@@ -817,51 +821,51 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
 
           {/* ═══════════ STEP 4: SAVE & PUBLISH ═══════════ */}
           {wizardStep === 4 && (
-            <View style={S.card}>
+            <View style={[S.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               <View style={S.cardHeader}>
-                <LinearGradient colors={['#ECFDF5', '#D1FAE5']} style={S.cardHeaderIcon}>
-                  <MaterialIcons name="publish" size={20} color="#059669" />
+                <LinearGradient colors={isDefaultTheme ? ['#ECFDF5', '#D1FAE5'] : [appTheme.surface, appTheme.cardBg]} style={S.cardHeaderIcon}>
+                  <MaterialIcons name="publish" size={20} color={isDefaultTheme ? "#059669" : appTheme.success} />
                 </LinearGradient>
                 <View>
-                  <Text style={S.cardTitle}>Save &amp; Publish</Text>
-                  <Text style={S.cardSub}>Review details before publishing</Text>
+                  <Text style={[S.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Save &amp; Publish</Text>
+                  <Text style={[S.cardSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>Review details before publishing</Text>
                 </View>
               </View>
 
               {/* Summary Grid */}
               <View style={{ gap: 10 }}>
                 {[
-                  { label: 'Assessment Title', value: title, icon: 'title', color: '#4F46E5' },
-                  { label: 'Class', value: cls, icon: 'school', color: '#0284C7' },
-                  { label: 'Section', value: section, icon: 'people', color: '#059669' },
-                  { label: 'Subject', value: course, icon: 'book', color: '#D97706' },
-                  { label: 'Total Questions', value: `${mcqs.length} MCQs`, icon: 'quiz', color: '#7C3AED' },
+                  { label: 'Assessment Title', value: title, icon: 'title', color: isDefaultTheme ? '#4F46E5' : appTheme.primary },
+                  { label: 'Class', value: cls, icon: 'school', color: isDefaultTheme ? '#0284C7' : appTheme.accent },
+                  { label: 'Section', value: section, icon: 'people', color: isDefaultTheme ? '#059669' : appTheme.success },
+                  { label: 'Subject', value: course, icon: 'book', color: isDefaultTheme ? '#D97706' : appTheme.warning },
+                  { label: 'Total Questions', value: `${mcqs.length} MCQs`, icon: 'quiz', color: isDefaultTheme ? '#7C3AED' : appTheme.primary },
                   { label: 'Learning Outcomes', value: `${slos.filter(s => s.trim()).length} SLOs`, icon: 'flag', color: '#DB2777' },
                 ].map(row => (
-                  <View key={row.label} style={S.summaryItem}>
+                  <View key={row.label} style={[S.summaryItem, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                     <View style={[S.summaryIcon, { backgroundColor: row.color + '18' }]}>
                       <MaterialIcons name={row.icon as any} size={18} color={row.color} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={S.summaryLabel}>{row.label}</Text>
-                      <Text style={S.summaryValue} numberOfLines={1}>{row.value || '—'}</Text>
+                      <Text style={[S.summaryLabel, !isDefaultTheme && { color: appTheme.textMuted }]}>{row.label}</Text>
+                      <Text style={[S.summaryValue, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{row.value || '—'}</Text>
                     </View>
                   </View>
                 ))}
               </View>
 
               {/* Publish Status */}
-              <Text style={[S.label, { marginTop: 18, marginBottom: 8 }]}>Publish Status</Text>
+              <Text style={[S.label, { marginTop: 18, marginBottom: 8 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>Publish Status</Text>
               {(['Published', 'Draft'] as const).map(s => (
-                <TouchableOpacity key={s} style={[S.publishOption, publishStatus === s && S.publishOptionActive]} onPress={() => setPublishStatus(s)} activeOpacity={0.8}>
-                  <View style={[S.publishRadio, publishStatus === s && S.publishRadioActive]}>
-                    {publishStatus === s && <View style={S.publishRadioInner} />}
+                <TouchableOpacity key={s} style={[S.publishOption, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, publishStatus === s && (isDefaultTheme ? S.publishOptionActive : { borderColor: appTheme.primary, backgroundColor: appTheme.surfaceVariant || appTheme.surface })]} onPress={() => setPublishStatus(s)} activeOpacity={0.8}>
+                  <View style={[S.publishRadio, !isDefaultTheme && { borderColor: appTheme.border }, publishStatus === s && (isDefaultTheme ? S.publishRadioActive : { borderColor: appTheme.primary })]}>
+                    {publishStatus === s && <View style={[S.publishRadioInner, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[S.publishLabel, publishStatus === s && { color: '#4F46E5' }]}>{s}</Text>
-                    <Text style={S.publishSub}>{s === 'Published' ? 'Students can see and take the quiz now' : 'Only you can view this draft'}</Text>
+                    <Text style={[S.publishLabel, !isDefaultTheme && { color: appTheme.textPrimary }, publishStatus === s && { color: isDefaultTheme ? '#4F46E5' : appTheme.primary }]}>{s}</Text>
+                    <Text style={[S.publishSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>{s === 'Published' ? 'Students can see and take the quiz now' : 'Only you can view this draft'}</Text>
                   </View>
-                  {publishStatus === s && <MaterialIcons name="check-circle" size={20} color="#4F46E5" />}
+                  {publishStatus === s && <MaterialIcons name="check-circle" size={20} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -870,23 +874,23 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {/* ── Loaders ── */}
           {isAnalyzing && (
             <View style={S.loaderOverlay}>
-              <View style={S.loaderCard}>
-                <View style={S.loaderIconCircle}>
-                  <ActivityIndicator size="large" color="#4F46E5" />
+              <View style={[S.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <View style={[S.loaderIconCircle, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                  <ActivityIndicator size="large" color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />
                 </View>
-                <Text style={S.loaderTitle}>Analyzing Document...</Text>
-                <Text style={S.loaderSub}>Extracting learning objectives and key concepts from your study material</Text>
+                <Text style={[S.loaderTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Analyzing Document...</Text>
+                <Text style={[S.loaderSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>Extracting learning objectives and key concepts from your study material</Text>
               </View>
             </View>
           )}
           {isGenerating && (
             <View style={S.loaderOverlay}>
-              <View style={S.loaderCard}>
-                <View style={S.loaderIconCircle}>
-                  <ActivityIndicator size="large" color="#7C3AED" />
+              <View style={[S.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <View style={[S.loaderIconCircle, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                  <ActivityIndicator size="large" color={isDefaultTheme ? "#7C3AED" : appTheme.primary} />
                 </View>
-                <Text style={S.loaderTitle}>Generating 10 MCQs...</Text>
-                <Text style={S.loaderSub}>AI is crafting targeted questions based on your learning outcomes</Text>
+                <Text style={[S.loaderTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Generating 10 MCQs...</Text>
+                <Text style={[S.loaderSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>AI is crafting targeted questions based on your learning outcomes</Text>
               </View>
             </View>
           )}
@@ -894,14 +898,14 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
           {/* ── Nav Buttons ── */}
           {wizardStep > 1 && (
             <View style={S.navRow}>
-              <TouchableOpacity style={S.prevBtn} onPress={handlePrev} activeOpacity={0.8}>
-                <MaterialIcons name="arrow-back" size={18} color="#475569" />
-                <Text style={S.prevBtnText}>Back</Text>
+              <TouchableOpacity style={[S.prevBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={handlePrev} activeOpacity={0.8}>
+                <MaterialIcons name="arrow-back" size={18} color={isDefaultTheme ? "#475569" : appTheme.textSecondary} />
+                <Text style={[S.prevBtnText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Back</Text>
               </TouchableOpacity>
               <View style={{ flex: 1 }} />
               <TouchableOpacity onPress={handleNext} activeOpacity={0.88}>
                 <LinearGradient
-                  colors={wizardStep === 4 ? ['#10B981', '#059669'] : ['#4F46E5', '#3730A3']}
+                  colors={wizardStep === 4 ? (isDefaultTheme ? ['#10B981', '#059669'] : [appTheme.success, appTheme.success]) : (isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient)}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={S.nextBtn}
                 >
@@ -944,20 +948,21 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                   width: '100vw',
                 } as any
               })
-            }
+            },
+            !isDefaultTheme && { backgroundColor: appTheme.bg }
           ]}>
-            <LinearGradient colors={['#EEF2FF', '#F0F9FF', '#F8FAFC']} style={StyleSheet.absoluteFill} />
+            {isDefaultTheme && <LinearGradient colors={['#EEF2FF', '#F0F9FF', '#F8FAFC']} style={StyleSheet.absoluteFill} />}
             <SafeAreaView style={{ flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' }} edges={['top', 'bottom']}>
-              <View style={S.playerHeader}>
-                <TouchableOpacity style={S.backBtn} onPress={() => setActivePlayer(null)} activeOpacity={0.7}>
-                  <MaterialIcons name="close" size={20} color="#0F172A" />
+              <View style={[S.playerHeader, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+                <TouchableOpacity style={[S.backBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setActivePlayer(null)} activeOpacity={0.7}>
+                  <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
                 </TouchableOpacity>
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={S.headerTitle} numberOfLines={1}>{activePlayer.title}</Text>
-                  <Text style={S.headerSub}>MCQ Interactive Quiz</Text>
+                  <Text style={[S.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activePlayer.title}</Text>
+                  <Text style={[S.headerSub, !isDefaultTheme && { color: appTheme.textSecondary }]}>MCQ Interactive Quiz</Text>
                 </View>
-                <View style={[S.generatorBadge, { borderColor: '#BAE6FD', backgroundColor: '#E0F2FE' }]}>
-                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#0369A1' }}>
+                <View style={[S.generatorBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, isDefaultTheme && { borderColor: '#BAE6FD', backgroundColor: '#E0F2FE' }]}>
+                  <Text style={[{ fontSize: 11.5, fontWeight: '900', color: '#0369A1' }, !isDefaultTheme && { color: appTheme.primary }]}>
                     {Object.keys(playerAnswers).length} / {activePlayer.mcqs?.length || 0} Answered
                   </Text>
                 </View>
@@ -968,22 +973,22 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                 showsVerticalScrollIndicator={false}
               >
                 {activePlayer.mcqs && activePlayer.mcqs.length > 0 ? (
-                  <View style={[S.card, { width: '100%', maxWidth: 620 }]}>
-                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5', marginBottom: 8 }}>
+                  <View style={[S.card, { width: '100%', maxWidth: 620 }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                    <Text style={[{ fontSize: 13, fontWeight: '800', color: '#4F46E5', marginBottom: 8 }, !isDefaultTheme && { color: appTheme.primary }]}>
                       Question {playerIndex + 1} of {activePlayer.mcqs.length}
                     </Text>
 
                     {/* Progress bar */}
-                    <View style={{ height: 6, borderRadius: 3, backgroundColor: '#E2E8F0', marginBottom: 16 }}>
+                    <View style={[{ height: 6, borderRadius: 3, backgroundColor: '#E2E8F0', marginBottom: 16 }, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
                       <LinearGradient
-                        colors={['#4F46E5', '#0284C7']}
+                        colors={isDefaultTheme ? ['#4F46E5', '#0284C7'] : appTheme.primaryGradient}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={{ height: 6, borderRadius: 3, width: `${((playerIndex + 1) / activePlayer.mcqs.length) * 100}%` as any }}
                       />
                     </View>
 
-                    <Text style={{ fontSize: 16.5, fontWeight: '800', color: '#0F172A', lineHeight: 24, marginBottom: 16 }}>
+                    <Text style={[{ fontSize: 16.5, fontWeight: '800', color: '#0F172A', lineHeight: 24, marginBottom: 16 }, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                       {activePlayer.mcqs[playerIndex]?.question}
                     </Text>
 
@@ -996,18 +1001,19 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                             key={idx}
                             style={[
                               S.optionRow,
-                              isSelected && (isCorrect ? S.optionRowCorrect : { borderColor: '#F43F5E', backgroundColor: '#FFF1F2' })
+                              !isDefaultTheme && !isSelected && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              isSelected && (isCorrect ? S.optionRowCorrect : { borderColor: '#F43F5E', backgroundColor: isDefaultTheme ? '#FFF1F2' : appTheme.surface })
                             ]}
                             onPress={() => setPlayerAnswers(prev => ({ ...prev, [playerIndex]: idx }))}
                             activeOpacity={0.8}
                           >
-                            <View style={[S.optionRadio, isSelected && (isCorrect ? S.optionRadioCorrect : { borderColor: '#F43F5E' })]}>
+                            <View style={[S.optionRadio, !isDefaultTheme && !isSelected && { borderColor: appTheme.border }, isSelected && (isCorrect ? S.optionRowCorrect : { borderColor: '#F43F5E' })]}>
                               {isSelected && <View style={[S.optionRadioInner, { backgroundColor: isCorrect ? '#10B981' : '#F43F5E' }]} />}
                             </View>
-                            <Text style={[S.optionLetter, { color: isSelected ? (isCorrect ? '#10B981' : '#F43F5E') : '#4F46E5' }]}>
+                            <Text style={[S.optionLetter, { color: isSelected ? (isCorrect ? '#10B981' : '#F43F5E') : (isDefaultTheme ? '#4F46E5' : appTheme.primary) }]}>
                               {String.fromCharCode(65 + idx)})
                             </Text>
-                            <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}>{opt}</Text>
+                            <Text style={[{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }, !isDefaultTheme && { color: appTheme.textPrimary }]}>{opt}</Text>
                             {isSelected && (
                               <MaterialIcons name={isCorrect ? 'check-circle' : 'cancel'} size={18} color={isCorrect ? '#10B981' : '#F43F5E'} />
                             )}
@@ -1019,12 +1025,12 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                     <View style={[S.navRow, { marginTop: 18 }]}>
                       <TouchableOpacity
                         disabled={playerIndex === 0}
-                        style={[S.prevBtn, playerIndex === 0 && { opacity: 0.4 }]}
+                        style={[S.prevBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }, playerIndex === 0 && { opacity: 0.4 }]}
                         onPress={() => setPlayerIndex(p => Math.max(0, p - 1))}
                         activeOpacity={0.8}
                       >
-                        <MaterialIcons name="arrow-back" size={16} color="#475569" />
-                        <Text style={S.prevBtnText}>Prev</Text>
+                        <MaterialIcons name="arrow-back" size={16} color={isDefaultTheme ? "#475569" : appTheme.textSecondary} />
+                        <Text style={[S.prevBtnText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Prev</Text>
                       </TouchableOpacity>
                       <View style={{ flex: 1 }} />
                       <TouchableOpacity
@@ -1038,7 +1044,7 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                         }}
                         activeOpacity={0.88}
                       >
-                        <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.nextBtn}>
+                        <LinearGradient colors={isDefaultTheme ? ['#10B981', '#059669'] : [appTheme.success, appTheme.success]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={S.nextBtn}>
                           <Text style={S.nextBtnText}>{playerIndex < activePlayer.mcqs.length - 1 ? 'Next' : 'Finish Quiz'}</Text>
                           <MaterialIcons name={playerIndex < activePlayer.mcqs.length - 1 ? 'arrow-forward' : 'check'} size={16} color="#fff" />
                         </LinearGradient>
@@ -1046,14 +1052,14 @@ export const MCQBuilderScreen = ({ navigation }: any) => {
                     </View>
                   </View>
                 ) : (
-                  <View style={[S.card, { alignItems: 'center', gap: 12, paddingVertical: 36 }]}>
-                    <View style={{ width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderWidth: 1.5, borderColor: '#C7D2FE' }}>
-                      <MaterialIcons name="quiz" size={34} color="#4F46E5" />
+                  <View style={[S.card, { alignItems: 'center', gap: 12, paddingVertical: 36 }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                    <View style={[{ width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderWidth: 1.5, borderColor: '#C7D2FE' }, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <MaterialIcons name="quiz" size={34} color={isDefaultTheme ? "#4F46E5" : appTheme.primary} />
                     </View>
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>No Questions Yet</Text>
-                    <Text style={{ fontSize: 13, color: '#64748B', textAlign: 'center', lineHeight: 20 }}>Generate MCQs using the 4-step wizard first.</Text>
+                    <Text style={[{ fontSize: 18, fontWeight: '900', color: '#0F172A' }, !isDefaultTheme && { color: appTheme.textPrimary }]}>No Questions Yet</Text>
+                    <Text style={[{ fontSize: 13, color: '#64748B', textAlign: 'center', lineHeight: 20 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>Generate MCQs using the 4-step wizard first.</Text>
                     <TouchableOpacity onPress={() => setActivePlayer(null)} activeOpacity={0.88}>
-                      <LinearGradient colors={['#4F46E5', '#3730A3']} style={S.nextBtn}>
+                      <LinearGradient colors={isDefaultTheme ? ['#4F46E5', '#3730A3'] : appTheme.primaryGradient} style={S.nextBtn}>
                         <Text style={S.nextBtnText}>Close</Text>
                         <MaterialIcons name="close" size={16} color="#fff" />
                       </LinearGradient>

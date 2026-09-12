@@ -10,12 +10,15 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface CBTSHubScreenProps {
   navigation: any;
 }
 
 export const CBTSHubScreen: React.FC<CBTSHubScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
   
   const recentAssessments = [
     {
@@ -33,89 +36,89 @@ export const CBTSHubScreen: React.FC<CBTSHubScreenProps> = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* TopAppBar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
           <Image 
             source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD3_lrwcrxr8nOo2F32v2Q1Wtd9tiSCvUTb6aW89U5lNdNhBRis3CBGEYDpd139HstNbV99wMZfSgoHkuFo8kkwgyOA_K0cgUqNsaVcx5c9kWfI4T5h2lGq0yvqAnQtAnAr-TJpWhYUb9bmUf7SRcoVyqOnzePhIR_JwILYOj7_qr9NgNGw-UVW_d541_T7hc-F8KxZ7YLGekDdowSIT2q5A3eIZuHWD6_qAaHFvpgem0CtntUJSywG5A' }}
-            style={styles.profilePic}
+            style={[styles.profilePic, !isDefaultTheme && { borderColor: appTheme.border }]}
           />
-          <Text style={styles.headerTitle}>Teacher Hub</Text>
+          <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Teacher Hub</Text>
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <MaterialIcons name="notifications" size={24} color={theme.colors.primary} />
+        <TouchableOpacity style={[styles.notificationButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+          <MaterialIcons name="notifications" size={24} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Intro */}
         <View style={styles.introContainer}>
-          <Text style={styles.introTitle}>Computer Based Testing System</Text>
-          <Text style={styles.introSubtitle}>Manage and create robust assessments for your students.</Text>
+          <Text style={[styles.introTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Computer Based Testing System</Text>
+          <Text style={[styles.introSubtitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Manage and create robust assessments for your students.</Text>
         </View>
 
         {/* Big Actions */}
         <View style={styles.gridContainer}>
           {/* Question Bank */}
           <TouchableOpacity 
-            style={[styles.bigCard, theme.shadows.level1]}
+            style={[styles.bigCard, theme.shadows.level1, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('QuestionBank')}
           >
             <View style={styles.bigCardHeader}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="storage" size={24} color={theme.colors.primary} />
+              <View style={[styles.iconContainer, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                <MaterialIcons name="storage" size={24} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
               </View>
-              <MaterialIcons name="storage" size={96} color="rgba(0, 82, 204, 0.05)" style={styles.bgIcon} />
+              <MaterialIcons name="storage" size={96} color={isDefaultTheme ? "rgba(0, 82, 204, 0.05)" : "rgba(255, 255, 255, 0.04)"} style={styles.bgIcon} />
             </View>
-            <Text style={styles.cardTitle}>Question Bank</Text>
-            <Text style={styles.cardDesc}>
+            <Text style={[styles.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Question Bank</Text>
+            <Text style={[styles.cardDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>
               Create, organize, and review test items. Supports multiple choice, essay, and interactive formats.
             </Text>
             <View style={styles.actionRow}>
-              <Text style={styles.actionText}>Manage Repository</Text>
-              <MaterialIcons name="arrow-forward" size={16} color={theme.colors.primary} />
+              <Text style={[styles.actionText, !isDefaultTheme && { color: appTheme.primary }]}>Manage Repository</Text>
+              <MaterialIcons name="arrow-forward" size={16} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
             </View>
           </TouchableOpacity>
 
           {/* Exam */}
           <TouchableOpacity 
-            style={[styles.bigCard, theme.shadows.level1]}
+            style={[styles.bigCard, theme.shadows.level1, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('CBTSExam')}
           >
             <View style={styles.bigCardHeader}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={24} color={theme.colors.primary} />
+              <View style={[styles.iconContainer, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                <MaterialIcons name="description" size={24} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
               </View>
-              <MaterialIcons name="description" size={96} color="rgba(0, 82, 204, 0.05)" style={styles.bgIcon} />
+              <MaterialIcons name="description" size={96} color={isDefaultTheme ? "rgba(0, 82, 204, 0.05)" : "rgba(255, 255, 255, 0.04)"} style={styles.bgIcon} />
             </View>
-            <Text style={styles.cardTitle}>Exam</Text>
-            <Text style={styles.cardDesc}>
+            <Text style={[styles.cardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Exam</Text>
+            <Text style={[styles.cardDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>
               Assemble exams from the bank, set grading rules, schedule sessions, and monitor live tests.
             </Text>
             <View style={styles.actionRow}>
-              <Text style={styles.actionText}>Launch & Monitor</Text>
-              <MaterialIcons name="arrow-forward" size={16} color={theme.colors.primary} />
+              <Text style={[styles.actionText, !isDefaultTheme && { color: appTheme.primary }]}>Launch & Monitor</Text>
+              <MaterialIcons name="arrow-forward" size={16} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Recent Assessments */}
         <View style={styles.recentContainer}>
-          <Text style={styles.recentTitle}>Recent Assessments</Text>
-          <View style={styles.recentList}>
+          <Text style={[styles.recentTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Recent Assessments</Text>
+          <View style={[styles.recentList, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             {recentAssessments.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.recentItem} activeOpacity={0.7}>
-                <View style={styles.recentIconWrapper}>
-                  <MaterialIcons name={item.icon as any} size={20} color={theme.colors.secondary} />
+              <TouchableOpacity key={item.id} style={[styles.recentItem, !isDefaultTheme && { borderBottomColor: appTheme.border }]} activeOpacity={0.7}>
+                <View style={[styles.recentIconWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                  <MaterialIcons name={item.icon as any} size={20} color={isDefaultTheme ? theme.colors.secondary : appTheme.accent} />
                 </View>
                 <View style={styles.recentTextWrapper}>
-                  <Text style={styles.recentItemTitle}>{item.title}</Text>
-                  <Text style={styles.recentItemDesc}>{item.details}</Text>
+                  <Text style={[styles.recentItemTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.title}</Text>
+                  <Text style={[styles.recentItemDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.details}</Text>
                 </View>
-                <MaterialIcons name="chevron-right" size={24} color={theme.colors.outlineVariant} />
+                <MaterialIcons name="chevron-right" size={24} color={isDefaultTheme ? theme.colors.outlineVariant : appTheme.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -129,6 +132,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   appBar: {
     height: 64,

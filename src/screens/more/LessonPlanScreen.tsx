@@ -1,1562 +1,2817 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+// @ts-ignore
+import ReactDOM from 'react-dom';
 import { 
   StyleSheet, 
   Text, 
   View, 
   ScrollView, 
   TouchableOpacity, 
-  TextInput,
-  Modal,
-  ActivityIndicator,
-  useWindowDimensions,
-  Animated,
-  Platform,
-  Pressable
+  TextInput, 
+  Modal, 
+  Platform, 
+  ActivityIndicator, 
+  Alert 
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Rect, Circle, Path, Line, G } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
+import { useAppTheme } from '../../context/ThemeContext';
 
-// Custom interfaces for Lesson Plan data structures
-interface MaterialItem {
-  name: string;
-  quantity: string;
-  desc: string;
-}
+// Universal Full-Viewport Modal for Web & Mobile
+const ViewportModal: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ visible, onClose, children }) => {
+  if (!visible) return null;
 
-interface AssessmentRow {
-  criteria: string;
-  excellent: string;
-  good: string;
-  needsImp: string;
-}
-
-interface LessonPlan {
-  id: string;
-  topic: string;
-  language: string;
-  level: string;
-  color?: string; // Dynamic color theme configuration for premium aesthetic
-  fileName?: string;
-  slos: string[];
-  objectives: string[];
-  materials: MaterialItem[];
-  introduction: string;
-  mainActivities: {
-    title: string;
-    duration: string;
-    details: string;
-  }[];
-  worksheet: string[];
-  assessment: AssessmentRow[];
-}
-
-export const LessonPlanScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
-  const isSmallScreen = width < 360;
-
-  // Form states
-  const [requestInput, setRequestInput] = useState('');
-  const [language, setLanguage] = useState('English');
-  const [level, setLevel] = useState('Level 4');
-  const [fileName, setFileName] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [progressStatus, setProgressStatus] = useState('Initializing AI Model...');
-
-  // Picker modals toggles
-  const [langModalVisible, setLangModalVisible] = useState(false);
-  const [levelModalVisible, setLevelModalVisible] = useState(false);
-
-  // Active viewing state
-  const [activePlan, setActivePlan] = useState<LessonPlan | null>(null);
-
-  // Pre-seeded high-fidelity mock data lesson plans
-  const [plans, setPlans] = useState<LessonPlan[]>([
-    {
-      id: 'demo_flowers',
-      topic: 'Flowers Anatomy and Pollination',
-      language: 'English',
-      level: 'Level 4',
-      color: '#0047CC', // Restored Original Brand Blue
-      fileName: 'science_curriculum_reference.pdf',
-      slos: [
-        'Identify and label the primary parts of a flower (Petals, Sepal, Pistil, Stamen).',
-        'Understand the role of flowers in plant reproduction.',
-        'Explain how insects and wind assist in the pollination process.'
-      ],
-      objectives: [
-        'Students will be able to dissect a flower and identify its internal reproductive organs with 90% accuracy.',
-        'Students will draw and label a complete diagram of a flower.',
-        'Students will explain the difference between self-pollination and cross-pollination.'
-      ],
-      materials: [
-        { name: 'Fresh Hibiscus or Lilies', quantity: '1 per pair', desc: 'Large flowers with clear reproductive parts for easy dissection.' },
-        { name: 'Magnifying Glasses', quantity: '1 per student', desc: 'For viewing pollen grains and internal ovules.' },
-        { name: 'Dissection Worksheets & Plastic Scalpels', quantity: '1 set per pair', desc: 'Guided diagram sheet to place parts and label them.' },
-        { name: 'Colored Glitter & Cotton Swabs', quantity: 'Assorted', desc: 'To simulate pollen transfer in pollination roleplay.' }
-      ],
-      introduction: 'Begin the lesson by showing a vibrant bouquet of flowers. Ask the students: "Why are flower petals so brightly colored? Is it just to look pretty?" Guide the discussion towards attracting pollinators like bees, butterflies, and hummingbirds. Explain that flowers are the reproductive centers of plants.',
-      mainActivities: [
-        {
-          title: 'Activity 1: Flower Dissection Lab',
-          duration: '15 Mins',
-          details: 'In pairs, students use plastic tools to carefully separate the sepal, petals, stamen (filament & anther), and pistil (stigma, style, ovary) of their flower. They tape each part onto their worksheet diagram and write its primary function.'
-        },
-        {
-          title: 'Activity 2: Pollination Simulation Roleplay',
-          duration: '10 Mins',
-          details: 'Using glitter on paper flowers (representing pollen) and cotton swabs (representing bee legs), students transfer "pollen" from flower A to flower B. They observe how easily pollen clings to surfaces and discuss the mechanic of fertilization.'
-        }
-      ],
-      worksheet: [
-        'Anatomy Lab: Fill out labeled boxes for the dissected parts of the flower.',
-        'Sequence Ordering: Arrange the steps of pollination from insect arrival to seed formation.',
-        'Critical Thinking: Write a short paragraph explaining what would happen to apple trees if all bees vanished.'
-      ],
-      assessment: [
-        {
-          criteria: 'Anatomy Labeling',
-          excellent: 'Accurately identifies and correctly positions all parts on the dissection board.',
-          good: 'Identifies most parts correctly with minor mislabeling.',
-          needsImp: 'Fails to locate key reproductive parts or leaves them blank.'
-        },
-        {
-          criteria: 'Pollination Mechanic',
-          excellent: 'Clearly explains the step-by-step process of pollination and insect involvement.',
-          good: 'Describes pollination but misses the role of fertilization or wind vectors.',
-          needsImp: 'Shows poor understanding of how pollen moves between flowers.'
-        }
-      ]
-    },
-    {
-      id: 'demo_matter',
-      topic: 'States of Matter and Phase Changes',
-      language: 'English',
-      level: 'Level 4',
-      color: '#0047CC', // Restored Original Brand Blue
-      fileName: 'WhatsApp Image 2026-08-10 at 12.44.42 PM.jpeg',
-      slos: [
-        'Differentiate between Solids, Liquids, and Gases based on particle structure.',
-        'Describe properties of matter (shape, volume, compressibility).',
-        'Observe and explain phase transitions (melting, freezing, condensation, evaporation).'
-      ],
-      objectives: [
-        'Students will draw particle arrangements of solids, liquids, and gases.',
-        'Students will measure and record temperature during water phase transitions.',
-        'Students will define melting point and boiling point.'
-      ],
-      materials: [
-        { name: 'Ice Cubes & Hot Plate', quantity: '1 set per class', desc: 'To visually demonstrate transitions from solid to liquid to gas.' },
-        { name: 'Clear Plastic Beakers', quantity: '3 per group', desc: 'Representing containers for solid, liquid, and gas samples.' },
-        { name: 'Balloons & Squeeze Bottles', quantity: 'Assorted', desc: 'To show gas shape/volume compressibility experiments.' }
-      ],
-      introduction: 'Hold up an ice cube. Ask: "What state of matter is this?" Drop it into a cup. Heat it until it melts, and eventually turns to steam. Ask: "Did the water vanish, or did it change form?" Introduce the concept that temperature changes molecular speeds, driving phase shifts.',
-      mainActivities: [
-        {
-          title: 'Activity 1: Molecule Movement Simulation',
-          duration: '15 Mins',
-          details: 'Take students to an open area. Ask them to link arms tightly and vibrate in place (solid). Then tell them to hold hands loosely and slide past each other (liquid). Finally, tell them to release hands and run freely in all directions (gas).'
-        },
-        {
-          title: 'Activity 2: Phase Transition Lab',
-          duration: '10 Mins',
-          details: 'Groups observe ice melting in beakers. They measure water temperature every 2 minutes and chart the phase transition plateau on a simple line graph, noting when it stays at 0°C during the melting process.'
-        }
-      ],
-      worksheet: [
-        'Graphing Activity: Label the phase change diagram (solid -> liquid -> gas) with correct temperature lines.',
-        'Properties Matrix: Fill in shapes, volumes, and compressibilities of solids, liquids, and gases.',
-        'Everyday Science: Identify condensation in real life (e.g. morning dew or soda cup sweat).'
-      ],
-      assessment: [
-        {
-          criteria: 'Particle Drawings',
-          excellent: 'Correctly draws tight grid patterns for solid, floating circles for liquid, and scattered ones for gas.',
-          good: 'Draws particle arrangements with minor structural errors.',
-          needsImp: 'Shows no distinction in molecular density between states.'
-        },
-        {
-          criteria: 'Phase Charting',
-          excellent: 'Accurately logs and explains temperature plateaus during transitions.',
-          good: 'Logs temperatures but struggles to explain why temperature remains flat during state transition.',
-          needsImp: 'Incomplete data log sheets or incorrect graphing trends.'
-        }
-      ]
-    },
-    {
-      id: 'demo_solar',
-      topic: 'Solar System Orbits and Scale Model',
-      language: 'English',
-      level: 'Level 5',
-      color: '#0047CC', // Restored Original Brand Blue
-      fileName: 'solar_system_guide.pdf',
-      slos: [
-        'Name the eight planets in order of distance from the Sun.',
-        'Explain planetary orbits and the role of gravity in keeping planets aligned.',
-        'Appreciate the vast relative scale of planets and distances between them.'
-      ],
-      objectives: [
-        'Students will sequence planets using a mnemonic device.',
-        'Students will build a physical scale model of planetary sizes.',
-        'Students will calculate relative years on different planets.'
-      ],
-      materials: [
-        { name: 'Fruity Scale Models (Grapefruit, Cherry, Peppercorn)', quantity: '1 set', desc: 'Representing Sun, Jupiter, Earth, and Mercury to show size relationships.' },
-        { name: '50-Meter Measuring Tape', quantity: '2 rolls', desc: 'To lay out relative distance models in the school corridor.' },
-        { name: 'Planet Fact Profile Cards', quantity: '8 cards', desc: 'Contains gravity strength, temperatures, and orbital speeds for reference.' }
-      ],
-      introduction: 'Darken the classroom. Shine a bright flashlight (the Sun) on a globe (the Earth). Spin the globe and orbit it around the light. Ask: "Why does it get colder or warmer, and why does a year take 365 days?" Explain gravitational pull.',
-      mainActivities: [
-        {
-          title: 'Activity 1: Planet Corridor Scale Walk',
-          duration: '15 Mins',
-          details: 'Students walk down the main school hallway, placing representing markers at relative steps (e.g., Mercury at 1 step, Earth at 2.5 steps, Jupiter at 13 steps). Demonstrates how empty space is in the outer solar system.'
-        },
-        {
-          title: 'Activity 2: Gravity Jump Lab',
-          duration: '10 Mins',
-          details: 'Students calculate how high they can jump on Mars, Jupiter, or the Moon compared to Earth by multiplying their average jump height by planetary gravity indices. They record findings on a chart.'
-        }
-      ],
-      worksheet: [
-        'Planetary Sequencing: Write down the order of planets from closest to furthest from the Sun.',
-        'Mnemonic Challenge: Invent a new creative sentence to remember the planets (e.g., My Very Educated Mother...).',
-        'Gravity Assessment: Summarize why gas giants have higher gravitational strengths.'
-      ],
-      assessment: [
-        {
-          criteria: 'Planetary Ordering',
-          excellent: 'Correctly sequences all planets and places Asteroid belt correctly.',
-          good: 'Sequences planets but swaps positions of Venus/Mercury or Uranus/Neptune.',
-          needsImp: 'Confuses outer and inner planets completely.'
-        },
-        {
-          criteria: 'Scale Concept Recall',
-          excellent: 'Accurately describes size scale gaps (e.g. Jupiter vs. Earth) and distance spacing differences.',
-          good: 'Understands size differences but doesn\'t grasp how far outer planets are spaced.',
-          needsImp: 'Draws all planets as identical size spheres with equal spacing.'
-        }
-      ]
-    }
-  ]);
-
-  // Handle mock file attachment toggle
-  const handleToggleMockFile = () => {
-    if (fileName) {
-      setFileName('');
-    } else {
-      setFileName('WhatsApp Image 2026-08-10 at 12.44.42 PM.jpeg');
-    }
-  };
-
-  // Run mock generation progress simulation
-  const handleGenerateLessonPlan = () => {
-    if (requestInput.trim() === '') {
-      alert('Please enter a lesson plan topic or request!');
-      return;
-    }
-
-    setGenerating(true);
-    setProgress(0);
-    setProgressStatus('Initializing AI Core Model...');
-
-    // Progress bar simulation interval
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + 5;
-        if (next >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            // Add generated plan to state list
-            const newPlan: LessonPlan = {
-              id: 'plan_' + Date.now(),
-              topic: requestInput,
-              language: language,
-              level: level,
-              fileName: fileName || undefined,
-              slos: [
-                `Analyze primary fundamentals and core mechanics of "${requestInput}".`,
-                `Identify critical parameters and key elements within the topic.`,
-                `Apply theoretical frameworks of "${requestInput}" to practical grade-appropriate contexts.`
-              ],
-              objectives: [
-                `Students will formulate an explanatory diagram modeling ${requestInput}.`,
-                `Students will discuss three practical applications in small groups.`,
-                `Students will complete a diagnostic quiz with at least 80% marks.`
-              ],
-              materials: [
-                { name: 'Teacher Visual Reference Slide deck', quantity: '1 set', desc: 'Visual aids detailing key concept points.' },
-                { name: 'Student Workspace Handout Sheets', quantity: '1 per student', desc: 'Activity guides, definitions, and questions.' },
-                { name: 'Interactive Group Activity Kit', quantity: 'Assorted', desc: 'Materials to support hands-on tasks.' }
-              ],
-              introduction: `Begin the class by raising a thought-provoking challenge or daily scenario related to "${requestInput}". Encourage student brainstorming and connect their responses directly to the learning goals of the lesson.`,
-              mainActivities: [
-                {
-                  title: 'Activity 1: Structured Exploration',
-                  duration: '15 Mins',
-                  details: `Groups investigate basic configurations of ${requestInput}. Students log variables on worksheets and discuss observations with peers.`
-                },
-                {
-                  title: 'Activity 2: Concept Synthesis',
-                  duration: '10 Mins',
-                  details: 'Class combines observations to construct a unified summary grid on the main white board. Teacher clarifies misconceptions.'
-                }
-              ],
-              worksheet: [
-                `Data Log: Match key vocabulary definitions related to ${requestInput}.`,
-                `Graphic Organizer: Draw and fill in the components of the core concept.`,
-                `Exit Ticket: Answer three formative review questions.`
-              ],
-              assessment: [
-                {
-                  criteria: 'Conceptual Clarity',
-                  excellent: 'Demonstrates master-level grasp of all core principles.',
-                  good: 'Explains primary concepts with minor definitions gaps.',
-                  needsImp: 'Shows significant confusion or repeats basic descriptions.'
-                },
-                {
-                  criteria: 'Worksheet Completion',
-                  excellent: 'Completes all sections with highly detailed answers.',
-                  good: 'Completes most sections with basic matching accuracy.',
-                  needsImp: 'Leaves major sections blank or displays multiple errors.'
-                }
-              ]
-            };
-
-            setPlans((prevPlans) => [newPlan, ...prevPlans]);
-            setGenerating(false);
-            setRequestInput('');
-            setFileName('');
-            
-            // Auto open the newly generated plan in view mode!
-            setActivePlan(newPlan);
-          }, 400);
-          return 100;
-        }
-
-        // Adjust status label based on percentage
-        if (next < 25) {
-          setProgressStatus('Drafting Learning Outcomes (SLOs)...');
-        } else if (next < 50) {
-          setProgressStatus('Formulating Lesson Objectives...');
-        } else if (next < 75) {
-          setProgressStatus('Assembling Materials and Resource Tables...');
-        } else {
-          setProgressStatus('Constructing Grading Assessment Rubrics...');
-        }
-        return next;
-      });
-    }, 120);
-  };
-  if (activePlan) {
-    return (
-      <View style={styles.viewerBackdrop}>
-        <SafeAreaView style={styles.viewerContainer} edges={['top', 'bottom']}>
-          {/* Viewer Top Action Bar */}
-          <View style={styles.viewerTopBar}>
-            <TouchableOpacity 
-              style={styles.viewerCloseBtn} 
-              onPress={() => setActivePlan(null)}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="arrow-back" size={20} color="#0A1F5C" />
-              <Text style={styles.viewerCloseText}>Back</Text>
-            </TouchableOpacity>
-
-            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-              <TouchableOpacity 
-                style={styles.downloadBtn} 
-                onPress={() => alert('Lesson Plan PDF downloaded to your device!')}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons name="file-download" size={15} color="#fff" style={{ marginRight: 3 }} />
-                <Text style={styles.downloadBtnText}>Download</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.printBtn} 
-                onPress={() => alert('Print command initialized! Loading printer preview...')}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons name="print" size={15} color="#003d9b" style={{ marginRight: 3 }} />
-                <Text style={styles.printBtnText}>Print</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.viewerScrollContent} showsVerticalScrollIndicator={false}>
-            {/* Clean Sheet Paper Layout */}
-            <View style={styles.paperSheet}>
-              {/* Sheet Title */}
-              <Text style={styles.sheetHeaderTitle}>Lesson Plan: {activePlan.topic}</Text>
-              <View style={styles.sheetMetaRow}>
-                <Text style={styles.sheetMetaText}>Target: {activePlan.level} • Language: {activePlan.language}</Text>
-                {activePlan.fileName && (
-                  <Text style={styles.sheetMetaFile}>Reference File: {activePlan.fileName}</Text>
-                )}
-              </View>
-              <View style={styles.sheetDivider} />
-
-              {/* 1. SLOs */}
-              <Text style={styles.sheetSectionTitle}>1. Student Learning Outcomes (SLOs)</Text>
-              {activePlan.slos.map((item, idx) => (
-                <View key={idx} style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>•</Text>
-                  <Text style={styles.bulletText}>{item}</Text>
-                </View>
-              ))}
-
-              {/* 2. Objectives */}
-              <Text style={styles.sheetSectionTitle}>2. Learning Objectives</Text>
-              {activePlan.objectives.map((item, idx) => (
-                <View key={idx} style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>*</Text>
-                  <Text style={styles.bulletText}>{item}</Text>
-                </View>
-              ))}
-
-              {/* 3. Materials Needed */}
-              <Text style={styles.sheetSectionTitle}>3. Materials Needed</Text>
-              
-              <View style={styles.tableHeaderRow}>
-                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Material</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Quantity</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Description</Text>
-              </View>
-              {activePlan.materials.map((m, idx) => (
-                <View key={idx} style={[styles.tableDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
-                  <Text style={[styles.tableDataCell, { flex: 1.5, fontWeight: '700' }]}>{m.name}</Text>
-                  <Text style={[styles.tableDataCell, { flex: 1 }]}>{m.quantity}</Text>
-                  <Text style={[styles.tableDataCell, { flex: 2, color: '#475569' }]}>{m.desc}</Text>
-                </View>
-              ))}
-
-              {/* 4. Introduction */}
-              <Text style={styles.sheetSectionTitle}>4. Introduction (10 minutes)</Text>
-              <Text style={styles.sheetParagraphText}>{activePlan.introduction}</Text>
-
-              {/* 5. Main Activities */}
-              <Text style={styles.sheetSectionTitle}>5. Main Activities (25 minutes)</Text>
-              {activePlan.mainActivities.map((act, idx) => (
-                <View key={idx} style={styles.activityBox}>
-                  <View style={styles.activityTitleRow}>
-                    <Text style={styles.activityTitleText}>{act.title}</Text>
-                    <Text style={styles.activityDurationText}>{act.duration}</Text>
-                  </View>
-                  <Text style={styles.sheetParagraphText}>{act.details}</Text>
-                </View>
-              ))}
-
-              {/* 6. Worksheet Activities */}
-              <Text style={styles.sheetSectionTitle}>6. Worksheet Activities</Text>
-              {activePlan.worksheet.map((item, idx) => (
-                <View key={idx} style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>-</Text>
-                  <Text style={styles.bulletText}>{item}</Text>
-                </View>
-              ))}
-
-              {/* 7. Assessment */}
-              <Text style={styles.sheetSectionTitle}>7. Assessment Rubric</Text>
-              
-              <View style={styles.rubricHeaderRow}>
-                <Text style={[styles.rubricHeaderCell, { flex: 1.2 }]}>Criteria</Text>
-                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Excellent (3)</Text>
-                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Good (2)</Text>
-                <Text style={[styles.rubricHeaderCell, { flex: 1.5 }]}>Needs Improvement (1)</Text>
-              </View>
-              {activePlan.assessment.map((r, idx) => (
-                <View key={idx} style={[styles.rubricDataRow, idx % 2 === 1 && { backgroundColor: '#F8FAFC' }]}>
-                  <Text style={[styles.rubricDataCell, { flex: 1.2, fontWeight: '700', color: '#0A1F5C' }]}>{r.criteria}</Text>
-                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#059669' }]}>{r.excellent}</Text>
-                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#D97706' }]}>{r.good}</Text>
-                  <Text style={[styles.rubricDataCell, { flex: 1.5, color: '#DC2626' }]}>{r.needsImp}</Text>
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && (ReactDOM as any)?.createPortal) {
+    return (ReactDOM as any).createPortal(
+      <View style={styles.webModalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
+      </View>,
+      document.body
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-
-      {/* ── Ambient mesh background ── */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-          {/* top-right deep navy */}
-          <Circle cx="105%" cy="-2%"  r="340" fill="#1B3270" opacity={0.07} />
-          {/* mid-left indigo */}
-          <Circle cx="-8%"  cy="45%" r="300" fill="#3730A3" opacity={0.055} />
-          {/* bottom-center royal blue */}
-          <Circle cx="55%"  cy="100%" r="380" fill="#1E40AF" opacity={0.065} />
-          {/* small accent top-left */}
-          <Circle cx="20%"  cy="18%" r="120" fill="#6366F1" opacity={0.04} />
-        </Svg>
+    <Modal visible={visible} transparent={true} animationType="fade" statusBarTranslucent={true} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        {children}
       </View>
-
-      {/* ── HEADER ── */}
-      <LinearGradient colors={['#0D1B4B', '#0047CC']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.header}>
-        {/* decorative orbs */}
-        <View style={{position:'absolute', right:-40, top:-60, width:180, height:180, borderRadius:90, backgroundColor:'rgba(99,102,241,0.18)'}} />
-        <View style={{position:'absolute', left:-20, bottom:-40, width:120, height:120, borderRadius:60, backgroundColor:'rgba(14,165,233,0.14)'}} />
-
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-            <View style={styles.backBtnInner}>
-              <MaterialIcons name="arrow-back" size={20} color="#fff" />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.titleContainer}>
-            {/* Icon badge */}
-            <LinearGradient colors={['rgba(255,255,255,0.25)','rgba(255,255,255,0.08)']} style={styles.headerIconBox}>
-              <Svg width="20" height="20" viewBox="0 0 32 32">
-                <Rect x="7" y="4" width="18" height="24" rx="3.5" fill="#fff" opacity={0.92}/>
-                <Path d="M12 4 C12 2.2, 20 2.2, 20 4" fill="#0047CC"/>
-                <Line x1="11" y1="11" x2="21" y2="11" stroke="#0047CC" strokeWidth={2.2} strokeLinecap="round"/>
-                <Line x1="11" y1="16" x2="18" y2="16" stroke="#0047CC" strokeWidth={2.2} strokeLinecap="round"/>
-                <Line x1="11" y1="21" x2="21" y2="21" stroke="#0047CC" strokeWidth={2.2} strokeLinecap="round"/>
-              </Svg>
-            </LinearGradient>
-
-            <View style={{flex:1}}>
-              <Text style={styles.headerTitle}>Lesson Plan Generator</Text>
-              <Text style={styles.headerSubtitle}>AI-powered · Grade-aligned · Curriculum ready</Text>
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
-      {/* cyan accent bar */}
-      <LinearGradient colors={['#00FFCC','#0047CC']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.headerBarGlow}/>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-
-        {/* ── FORM CARD ── */}
-        <View style={styles.card}>
-
-          {/* YOUR REQUEST */}
-          <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot}/>
-            <Text style={styles.sectionLabel}>Your Request</Text>
-          </View>
-          <TextInput
-            style={styles.requestTextArea}
-            placeholder="Describe your lesson topic…  e.g. Solar System, Photosynthesis"
-            placeholderTextColor="#94A3B8"
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            value={requestInput}
-            onChangeText={setRequestInput}
-            editable={!generating}
-          />
-
-          {/* LANGUAGE & LEVEL */}
-          <View style={styles.gridRow}>
-            <View style={styles.gridCol}>
-              <View style={styles.fieldHeader}>
-                <View style={styles.fieldDot}/>
-                <Text style={styles.sectionLabel}>Language</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.pickerButton}
-                onPress={() => !generating && setLangModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.pickerLeft}>
-                  <LinearGradient colors={['#EEF2FF','#E0E7FF']} style={styles.pickerIconOrb}>
-                    <MaterialIcons name="translate" size={15} color="#0047CC"/>
-                  </LinearGradient>
-                  <Text style={styles.pickerButtonText}>{language}</Text>
-                </View>
-                <MaterialIcons name="expand-more" size={20} color="#94A3B8"/>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.gridCol}>
-              <View style={styles.fieldHeader}>
-                <View style={styles.fieldDot}/>
-                <Text style={styles.sectionLabel}>Level</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.pickerButton}
-                onPress={() => !generating && setLevelModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.pickerLeft}>
-                  <LinearGradient colors={['#EEF2FF','#E0E7FF']} style={styles.pickerIconOrb}>
-                    <MaterialIcons name="school" size={15} color="#0047CC"/>
-                  </LinearGradient>
-                  <Text style={styles.pickerButtonText}>{level}</Text>
-                </View>
-                <MaterialIcons name="expand-more" size={20} color="#94A3B8"/>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* ATTACH FILE */}
-          <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot}/>
-            <Text style={styles.sectionLabel}>Attach File  <Text style={{color:'#94A3B8',fontWeight:'600',textTransform:'none'}}>optional</Text></Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.fileAttachmentBox, fileName ? styles.fileAttachmentBoxActive : null]}
-            onPress={handleToggleMockFile}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={fileName ? ['#DBEAFE','#EFF6FF'] : ['#F1F5F9','#F8FAFC']}
-              style={styles.fileIconOrb}
-            >
-              <MaterialIcons
-                name={fileName ? "insert-drive-file" : "cloud-upload"}
-                size={18}
-                color={fileName ? "#0047CC" : "#94A3B8"}
-              />
-            </LinearGradient>
-            <Text style={[styles.fileAttachmentText, fileName ? styles.fileAttachmentTextActive : null]} numberOfLines={1}>
-              {fileName ? fileName : "Tap to choose a file (Image / PDF)"}
-            </Text>
-            {fileName && (
-              <TouchableOpacity onPress={() => setFileName('')} hitSlop={{top:8,bottom:8,left:8,right:8}}>
-                <MaterialIcons name="close" size={17} color="#94A3B8" style={{marginLeft:6}}/>
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
-
-          {/* ── GENERATE BUTTON ── */}
-          {!generating ? (
-            <TouchableOpacity
-              style={styles.generateBtnContainer}
-              onPress={handleGenerateLessonPlan}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={['#152960', '#1E3A99', '#2B50CC']}
-                start={{x:0, y:0}}
-                end={{x:1, y:1}}
-                style={styles.generateBtn}
-              >
-                {/* top highlight */}
-                <View style={styles.generateBtnHighlight} />
-
-                {/* Icon zone */}
-                <View style={styles.generateBtnIconZone}>
-                  <MaterialIcons name="auto-fix-high" size={20} color="#fff" />
-                </View>
-
-                {/* Divider */}
-                <View style={styles.generateBtnDivider} />
-
-                {/* Label */}
-                <View style={styles.generateBtnLabelBlock}>
-                  <Text style={styles.generateBtnText} numberOfLines={1}>Generate Lesson Plan</Text>
-                  <Text style={styles.generateBtnSubText} numberOfLines={1}>AI · Multilingual · Grade-ready</Text>
-                </View>
-
-                {/* Premium arrow pill */}
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0.08)']}
-                  start={{x:0, y:0}}
-                  end={{x:0, y:1}}
-                  style={styles.generateBtnArrow}
-                >
-                  <MaterialIcons name="double-arrow" size={16} color="#fff" />
-                </LinearGradient>
-
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.generatingContainer}>
-              <ActivityIndicator color="#0047CC" size="small" style={{marginRight:10}}/>
-              <Text style={styles.generatingButtonText}>Generating your plan…</Text>
-            </View>
-          )}
-        </View>
-
-        {/* ── PROCESSING LOADER ── */}
-        {generating && (
-          <View style={styles.loaderCard}>
-            <View style={styles.loaderHeader}>
-              <ActivityIndicator color="#0047CC" size="small" style={{marginRight:10}}/>
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
-            </View>
-            <View style={styles.progressBarBg}>
-              <LinearGradient
-                colors={['#0047CC','#0EA5E9']}
-                start={{x:0,y:0}} end={{x:1,y:0}}
-                style={[styles.progressBarFill, {width:`${progress}%` as any}]}
-              />
-            </View>
-            <Text style={styles.loaderPercentage}>{progress}% Complete</Text>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* LANGUAGE SELECTOR PICKER MODAL */}
-      <Modal visible={langModalVisible} transparent={true} animationType="slide">
-        <PressableModalBackdrop onClose={() => setLangModalVisible(false)}>
-          <View style={styles.pickerModalContainer}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.pickerModalTitle}>Select Language</Text>
-            {['English', 'Urdu', 'Punjabi', 'Sindhi', 'Pashto'].map((l) => (
-              <TouchableOpacity
-                key={l}
-                style={[styles.pickerModalItem, language === l && styles.pickerModalItemActive]}
-                onPress={() => {
-                  setLanguage(l);
-                  setLangModalVisible(false);
-                }}
-              >
-                <Text style={[styles.pickerModalItemText, language === l && styles.pickerModalItemTextActive]}>{l}</Text>
-                {language === l && <MaterialIcons name="check" size={18} color="#003d9b" />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </PressableModalBackdrop>
-      </Modal>
-
-      {/* LEVEL SELECTOR PICKER MODAL */}
-      <Modal visible={levelModalVisible} transparent={true} animationType="slide">
-        <PressableModalBackdrop onClose={() => setLevelModalVisible(false)}>
-          <View style={styles.pickerModalContainer}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.pickerModalTitle}>Select Level</Text>
-            {['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8'].map((l) => (
-              <TouchableOpacity
-                key={l}
-                style={[styles.pickerModalItem, level === l && styles.pickerModalItemActive]}
-                onPress={() => {
-                  setLevel(l);
-                  setLevelModalVisible(false);
-                }}
-              >
-                <Text style={[styles.pickerModalItemText, level === l && styles.pickerModalItemTextActive]}>{l}</Text>
-                {level === l && <MaterialIcons name="check" size={18} color="#003d9b" />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </PressableModalBackdrop>
-      </Modal>
-
-    </SafeAreaView>
+    </Modal>
   );
 };
 
-// Pressable Backdrop helper to easily dismiss pickers
-const PressableModalBackdrop = ({ children, onClose }: { children: React.ReactNode, onClose: () => void }) => {
+// Data Interfaces
+export type SLOItem = {
+  id: string;
+  code: string;
+  title: string;
+  objective: string;
+  month: string;
+  startDate: string;
+  endDate: string;
+  week: string; // e.g. "W1", "W2", "W3", "W4", "W5"
+  bloomTaxonomy: 'Knowledge' | 'Understanding' | 'Application';
+  completed: boolean;
+};
+
+export type PlannerFile = {
+  id: string;
+  contentType: 'PDF' | 'Power Point' | 'Link' | string;
+  title: string;
+  uploadedAt: string;
+};
+
+export type Chapter = {
+  id: string;
+  chapterNumber: number;
+  title: string;
+  terms: string[];
+  slos: SLOItem[];
+  plannerFiles: PlannerFile[];
+};
+
+export type ClassItem = {
+  id: string;
+  name: string;
+  courses: string[];
+};
+
+export const LessonPlanScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
+  // Master Data Definitions
+  const classList: ClassItem[] = [
+    { id: 'c1', name: 'GRADE-II', courses: ['English', 'Urdu', 'Math', 'Science', 'Islamiat', 'GK', 'Art'] },
+    { 
+      id: 'c2', 
+      name: 'GRADE-V', 
+      courses: [
+        'English', 'Urdu', 'Science', 'Math', 'Islamiat', 'Nazra', 
+        'Social Studies', 'GK', 'Art', 'Information Communication Technology', 'Computer'
+      ] 
+    },
+    { id: 'c3', name: 'GRADE-IX', courses: ['English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Math', 'Pak Studies', 'Islamiat', 'Computer Science'] }
+  ];
+
+  const termsList = ['Mid Term', 'First Assessment'];
+  const monthOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const weekOptions = ['W1', 'W2', 'W3', 'W4', 'W5'];
+  const bloomOptions: ('Knowledge' | 'Understanding' | 'Application')[] = ['Knowledge', 'Understanding', 'Application'];
+  const contentTypeOptions = ['PDF', 'Power Point', 'Link'];
+
+  // Step state (1: Class & Subject, 2: Term & Chapters, 3: Lesson Plan & SLOs)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
+  // Sub-tab in Step 3
+  const [step3Tab, setStep3Tab] = useState<'slos' | 'planner'>('slos');
+
+  // Selections
+  const [selectedClass, setSelectedClass] = useState<string>('GRADE-V');
+  const [selectedCourse, setSelectedCourse] = useState<string>('Science');
+  const [selectedTerm, setSelectedTerm] = useState<string>('Mid Term');
+  const [selectedChapterId, setSelectedChapterId] = useState<string>('ch_1');
+
+  // Loaders
+  const [loadingClass, setLoadingClass] = useState<boolean>(false);
+  const [addingChapterLoading, setAddingChapterLoading] = useState<boolean>(false);
+  const [savingSloLoading, setSavingSloLoading] = useState<boolean>(false);
+  const [uploadingPlannerLoading, setUploadingPlannerLoading] = useState<boolean>(false);
+
+  // Confirmation Alert Dialog State (Image 2)
+  const [confirmSloModalVisible, setConfirmSloModalVisible] = useState(false);
+  const [pendingSloToToggle, setPendingSloToToggle] = useState<SLOItem | null>(null);
+
+  // Date Pickers State
+  const [datePickerTarget, setDatePickerTarget] = useState<'startDate' | 'endDate' | null>(null);
+
+  // Toast
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  // Pre-seeded Chapters Repository
+  const [chapters, setChapters] = useState<Chapter[]>([
+    {
+      id: 'ch_1',
+      chapterNumber: 1,
+      title: 'Living Things & Adaptations',
+      terms: ['Mid Term'],
+      slos: [
+        {
+          id: 'slo_1',
+          code: 'SLO-01',
+          title: 'Characteristics of Living Organisms',
+          objective: 'Identify cellular structure and basic respiration mechanisms in living cells',
+          month: 'July',
+          startDate: '2026-07-29',
+          endDate: '2026-07-29',
+          week: 'W1',
+          bloomTaxonomy: 'Knowledge',
+          completed: true
+        },
+        {
+          id: 'slo_2',
+          code: 'SLO-02',
+          title: 'Plant and Animal Adaptations',
+          objective: 'Differentiate plant and animal adaptation strategies in arid environments',
+          month: 'January',
+          startDate: '2026-09-05',
+          endDate: '2026-09-25',
+          week: 'W1',
+          bloomTaxonomy: 'Application',
+          completed: false
+        }
+      ],
+      plannerFiles: [
+        {
+          id: 'file_1',
+          contentType: 'PDF',
+          title: 'Chapter 1 Biology Master Plan.pdf',
+          uploadedAt: '2026-07-29'
+        }
+      ]
+    },
+    {
+      id: 'ch_2',
+      chapterNumber: 2,
+      title: 'Cellular Structures & Tissues',
+      terms: ['Mid Term'],
+      slos: [
+        {
+          id: 'slo_3',
+          code: 'SLO-03',
+          title: 'Cell Wall & Organelles Observation',
+          objective: 'Observe plant cell wall and organelles under compound microscope',
+          month: 'August',
+          startDate: '2026-08-05',
+          endDate: '2026-08-12',
+          week: 'W1',
+          bloomTaxonomy: 'Understanding',
+          completed: false
+        }
+      ],
+      plannerFiles: []
+    },
+    {
+      id: 'ch_3',
+      chapterNumber: 3,
+      title: 'Ecosystems & Energy Flow',
+      terms: ['Mid Term'],
+      slos: [],
+      plannerFiles: []
+    },
+    {
+      id: 'ch_4',
+      chapterNumber: 4,
+      title: 'Human Body Systems',
+      terms: ['Mid Term', 'First Assessment'],
+      slos: [],
+      plannerFiles: []
+    }
+  ]);
+
+  // Add Chapter Form State
+  const [showAddChapterForm, setShowAddChapterForm] = useState(false);
+  const [newChapterTitle, setNewChapterTitle] = useState('');
+  const [newChapterNumber, setNewChapterNumber] = useState('');
+  const [newChapterTerms, setNewChapterTerms] = useState<string[]>(['Mid Term']);
+
+  // Add SLO Modal States
+  const [addSloModalVisible, setAddSloModalVisible] = useState(false);
+  const [sloTitle, setSloTitle] = useState('');
+  const [sloMonth, setSloMonth] = useState('-- Select Month --');
+  const [sloObjective, setSloObjective] = useState('');
+  const [sloStartDate, setSloStartDate] = useState('2026-09-05');
+  const [sloEndDate, setSloEndDate] = useState('2026-09-25');
+  const [sloWeek, setSloWeek] = useState('W1');
+  const [sloBloom, setSloBloom] = useState<'Knowledge' | 'Understanding' | 'Application'>('Knowledge');
+
+  // Add Planner Form States
+  const [plannerContentType, setPlannerContentType] = useState<'PDF' | 'Power Point' | 'Link' | ''>('');
+  const [plannerTitle, setPlannerTitle] = useState('');
+
+  // Dropdown Picker Modal
+  const [pickerModalType, setPickerModalType] = useState<'month' | 'week' | 'bloom' | 'contentType' | null>(null);
+
+  // Filter Chapters by active term
+  const termChapters = chapters.filter(ch => ch.terms.includes(selectedTerm));
+  const activeChapter = chapters.find(ch => ch.id === selectedChapterId) || termChapters[0] || null;
+  const currentClassCourses = classList.find(c => c.name === selectedClass)?.courses || [];
+
+  // Helper for Theme & Distinct Color per Subject
+  const getCourseTheme = (course: string) => {
+    const c = course.toLowerCase();
+    if (c.includes('sci')) {
+      return { icon: 'biotech' as const, color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', activeBg: '#F0FDF4' };
+    }
+    if (c.includes('eng')) {
+      return { icon: 'menu-book' as const, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', activeBg: '#F0F7FF' };
+    }
+    if (c.includes('math')) {
+      return { icon: 'calculate' as const, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', activeBg: '#FFFDF5' };
+    }
+    if (c.includes('urdu')) {
+      return { icon: 'edit-note' as const, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', activeBg: '#FAF5FF' };
+    }
+    if (c.includes('islam')) {
+      return { icon: 'auto-stories' as const, color: '#0D9488', bg: '#F0FDFA', border: '#99F6E4', activeBg: '#F2FCFA' };
+    }
+    if (c.includes('nazra')) {
+      return { icon: 'import-contacts' as const, color: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', activeBg: '#F0F9FF' };
+    }
+    if (c.includes('soc') || c.includes('pak')) {
+      return { icon: 'public' as const, color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', activeBg: '#FFF5F5' };
+    }
+    if (c.includes('gk')) {
+      return { icon: 'lightbulb' as const, color: '#EA580C', bg: '#FFF7ED', border: '#FED7AA', activeBg: '#FFFAF5' };
+    }
+    if (c.includes('art')) {
+      return { icon: 'palette' as const, color: '#DB2777', bg: '#FDF2F8', border: '#FBCFE8', activeBg: '#FDF4F9' };
+    }
+    if (c.includes('comp') || c.includes('ict') || c.includes('tech')) {
+      return { icon: 'computer' as const, color: '#4F46E5', bg: '#EEF2FF', border: '#C7D2FE', activeBg: '#F5F7FF' };
+    }
+    if (c.includes('phys')) {
+      return { icon: 'bolt' as const, color: '#6366F1', bg: '#EEF2FF', border: '#C7D2FE', activeBg: '#F5F7FF' };
+    }
+    if (c.includes('chem')) {
+      return { icon: 'science' as const, color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', activeBg: '#FFF5F5' };
+    }
+    if (c.includes('bio')) {
+      return { icon: 'eco' as const, color: '#10B981', bg: '#ECFDF5', border: '#A7F3D0', activeBg: '#F0FDF4' };
+    }
+    return { icon: 'book' as const, color: '#0052cc', bg: '#EFF6FF', border: '#DBEAFE', activeBg: '#F8FAFC' };
+  };
+
+  // Helper for Class Theme
+  const getClassTheme = (cls: string) => {
+    if (cls.includes('II')) return { color: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD' };
+    if (cls.includes('V')) return { color: '#2563EB', bg: '#EFF6FF', border: '#DBEAFE' };
+    if (cls.includes('IX')) return { color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' };
+    return { color: '#0052cc', bg: '#EFF6FF', border: '#DBEAFE' };
+  };
+
+  // Select Class with Loader
+  const handleSelectClass = (clsName: string) => {
+    if (clsName === selectedClass) return;
+    setLoadingClass(true);
+    setSelectedClass(clsName);
+    const targetClass = classList.find(c => c.name === clsName);
+    if (targetClass && targetClass.courses.length > 0) {
+      setSelectedCourse(targetClass.courses[0]);
+    }
+    setTimeout(() => {
+      setLoadingClass(false);
+      showToast(`Selected ${clsName}`);
+    }, 300);
+  };
+
+  // Toggle Term Checkbox in Add Chapter Form
+  const toggleNewChapterTerm = (term: string) => {
+    if (newChapterTerms.includes(term)) {
+      if (newChapterTerms.length > 1) {
+        setNewChapterTerms(newChapterTerms.filter(t => t !== term));
+      }
+    } else {
+      setNewChapterTerms([...newChapterTerms, term]);
+    }
+  };
+
+  // Add Chapter Handler with Loader
+  const handleAddChapter = () => {
+    if (!newChapterTitle.trim()) {
+      alert('Please enter a Chapter Title.');
+      return;
+    }
+    if (newChapterTerms.length === 0) {
+      alert('Please select at least one term.');
+      return;
+    }
+
+    setAddingChapterLoading(true);
+    setTimeout(() => {
+      const nextNum = newChapterNumber.trim() 
+        ? parseInt(newChapterNumber.trim(), 10) || (chapters.length + 1)
+        : (chapters.length + 1);
+
+      const newId = `ch_${Date.now()}`;
+      const newCh: Chapter = {
+        id: newId,
+        chapterNumber: nextNum,
+        title: newChapterTitle.trim(),
+        terms: [...newChapterTerms],
+        slos: [],
+        plannerFiles: []
+      };
+
+      setChapters(prev => [...prev, newCh]);
+      setSelectedChapterId(newId);
+      setNewChapterTitle('');
+      setNewChapterNumber('');
+      setShowAddChapterForm(false);
+      setAddingChapterLoading(false);
+      showToast(`Chapter "${newCh.title}" added!`);
+    }, 400);
+  };
+
+  // Delete Chapter
+  const handleDeleteChapter = (chId: string, chTitle: string) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Delete Chapter "${chTitle}"?`)) {
+        setChapters(prev => prev.filter(c => c.id !== chId));
+        if (selectedChapterId === chId) {
+          setSelectedChapterId(chapters.find(c => c.id !== chId)?.id || '');
+        }
+        showToast('Chapter deleted.');
+      }
+    } else {
+      Alert.alert(
+        'Delete Chapter',
+        `Are you sure you want to delete "${chTitle}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Delete', 
+            style: 'destructive', 
+            onPress: () => {
+              setChapters(prev => prev.filter(c => c.id !== chId));
+              if (selectedChapterId === chId) {
+                setSelectedChapterId(chapters.find(c => c.id !== chId)?.id || '');
+              }
+              showToast('Chapter deleted.');
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  // Request SLO Toggle with Confirmation Alert
+  const handleRequestToggleSlo = (slo: SLOItem) => {
+    setPendingSloToToggle(slo);
+    setConfirmSloModalVisible(true);
+  };
+
+  // Confirm SLO Toggle Action
+  const handleConfirmToggleSlo = () => {
+    if (!pendingSloToToggle || !activeChapter) return;
+    const targetSloId = pendingSloToToggle.id;
+    setChapters(prev => prev.map(ch => {
+      if (ch.id === activeChapter.id) {
+        return {
+          ...ch,
+          slos: ch.slos.map(s => s.id === targetSloId ? { ...s, completed: !s.completed } : s)
+        };
+      }
+      return ch;
+    }));
+    setConfirmSloModalVisible(false);
+    setPendingSloToToggle(null);
+    showToast(pendingSloToToggle.completed ? 'SLO marked as pending' : 'SLO marked as covered!');
+  };
+
+  // Delete SLO
+  const handleDeleteSlo = (sloId: string, sloTitleStr: string) => {
+    if (!activeChapter) return;
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Delete SLO "${sloTitleStr}"?`)) {
+        setChapters(prev => prev.map(ch => ch.id === activeChapter.id ? { ...ch, slos: ch.slos.filter(s => s.id !== sloId) } : ch));
+        showToast('SLO deleted.');
+      }
+    } else {
+      Alert.alert('Delete SLO', `Delete SLO "${sloTitleStr}"?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: () => {
+            setChapters(prev => prev.map(ch => ch.id === activeChapter.id ? { ...ch, slos: ch.slos.filter(s => s.id !== sloId) } : ch));
+            showToast('SLO deleted.');
+          } 
+        }
+      ]);
+    }
+  };
+
+  // Save New SLO from Modal with Loader
+  const handleSaveSlo = () => {
+    if (!activeChapter) return;
+    if (!sloTitle.trim()) {
+      alert("Please fill in the SLO'S standard title.");
+      return;
+    }
+
+    setSavingSloLoading(true);
+    setTimeout(() => {
+      const newSlo: SLOItem = {
+        id: `slo_${Date.now()}`,
+        code: `SLO-${(activeChapter.slos.length + 1).toString().padStart(2, '0')}`,
+        title: sloTitle.trim(),
+        objective: sloObjective.trim() || 'Core learning objective for ' + sloTitle.trim(),
+        month: sloMonth === '-- Select Month --' ? 'January' : sloMonth,
+        startDate: sloStartDate,
+        endDate: sloEndDate,
+        week: sloWeek,
+        bloomTaxonomy: sloBloom,
+        completed: false
+      };
+
+      setChapters(prev => prev.map(ch => {
+        if (ch.id === activeChapter.id) {
+          return { ...ch, slos: [...ch.slos, newSlo] };
+        }
+        return ch;
+      }));
+
+      setSavingSloLoading(false);
+      setAddSloModalVisible(false);
+      setSloTitle('');
+      setSloObjective('');
+      showToast('SLO saved and objectives updated!');
+    }, 450);
+  };
+
+  // Add Planner Activity with Uploading Loader
+  const handleAddPlanner = () => {
+    if (!activeChapter) return;
+    if (!plannerContentType) {
+      alert('Please select a Content Type.');
+      return;
+    }
+    if (!plannerTitle.trim()) {
+      alert('Please enter a Planner Title.');
+      return;
+    }
+
+    setUploadingPlannerLoading(true);
+    setTimeout(() => {
+      const newFile: PlannerFile = {
+        id: `file_${Date.now()}`,
+        contentType: plannerContentType,
+        title: plannerTitle.trim(),
+        uploadedAt: new Date().toISOString().split('T')[0]
+      };
+
+      setChapters(prev => prev.map(ch => {
+        if (ch.id === activeChapter.id) {
+          return { ...ch, plannerFiles: [...ch.plannerFiles, newFile] };
+        }
+        return ch;
+      }));
+
+      setPlannerTitle('');
+      setPlannerContentType('');
+      setUploadingPlannerLoading(false);
+      showToast('Planner document uploaded!');
+    }, 500);
+  };
+
+  // Delete Planner File
+  const handleDeletePlannerFile = (fileId: string) => {
+    if (!activeChapter) return;
+    setChapters(prev => prev.map(ch => ch.id === activeChapter.id ? { ...ch, plannerFiles: ch.plannerFiles.filter(f => f.id !== fileId) } : ch));
+    showToast('Planner file removed.');
+  };
+
+  // Stats
+  const coveredSloCount = activeChapter ? activeChapter.slos.filter(s => s.completed).length : 0;
+  const totalSloCount = activeChapter ? activeChapter.slos.length : 0;
+  const progressPercent = totalSloCount > 0 ? Math.round((coveredSloCount / totalSloCount) * 100) : 0;
+
   return (
-    <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose}>
-      <Pressable style={{ width: '100%' }}>
-        {children}
-      </Pressable>
-    </TouchableOpacity>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
+        
+        {/* ════════════════════════════════════════════════
+            APP BAR HEADER (Sharp Compact Style)
+           ════════════════════════════════════════════════ */}
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity 
+              style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+              onPress={() => {
+                if (currentStep > 1) setCurrentStep((currentStep - 1) as any);
+                else navigation.goBack();
+              }} 
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={17} color={isDefaultTheme ? '#0052cc' : appTheme.primary} />
+            </TouchableOpacity>
+            <View style={styles.headerTitleGroup}>
+              <View style={[styles.spCircleBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
+                <Text style={styles.spCircleText}>SP</Text>
+              </View>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>Syllabus & Lesson Planner</Text>
+              </View>
+            </View>
+          </View>
+          
+          {/* Quick Step Indicator Badge in App Bar */}
+          <View style={[styles.appBarStepPill, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+            <Text style={[styles.appBarStepPillText, !isDefaultTheme && { color: appTheme.primary }]}>Step {currentStep}/3</Text>
+          </View>
+        </View>
+
+        {/* Global Toast Alert */}
+        {toastMessage && (
+          <View style={styles.toastBanner}>
+            <MaterialIcons name="check-circle" size={14} color="#FFFFFF" />
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
+        )}
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* ════════════════════════════════════════════════
+              SLIM & ULTRA-SHARP STEPPER (No text truncation!)
+             ════════════════════════════════════════════════ */}
+          <LinearGradient
+            colors={isDefaultTheme ? ['#0A1F5C', '#003D9B', '#0052CC'] : appTheme.bannerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroBanner}
+          >
+            {/* 3 Step Pills (Clean, Sharp & Compact) */}
+            <View style={styles.stepperContainer}>
+              {[
+                { step: 1, label: 'Class', icon: 'school' },
+                { step: 2, label: 'Chapters', icon: 'menu-book' },
+                { step: 3, label: 'SLOs & Plan', icon: 'fact-check' },
+              ].map((s) => {
+                const isActive = currentStep === s.step;
+                const isCompleted = currentStep > s.step;
+                return (
+                  <TouchableOpacity 
+                    key={s.step}
+                    style={[styles.stepSegment, isActive && styles.stepSegmentActive]}
+                    onPress={() => setCurrentStep(s.step as any)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[
+                      styles.stepSegmentDot, 
+                      isActive && styles.stepSegmentDotActive,
+                      isCompleted && styles.stepSegmentDotDone
+                    ]}>
+                      {isCompleted ? (
+                        <MaterialIcons name="check" size={10} color="#FFFFFF" />
+                      ) : (
+                        <Text style={[styles.stepSegmentDotText, isActive && styles.stepSegmentDotTextActive]}>
+                          {s.step}
+                        </Text>
+                      )}
+                    </View>
+                    <Text 
+                      style={[styles.stepSegmentText, isActive && styles.stepSegmentTextActive]}
+                      numberOfLines={1}
+                    >
+                      {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Breadcrumb Context Pill (Slim & Crisp) */}
+            <View style={styles.heroBreadcrumbRow}>
+              <View style={styles.heroSummaryPill}>
+                <MaterialIcons name="navigation" size={11} color="#93C5FD" style={{ marginRight: 4 }} />
+                <Text style={styles.heroSummaryText} numberOfLines={1}>
+                  {selectedClass} &bull; {selectedCourse} {currentStep >= 2 ? `&bull; ${selectedTerm}` : ''} {currentStep === 3 && activeChapter ? `&bull; Ch. ${activeChapter.chapterNumber}` : ''}
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* ════════════════════════════════════════════════
+              STEP 1: SELECT CLASS & SUBJECT
+             ════════════════════════════════════════════════ */}
+          {currentStep === 1 && (
+            <View style={styles.stepContainer}>
+              
+              {/* Section Header (Compact) */}
+              <View style={styles.stepHeaderCard}>
+                <View style={styles.stepTitleRow}>
+                  <View style={[styles.stepIconBox, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+                    <MaterialIcons name="school" size={16} color="#2563EB" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepTitle}>Select Grade & Subject</Text>
+                    <Text style={styles.stepDesc}>Pick a grade level and subject to manage lesson plans.</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 1. Classes Selection Chips */}
+              <View style={styles.cardContainer}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardSectionTitle}>1. Grade / Class Level</Text>
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>{classList.length} Classes</Text>
+                  </View>
+                </View>
+
+                <View style={styles.classListRow}>
+                  {classList.map(c => {
+                    const isSelected = selectedClass === c.name;
+                    const cTheme = getClassTheme(c.name);
+                    return (
+                      <TouchableOpacity
+                        key={c.id}
+                        style={[
+                          styles.classChip, 
+                          isSelected ? styles.classChipActive : { backgroundColor: cTheme.bg, borderColor: cTheme.border }
+                        ]}
+                        onPress={() => handleSelectClass(c.name)}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons 
+                          name="school" 
+                          size={14} 
+                          color={isSelected ? "#FFFFFF" : cTheme.color} 
+                          style={{ marginRight: 5 }}
+                        />
+                        <Text style={[styles.classChipText, isSelected ? styles.classChipTextActive : { color: '#0D1B3E' }]}>
+                          {c.name}
+                        </Text>
+                        {isSelected && (
+                          <View style={styles.activeDot} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* 2. Courses (Subjects) Grid with COLORFUL ICONS */}
+              <View style={styles.cardContainer}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardSectionTitle}>2. Choose Subject for {selectedClass}</Text>
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>{currentClassCourses.length} Subjects</Text>
+                  </View>
+                </View>
+
+                {loadingClass ? (
+                  <View style={styles.loaderBox}>
+                    <ActivityIndicator size="small" color="#0052cc" />
+                    <Text style={styles.loaderText}>Loading subjects for {selectedClass}...</Text>
+                  </View>
+                ) : (
+                  <View style={styles.coursesGrid}>
+                    {currentClassCourses.map(course => {
+                      const isSelected = selectedCourse === course;
+                      const courseTheme = getCourseTheme(course);
+                      return (
+                        <TouchableOpacity
+                          key={course}
+                          style={[
+                            styles.courseGridCard, 
+                            isSelected ? [styles.courseGridCardActive, { backgroundColor: courseTheme.activeBg, borderColor: courseTheme.color }] : {}
+                          ]}
+                          onPress={() => {
+                            setSelectedCourse(course);
+                            showToast(`Selected ${course}`);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <View style={[
+                            styles.courseIconCircle, 
+                            { backgroundColor: courseTheme.bg, borderColor: courseTheme.border }
+                          ]}>
+                            <MaterialIcons name={courseTheme.icon} size={17} color={courseTheme.color} />
+                          </View>
+                          <Text 
+                            style={[
+                              styles.courseGridTitle, 
+                              isSelected && { color: courseTheme.color, fontWeight: '900' }
+                            ]} 
+                            numberOfLines={2}
+                          >
+                            {course}
+                          </Text>
+                          {isSelected && (
+                            <View style={[styles.selectedBadgeCorner, { backgroundColor: courseTheme.color }]}>
+                              <MaterialIcons name="check" size={10} color="#FFFFFF" />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+
+              {/* Next Step Button */}
+              <TouchableOpacity 
+                style={styles.primaryActionButton}
+                onPress={() => setCurrentStep(2)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.primaryActionButtonText}>
+                  Continue to Chapters &rsaquo;
+                </Text>
+                <MaterialIcons name="arrow-forward" size={15} color="#FFFFFF" />
+              </TouchableOpacity>
+
+            </View>
+          )}
+
+          {/* ════════════════════════════════════════════════
+              STEP 2: TERM & CHAPTERS
+             ════════════════════════════════════════════════ */}
+          {currentStep === 2 && (
+            <View style={styles.stepContainer}>
+              
+              {/* Section Header (Compact) */}
+              <View style={styles.stepHeaderCard}>
+                <View style={styles.stepTitleRow}>
+                  <View style={[styles.stepIconBox, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+                    <MaterialIcons name="menu-book" size={16} color="#D97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepTitle}>Term & Chapters</Text>
+                    <Text style={styles.stepDesc}>{selectedClass} &bull; {selectedCourse}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.stepBackMiniBtn} 
+                    onPress={() => setCurrentStep(1)}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="edit" size={11} color="#0052cc" style={{ marginRight: 2 }} />
+                    <Text style={styles.stepBackMiniBtnText}>Change</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* 1. Terms Switcher */}
+              <View style={styles.cardContainer}>
+                <Text style={styles.cardSectionTitle}>1. Academic Term</Text>
+                <View style={styles.termsRow}>
+                  {termsList.map((term, idx) => {
+                    const isSelected = selectedTerm === term;
+                    const count = chapters.filter(c => c.terms.includes(term)).length;
+                    const termColor = idx === 0 ? '#2563EB' : '#D97706';
+                    const termBg = idx === 0 ? '#EFF6FF' : '#FFFBEB';
+                    return (
+                      <TouchableOpacity
+                        key={term}
+                        style={[
+                          styles.termButton, 
+                          isSelected ? styles.termButtonActive : { backgroundColor: termBg, borderColor: idx === 0 ? '#DBEAFE' : '#FDE68A' }
+                        ]}
+                        onPress={() => setSelectedTerm(term)}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons 
+                          name="calendar-view-month" 
+                          size={14} 
+                          color={isSelected ? "#FFFFFF" : termColor} 
+                          style={{ marginRight: 5 }} 
+                        />
+                        <Text style={[styles.termButtonText, isSelected ? styles.termButtonTextActive : { color: '#0D1B3E' }]} numberOfLines={1}>
+                          {term}
+                        </Text>
+                        <View style={[styles.termCountPill, isSelected && styles.termCountPillActive]}>
+                          <Text style={[styles.termCountPillText, isSelected ? styles.termCountPillTextActive : { color: termColor }]}>
+                            {count} Ch
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* 2. Chapters List */}
+              <View style={styles.cardContainer}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardSectionTitle}>2. Chapters ({termChapters.length})</Text>
+                  <TouchableOpacity 
+                    style={styles.addChapterToggleBtn}
+                    onPress={() => setShowAddChapterForm(!showAddChapterForm)}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name={showAddChapterForm ? "close" : "add"} size={14} color="#0052cc" />
+                    <Text style={styles.addChapterToggleBtnText}>
+                      {showAddChapterForm ? "Cancel" : "Add Chapter"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Add Chapter Form (Collapsible) */}
+                {showAddChapterForm && (
+                  <View style={styles.addChapterFormCard}>
+                    <Text style={styles.formSectionHeader}>New Chapter Details</Text>
+                    
+                    <Text style={styles.inputLabel}>CHAPTER TITLE <Text style={styles.reqStar}>*</Text></Text>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="e.g. Living Things & Organisms"
+                      placeholderTextColor="#94A3B8"
+                      value={newChapterTitle}
+                      onChangeText={setNewChapterTitle}
+                    />
+
+                    <Text style={styles.inputLabel}>
+                      CHAPTER NUMBER <Text style={styles.subNote}>(optional)</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="e.g. 1"
+                      placeholderTextColor="#94A3B8"
+                      keyboardType="numeric"
+                      value={newChapterNumber}
+                      onChangeText={setNewChapterNumber}
+                    />
+
+                    <Text style={styles.inputLabel}>
+                      ADD TO TERM(S) <Text style={styles.reqStar}>*</Text>
+                    </Text>
+                    <View style={styles.termsCheckboxRow}>
+                      {termsList.map(t => {
+                        const isChecked = newChapterTerms.includes(t);
+                        return (
+                          <TouchableOpacity
+                            key={t}
+                            style={[styles.checkboxChip, isChecked && styles.checkboxChipActive]}
+                            onPress={() => toggleNewChapterTerm(t)}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialIcons 
+                              name={isChecked ? "check-box" : "check-box-outline-blank"} 
+                              size={15} 
+                              color={isChecked ? "#0052cc" : "#64748B"} 
+                            />
+                            <Text style={[styles.checkboxChipText, isChecked && styles.checkboxChipTextActive]}>{t}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <TouchableOpacity 
+                      style={styles.saveChapterButton}
+                      onPress={handleAddChapter}
+                      disabled={addingChapterLoading}
+                      activeOpacity={0.8}
+                    >
+                      {addingChapterLoading ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                          <Text style={styles.saveChapterButtonText}>Creating Chapter...</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.saveChapterButtonText}>+ Save Chapter</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Chapter Cards */}
+                {termChapters.length === 0 ? (
+                  <View style={styles.emptyCardBox}>
+                    <MaterialIcons name="auto-stories" size={28} color="#CBD5E1" />
+                    <Text style={styles.emptyCardTitle}>No Chapters in {selectedTerm}</Text>
+                    <Text style={styles.emptyCardSub}>Tap "+ Add Chapter" above to create your first chapter.</Text>
+                  </View>
+                ) : (
+                  <View style={styles.chaptersStack}>
+                    {termChapters.map(ch => {
+                      const isSelected = activeChapter?.id === ch.id;
+                      const covered = ch.slos.filter(s => s.completed).length;
+                      const total = ch.slos.length;
+                      const chPercent = total > 0 ? Math.round((covered / total) * 100) : 0;
+
+                      return (
+                        <TouchableOpacity
+                          key={ch.id}
+                          style={[styles.chapterListItem, isSelected && styles.chapterListItemActive]}
+                          onPress={() => setSelectedChapterId(ch.id)}
+                          activeOpacity={0.85}
+                        >
+                          <View style={styles.chapterItemTop}>
+                            <View style={[
+                              styles.chapterNumberBadge, 
+                              isSelected ? styles.chapterNumberBadgeActive : { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }
+                            ]}>
+                              <Text style={[
+                                styles.chapterNumberBadgeText, 
+                                isSelected ? styles.chapterNumberBadgeTextActive : { color: '#0052cc' }
+                              ]}>
+                                Ch. {ch.chapterNumber}
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, marginHorizontal: 7 }}>
+                              <Text style={[styles.chapterItemTitle, isSelected && styles.chapterItemTitleActive]} numberOfLines={1}>
+                                {ch.title}
+                              </Text>
+                              <Text style={styles.chapterItemMeta}>
+                                <Text style={{ color: '#059669', fontWeight: '700' }}>{covered}/{total} covered</Text> ({chPercent}%) &bull; {ch.plannerFiles.length} files
+                              </Text>
+                            </View>
+
+                            <TouchableOpacity 
+                              onPress={(e) => {
+                                e.stopPropagation?.();
+                                handleDeleteChapter(ch.id, ch.title);
+                              }}
+                              style={styles.deleteChapterIconBtn}
+                            >
+                              <MaterialIcons name="delete-outline" size={16} color="#EF4444" />
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Progress Line */}
+                          <View style={styles.chapterProgressTrack}>
+                            <View style={[styles.chapterProgressFill, { width: `${chPercent}%`, backgroundColor: chPercent === 100 ? '#059669' : '#0052cc' }]} />
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+
+              {/* Navigation Action Buttons */}
+              <View style={styles.stepNavigationRow}>
+                <TouchableOpacity 
+                  style={styles.secondaryButton}
+                  onPress={() => setCurrentStep(1)}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="arrow-back" size={14} color="#0052cc" />
+                  <Text style={styles.secondaryButtonText}>Back to Subjects</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.primaryButton, !activeChapter && { opacity: 0.6 }]}
+                  onPress={() => {
+                    if (activeChapter) setCurrentStep(3);
+                    else alert('Please select or create a chapter first.');
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.primaryButtonText}>View Lesson Plan &rsaquo;</Text>
+                  <MaterialIcons name="arrow-forward" size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+
+            </View>
+          )}
+
+          {/* ════════════════════════════════════════════════
+              STEP 3: LESSON PLAN & SLOS
+             ════════════════════════════════════════════════ */}
+          {currentStep === 3 && activeChapter && (
+            <View style={styles.stepContainer}>
+              
+              {/* Header Card with Progress (Compact) */}
+              <View style={styles.step3HeroCard}>
+                <View style={styles.step3HeaderRow}>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.step3TagRow}>
+                      <View style={[styles.step3BadgePill, { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }]}>
+                        <Text style={[styles.step3BadgeText, { color: '#2563EB' }]}>{selectedClass}</Text>
+                      </View>
+                      <View style={[styles.step3BadgePill, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+                        <Text style={[styles.step3BadgeText, { color: '#059669' }]}>{selectedCourse}</Text>
+                      </View>
+                      <View style={[styles.step3BadgePill, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+                        <Text style={[styles.step3BadgeText, { color: '#D97706' }]}>{selectedTerm}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.step3ChapterTitle} numberOfLines={1}>
+                      Chapter {activeChapter.chapterNumber}: {activeChapter.title}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity 
+                    style={styles.changeChapterBtn}
+                    onPress={() => setCurrentStep(2)}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="swap-horiz" size={14} color="#0052cc" />
+                    <Text style={styles.changeChapterBtnText}>Chapters</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Live Progress Bar */}
+                <View style={styles.step3ProgressBox}>
+                  <View style={styles.step3ProgressLabels}>
+                    <Text style={styles.progressStatusText}>Curriculum Coverage</Text>
+                    <Text style={styles.progressPctValue}>{coveredSloCount}/{totalSloCount} Covered ({progressPercent}%)</Text>
+                  </View>
+                  <View style={styles.step3ProgressBar}>
+                    <View style={[styles.step3ProgressFill, { width: `${progressPercent}%` }]} />
+                  </View>
+                </View>
+
+                {/* Sub Tabs */}
+                <View style={styles.subTabsRow}>
+                  <TouchableOpacity 
+                    style={[styles.subTabButton, step3Tab === 'slos' && styles.subTabButtonActive]}
+                    onPress={() => setStep3Tab('slos')}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons 
+                      name="checklist" 
+                      size={14} 
+                      color={step3Tab === 'slos' ? "#FFFFFF" : "#059669"} 
+                      style={{ marginRight: 4 }} 
+                    />
+                    <Text style={[styles.subTabButtonText, step3Tab === 'slos' && styles.subTabButtonTextActive]} numberOfLines={1}>
+                      SLOs ({activeChapter.slos.length})
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.subTabButton, step3Tab === 'planner' && styles.subTabButtonActive]}
+                    onPress={() => setStep3Tab('planner')}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons 
+                      name="folder-shared" 
+                      size={14} 
+                      color={step3Tab === 'planner' ? "#FFFFFF" : "#2563EB"} 
+                      style={{ marginRight: 4 }} 
+                    />
+                    <Text style={[styles.subTabButtonText, step3Tab === 'planner' && styles.subTabButtonTextActive]} numberOfLines={1}>
+                      Planner ({activeChapter.plannerFiles.length})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* ── SUB-TAB 1: SLOS & OBJECTIVES ── */}
+              {step3Tab === 'slos' && (
+                <View style={styles.cardContainer}>
+                  
+                  {/* Action Bar */}
+                  <View style={styles.cardTitleRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.cardSectionTitle}>Learning Outcomes</Text>
+                      <Text style={styles.cardSubTitle}>Check covered SLOs or add new targets.</Text>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={styles.addSloActionBtn}
+                      onPress={() => setAddSloModalVisible(true)}
+                      activeOpacity={0.8}
+                    >
+                      <MaterialIcons name="add" size={14} color="#FFFFFF" />
+                      <Text style={styles.addSloActionBtnText}>+ Add SLO</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* SLOs List */}
+                  {activeChapter.slos.length === 0 ? (
+                    <View style={styles.emptyCardBox}>
+                      <MaterialIcons name="task" size={28} color="#CBD5E1" />
+                      <Text style={styles.emptyCardTitle}>No SLOs Added Yet</Text>
+                      <Text style={styles.emptyCardSub}>Click "+ Add SLO" above to define objectives.</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.sloStack}>
+                      {activeChapter.slos.map((slo) => {
+                        const isDone = slo.completed;
+                        return (
+                          <View 
+                            key={slo.id} 
+                            style={[styles.sloCard, isDone && styles.sloCardDone]}
+                          >
+                            <View style={styles.sloCardHeader}>
+                              
+                              {/* Checkbox */}
+                              <TouchableOpacity 
+                                style={styles.sloCheckbox}
+                                onPress={() => handleRequestToggleSlo(slo)}
+                                activeOpacity={0.7}
+                              >
+                                <MaterialIcons 
+                                  name={isDone ? "check-box" : "check-box-outline-blank"} 
+                                  size={20} 
+                                  color={isDone ? "#059669" : "#0052cc"} 
+                                />
+                              </TouchableOpacity>
+
+                              {/* Week & Bloom Badges */}
+                              <View style={styles.weekPill}>
+                                <Text style={styles.weekPillText}>{slo.week}</Text>
+                              </View>
+
+                              <View style={[
+                                styles.bloomBadge,
+                                slo.bloomTaxonomy === 'Knowledge' && { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' },
+                                slo.bloomTaxonomy === 'Understanding' && { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+                                slo.bloomTaxonomy === 'Application' && { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
+                              ]}>
+                                <Text style={[
+                                  styles.bloomBadgeText,
+                                  slo.bloomTaxonomy === 'Knowledge' && { color: '#1D4ED8' },
+                                  slo.bloomTaxonomy === 'Understanding' && { color: '#047857' },
+                                  slo.bloomTaxonomy === 'Application' && { color: '#B45309' },
+                                ]}>
+                                  {slo.bloomTaxonomy}
+                                </Text>
+                              </View>
+
+                              <View style={{ flex: 1 }} />
+
+                              {/* Actions */}
+                              <TouchableOpacity 
+                                onPress={() => showToast(`Editing ${slo.title}`)}
+                                style={styles.iconAction}
+                              >
+                                <MaterialIcons name="edit" size={13} color="#64748B" />
+                              </TouchableOpacity>
+
+                              <TouchableOpacity 
+                                onPress={() => handleDeleteSlo(slo.id, slo.title)}
+                                style={styles.iconAction}
+                              >
+                                <MaterialIcons name="delete-outline" size={15} color="#EF4444" />
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* SLO Title & Objective */}
+                            <Text style={[styles.sloTitle, isDone && styles.sloTitleDone]}>
+                              {slo.title}
+                            </Text>
+                            <Text style={[styles.sloObjective, isDone && styles.sloObjectiveDone]}>
+                              {slo.objective}
+                            </Text>
+
+                            {/* Date Range Meta */}
+                            <View style={styles.sloDateRow}>
+                              <MaterialIcons name="event" size={11} color="#94A3B8" />
+                              <Text style={styles.sloDateText}>
+                                {slo.month} &bull; {slo.startDate.split(' ')[0]} &rarr; {slo.endDate.split(' ')[0]}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* ── SUB-TAB 2: PLANNER & FILES ── */}
+              {step3Tab === 'planner' && (
+                <View style={styles.cardContainer}>
+                  
+                  <Text style={styles.cardSectionTitle}>Uploaded Materials</Text>
+                  <Text style={styles.cardSubTitle}>Syllabus handouts and worksheets.</Text>
+
+                  {/* Uploaded Files Stack with Thematic Badges */}
+                  {activeChapter.plannerFiles.length === 0 ? (
+                    <View style={styles.emptyCardBox}>
+                      <MaterialIcons name="upload-file" size={28} color="#CBD5E1" />
+                      <Text style={styles.emptyCardTitle}>No Files Uploaded</Text>
+                      <Text style={styles.emptyCardSub}>Upload a PDF, PowerPoint, or link below.</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.filesStack}>
+                      {activeChapter.plannerFiles.map(file => {
+                        const isPdf = file.contentType.toLowerCase().includes('pdf');
+                        const isPpt = file.contentType.toLowerCase().includes('power') || file.contentType.toLowerCase().includes('ppt');
+                        const fColor = isPdf ? '#DC2626' : isPpt ? '#EA580C' : '#2563EB';
+                        const fBg = isPdf ? '#FEF2F2' : isPpt ? '#FFF7ED' : '#EFF6FF';
+                        const fBorder = isPdf ? '#FECACA' : isPpt ? '#FED7AA' : '#DBEAFE';
+                        const fIcon: any = isPdf ? 'picture-as-pdf' : isPpt ? 'slideshow' : 'link';
+
+                        return (
+                          <View key={file.id} style={styles.fileItemRow}>
+                            <View style={[styles.fileBadge, { backgroundColor: fBg, borderColor: fBorder }]}>
+                              <MaterialIcons name={fIcon} size={12} color={fColor} style={{ marginRight: 3 }} />
+                              <Text style={[styles.fileBadgeText, { color: fColor }]}>{file.contentType}</Text>
+                            </View>
+                            
+                            <View style={{ flex: 1, marginHorizontal: 7 }}>
+                              <Text style={styles.fileItemTitle} numberOfLines={1}>{file.title}</Text>
+                              <Text style={styles.fileItemMeta}>Uploaded {file.uploadedAt}</Text>
+                            </View>
+
+                            <TouchableOpacity 
+                              onPress={() => showToast(`Opening ${file.title}`)}
+                              style={styles.openFileBtn}
+                            >
+                              <Text style={styles.openFileBtnText}>Open</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                              onPress={() => handleDeletePlannerFile(file.id)}
+                              style={styles.deleteFileBtn}
+                            >
+                              <MaterialIcons name="delete-outline" size={16} color="#EF4444" />
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  {/* Add Planner Form */}
+                  <View style={styles.addPlannerBox}>
+                    <Text style={styles.formSectionHeader}>+ Upload Document</Text>
+                    
+                    <View style={styles.plannerInputsRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>TYPE <Text style={styles.reqStar}>*</Text></Text>
+                        <TouchableOpacity 
+                          style={styles.formDropdown}
+                          onPress={() => setPickerModalType('contentType')}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.formDropdownText, !plannerContentType && { color: '#94A3B8' }]}>
+                            {plannerContentType || '-- Select --'}
+                          </Text>
+                          <MaterialIcons name="arrow-drop-down" size={16} color="#64748B" />
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={{ flex: 1.4 }}>
+                        <Text style={styles.inputLabel}>TITLE <Text style={styles.reqStar}>*</Text></Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          placeholder="e.g. Lesson Handout"
+                          placeholderTextColor="#94A3B8"
+                          value={plannerTitle}
+                          onChangeText={setPlannerTitle}
+                        />
+                      </View>
+                    </View>
+
+                    <TouchableOpacity 
+                      style={styles.uploadPlannerBtn}
+                      onPress={handleAddPlanner}
+                      disabled={uploadingPlannerLoading}
+                      activeOpacity={0.8}
+                    >
+                      {uploadingPlannerLoading ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                          <Text style={styles.uploadPlannerBtnText}>Uploading...</Text>
+                        </View>
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <MaterialIcons name="cloud-upload" size={14} color="#FFFFFF" />
+                          <Text style={styles.uploadPlannerBtnText}>Add Document</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                </View>
+              )}
+
+              {/* Bottom Step Navigation */}
+              <View style={styles.stepNavigationRow}>
+                <TouchableOpacity 
+                  style={styles.secondaryButton}
+                  onPress={() => setCurrentStep(2)}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="arrow-back" size={14} color="#0052cc" />
+                  <Text style={styles.secondaryButtonText}>Back to Chapters</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.primaryButton}
+                  onPress={() => {
+                    showToast('Lesson plan saved successfully!');
+                    navigation.goBack();
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <MaterialIcons name="done-all" size={14} color="#FFFFFF" />
+                  <Text style={styles.primaryButtonText}>Done & Save</Text>
+                </TouchableOpacity>
+              </View>
+
+            </View>
+          )}
+
+        </ScrollView>
+
+        {/* ════════════════════════════════════════════════
+            CONFIRMATION DIALOG MODAL (Alert)
+           ════════════════════════════════════════════════ */}
+        <ViewportModal
+          visible={confirmSloModalVisible}
+          onClose={() => setConfirmSloModalVisible(false)}
+        >
+          <View style={styles.alertModalCard}>
+            <View style={styles.alertHeaderRow}>
+              <View style={styles.alertIconCircle}>
+                <MaterialIcons name="help-outline" size={16} color="#0052cc" />
+              </View>
+              <Text style={styles.alertDomainTitle}>Curriculum Alert</Text>
+            </View>
+
+            <Text style={styles.alertQuestionText}>
+              {pendingSloToToggle?.completed 
+                ? 'Unmark this SLO as covered?' 
+                : 'Mark this SLO as covered?'}
+            </Text>
+
+            <View style={styles.alertButtonsRow}>
+              <TouchableOpacity 
+                style={styles.alertOkBtn}
+                onPress={handleConfirmToggleSlo}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.alertOkBtnText}>OK</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.alertCancelBtn}
+                onPress={() => setConfirmSloModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.alertCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ViewportModal>
+
+        {/* ════════════════════════════════════════════════
+            ADD SLO MODAL (Full Specs & Date Pickers)
+           ════════════════════════════════════════════════ */}
+        <ViewportModal
+          visible={addSloModalVisible}
+          onClose={() => setAddSloModalVisible(false)}
+        >
+          <View style={styles.addSloModalContainer}>
+            <View style={styles.addSloModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.addSloModalTitle}>Add New SLO</Text>
+                <Text style={styles.addSloModalSubtitle}>{activeChapter?.title || 'Active Chapter'}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.modalCloseBtn}
+                onPress={() => setAddSloModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="close" size={16} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalScrollArea} showsVerticalScrollIndicator={false}>
+              
+              {/* SLO Standard / Title */}
+              <Text style={styles.inputLabel}>SLO'S STANDARD / TITLE <Text style={styles.reqStar}>*</Text></Text>
+              <TextInput
+                style={styles.formTextInput}
+                placeholder="e.g. Describe plant cell functions"
+                placeholderTextColor="#94A3B8"
+                value={sloTitle}
+                onChangeText={setSloTitle}
+              />
+
+              {/* Month Dropdown */}
+              <Text style={styles.inputLabel}>SELECT MONTH</Text>
+              <TouchableOpacity 
+                style={styles.formDropdown}
+                onPress={() => setPickerModalType('month')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.formDropdownText}>{sloMonth}</Text>
+                <MaterialIcons name="arrow-drop-down" size={16} color="#64748B" />
+              </TouchableOpacity>
+
+              {/* Pedagogical Objective */}
+              <Text style={styles.inputLabel}>PEDAGOGICAL OBJECTIVE</Text>
+              <TextInput
+                style={[styles.formTextInput, { height: 62, textAlignVertical: 'top' }]}
+                placeholder="Detailed learning target..."
+                placeholderTextColor="#94A3B8"
+                multiline={true}
+                value={sloObjective}
+                onChangeText={setSloObjective}
+              />
+
+              {/* Date & End Date Row */}
+              <View style={styles.datePickerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabel}>DATE <Text style={styles.reqStar}>*</Text></Text>
+                  <TouchableOpacity 
+                    style={styles.datePickerButton}
+                    onPress={() => setDatePickerTarget('startDate')}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="calendar-today" size={13} color="#0052cc" />
+                    <Text style={styles.datePickerButtonText}>{sloStartDate}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabel}>END DATE <Text style={styles.reqStar}>*</Text></Text>
+                  <TouchableOpacity 
+                    style={styles.datePickerButton}
+                    onPress={() => setDatePickerTarget('endDate')}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="event" size={13} color="#0052cc" />
+                    <Text style={styles.datePickerButtonText}>{sloEndDate}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Week Selector */}
+              <Text style={styles.inputLabel}>WEEK (W1 - W5)</Text>
+              <TouchableOpacity 
+                style={styles.formDropdown}
+                onPress={() => setPickerModalType('week')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.formDropdownText}>{sloWeek}</Text>
+                <MaterialIcons name="arrow-drop-down" size={16} color="#64748B" />
+              </TouchableOpacity>
+
+              {/* Bloom's Taxonomy Selector */}
+              <Text style={styles.inputLabel}>BLOOM'S TAXONOMY <Text style={styles.reqStar}>*</Text></Text>
+              <View style={styles.bloomOptionsRow}>
+                {bloomOptions.map((opt) => {
+                  const isSelected = sloBloom === opt;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      style={[styles.bloomOptionBtn, isSelected && styles.bloomOptionBtnActive]}
+                      onPress={() => setSloBloom(opt)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.bloomOptionBtnText, isSelected && styles.bloomOptionBtnTextActive]}>
+                        {opt}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity 
+                style={styles.saveSloButton}
+                onPress={handleSaveSlo}
+                disabled={savingSloLoading}
+                activeOpacity={0.8}
+              >
+                {savingSloLoading ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.saveSloButtonText}>Saving SLO...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.saveSloButtonText}>Save SLO's</Text>
+                )}
+              </TouchableOpacity>
+
+            </ScrollView>
+          </View>
+        </ViewportModal>
+
+        {/* ════════════════════════════════════════════════
+            GENERIC PICKER MODAL (Dropdown Selects)
+           ════════════════════════════════════════════════ */}
+        <ViewportModal
+          visible={pickerModalType !== null}
+          onClose={() => setPickerModalType(null)}
+        >
+          <View style={styles.pickerModalCard}>
+            <Text style={styles.pickerModalTitle}>
+              {pickerModalType === 'month' && 'Select Month'}
+              {pickerModalType === 'week' && 'Select Week'}
+              {pickerModalType === 'bloom' && "Select Bloom's Taxonomy"}
+              {pickerModalType === 'contentType' && 'Select Content Type'}
+            </Text>
+
+            <ScrollView style={{ maxHeight: 240 }} showsVerticalScrollIndicator={false}>
+              {pickerModalType === 'month' && monthOptions.map(m => (
+                <TouchableOpacity 
+                  key={m} 
+                  style={styles.pickerItem} 
+                  onPress={() => { setSloMonth(m); setPickerModalType(null); }}
+                >
+                  <Text style={[styles.pickerItemText, sloMonth === m && styles.pickerItemTextActive]}>{m}</Text>
+                  {sloMonth === m && <MaterialIcons name="check" size={14} color="#0052cc" />}
+                </TouchableOpacity>
+              ))}
+
+              {pickerModalType === 'week' && weekOptions.map(w => (
+                <TouchableOpacity 
+                  key={w} 
+                  style={styles.pickerItem} 
+                  onPress={() => { setSloWeek(w); setPickerModalType(null); }}
+                >
+                  <Text style={[styles.pickerItemText, sloWeek === w && styles.pickerItemTextActive]}>{w}</Text>
+                  {sloWeek === w && <MaterialIcons name="check" size={14} color="#0052cc" />}
+                </TouchableOpacity>
+              ))}
+
+              {pickerModalType === 'bloom' && bloomOptions.map(b => (
+                <TouchableOpacity 
+                  key={b} 
+                  style={styles.pickerItem} 
+                  onPress={() => { setSloBloom(b); setPickerModalType(null); }}
+                >
+                  <Text style={[styles.pickerItemText, sloBloom === b && styles.pickerItemTextActive]}>{b}</Text>
+                  {sloBloom === b && <MaterialIcons name="check" size={14} color="#0052cc" />}
+                </TouchableOpacity>
+              ))}
+
+              {pickerModalType === 'contentType' && contentTypeOptions.map(ct => (
+                <TouchableOpacity 
+                  key={ct} 
+                  style={styles.pickerItem} 
+                  onPress={() => { setPlannerContentType(ct as any); setPickerModalType(null); }}
+                >
+                  <Text style={[styles.pickerItemText, plannerContentType === ct && styles.pickerItemTextActive]}>{ct}</Text>
+                  {plannerContentType === ct && <MaterialIcons name="check" size={14} color="#0052cc" />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </ViewportModal>
+
+        {/* ════════════════════════════════════════════════
+            PREMIUM DATE TIME PICKER INTEGRATION
+           ════════════════════════════════════════════════ */}
+        <PremiumDateTimePicker
+          visible={datePickerTarget !== null}
+          mode="date"
+          value={datePickerTarget === 'startDate' ? sloStartDate : sloEndDate}
+          title={datePickerTarget === 'startDate' ? 'Select Start Date' : 'Select End Date'}
+          onSelect={(dateStr: string) => {
+            if (datePickerTarget === 'startDate') setSloStartDate(dateStr);
+            else if (datePickerTarget === 'endDate') setSloEndDate(dateStr);
+            setDatePickerTarget(null);
+          }}
+          onClose={() => setDatePickerTarget(null)}
+        />
+
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#EBF0FB',
+    backgroundColor: 'transparent',
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
 
-  // HEADER STYLE
-  header: {
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 20,
-  },
-  headerContent: {
+  // ── APP BAR HEADER ──
+  appBar: {
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  backBtn: {
-    marginRight: 12,
-  },
-  backBtnInner: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  titleContainer: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     flex: 1,
   },
-  headerIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  backButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: '#DBEAFE',
+  },
+  headerTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  spCircleBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    backgroundColor: '#0052cc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spCircleText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  headerBarGlow: {
-    height: 3,
-  },
-
-  scrollContainer: {
-    padding: 16,
-    paddingBottom: 48,
-    backgroundColor: 'transparent',
-  },
-
-  // AI FEATURE PILLS
-  pillRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-    flexWrap: 'wrap',
-  },
-  featurePill: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(27,50,112,0.12)',
-  },
-  featurePillText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#1B3270',
-    letterSpacing: 0.2,
-  },
-
-  // FORM CARD
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(27, 50, 112, 0.08)',
-    shadowColor: '#1B3270',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-    marginBottom: 14,
-  },
-  // FIELD HEADER
-  fieldHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  fieldDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#0047CC',
-    marginRight: 6,
-  },
-  sectionLabel: {
-    fontSize: 10.5,
-    fontWeight: '900',
-    color: '#334155',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  requestTextArea: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 71, 204, 0.12)',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     fontSize: 12.5,
-    color: '#0F172A',
-    fontWeight: '600',
-    height: 60,
-    marginBottom: 10,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
-  },
-  gridCol: {
-    flex: 1,
-  },
-  pickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FAFBFF',
-    borderWidth: 1,
-    borderColor: 'rgba(0,71,204,0.14)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    height: 38,
-  },
-  pickerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  pickerIconOrb: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 6,
-  },
-  pickerButtonText: {
-    fontSize: 12,
     fontWeight: '800',
-    color: '#1E293B',
+    color: '#0D1B3E',
+    letterSpacing: -0.2,
   },
-
-  // File Upload Box
-  fileAttachmentBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(0, 71, 204, 0.18)',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    height: 38,
-    marginBottom: 12,
-  },
-  fileAttachmentBoxActive: {
+  appBarStepPill: {
     backgroundColor: '#EFF6FF',
-    borderStyle: 'solid',
-    borderColor: '#0047CC',
-  },
-  fileIconOrb: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  fileAttachmentText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    color: '#94A3B8',
-    flex: 1,
-  },
-  fileAttachmentTextActive: {
-    color: '#0047CC',
-    fontWeight: '700',
-  },
-
-  // ── GENERATE BUTTON ──
-  generateBtnContainer: {
-    marginTop: 2,
-    borderRadius: 12,
-    shadowColor: '#0D1F55',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
-    overflow: 'visible',
-  },
-  generateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-  },
-  generateBtnHighlight: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  generateBtnIconZone: {
-    width: 44,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
-  },
-  generateBtnDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    marginRight: 8,
-  },
-  generateBtnLabelBlock: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  generateBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
-    fontWeight: '900',
-    letterSpacing: 0.2,
-    lineHeight: 15,
-  },
-  generateBtnSubText: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 8.5,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginTop: 1,
-    lineHeight: 11,
-    textTransform: 'uppercase',
-  },
-  generateBtnArrow: {
-    height: 28,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-
-  // Generating State
-  generatingContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#EFF6FF',
-    borderRadius: 16,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,71,204,0.2)',
-  },
-  generatingButtonText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0047CC',
-    letterSpacing: 0.2,
-  },
-
-  // PROCESSING LOADER CARD
-  loaderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  loaderHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  loaderStatus: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  loaderPercentage: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#64748B',
-    textAlign: 'right',
-  },
-
-  // LIST HEADER
-  viewPlanHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-    marginTop: 6,
-  },
-  bulletIndicator: {
-    width: 5,
-    height: 18,
-    borderRadius: 3,
-    marginRight: 9,
-  },
-  viewPlanTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#1E293B',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    flex: 1,
-  },
-  planCountBadge: {
-    backgroundColor: '#0047CC',
-    borderRadius: 10,
-    minWidth: 22,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  planCountText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#fff',
-  },
-
-  plansListContainer: {
-    gap: 12,
-  },
-  planItemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingLeft: 0,
-    paddingRight: 14,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(27,50,112,0.1)',
-    shadowColor: '#1B3270',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 4,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  planItemTopHighlight: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-  },
-  planItemIconWrapper: {
-    width: 46,
-    height: 46,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 16,
-    marginRight: 13,
-    borderWidth: 1.5,
-    borderColor: 'rgba(30,64,175,0.15)',
-    shadowColor: '#1E40AF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  planItemIconInner: {
-    width: 46,
-    height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  planItemTextContent: {
-    flex: 1,
-  },
-  planItemTopic: {
-    fontSize: 14.5,
-    fontWeight: '900',
-    color: '#0F1F56',
-    marginBottom: 6,
-    letterSpacing: 0.1,
-  },
-  planMetaRow: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-  },
-  planMetaPill: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    borderRadius: 6,
     paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingVertical: 2.5,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(27,50,112,0.1)',
+    borderColor: '#DBEAFE',
+  },
+  appBarStepPillText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+
+  // Toast
+  toastBanner: {
+    position: 'absolute',
+    top: 54,
+    alignSelf: 'center',
+    backgroundColor: '#0F172A',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  planMetaPillBlue: {
-    backgroundColor: 'rgba(27,50,112,0.08)',
-    borderColor: 'rgba(27,50,112,0.18)',
-  },
-  planMetaPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#4B6CB7',
-    letterSpacing: 0.2,
-  },
-  // Modern icon-only action button (KEPT for legacy reference)
-  planItemActionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#1B3270',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    zIndex: 999,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
     elevation: 5,
   },
-  // ── Premium Eye Button ──
-  eyeBtnOuter: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(37,99,235,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(37,99,235,0.06)',
-    marginRight: 2,
-    shadowColor: '#1B3270',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  eyeBtnCore: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  eyeBtnGloss: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 14,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+  toastText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 
-  // PICKERS MODAL (Bottom Sheet Layout)
-  modalBackdrop: {
+  scrollContent: {
+    paddingBottom: 30,
+  },
+
+  // ── HERO BANNER & SLIM STEPPER ──
+  heroBanner: {
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginBottom: 8,
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 8,
+    padding: 2.5,
+    marginBottom: 5,
+    gap: 3,
+  },
+  stepSegment: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)', // Slightly darker dim overlay
-    justifyContent: 'flex-end', // Align to bottom
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4.5,
+    paddingHorizontal: 3,
+    borderRadius: 6,
+    gap: 4,
   },
-  pickerModalContainer: {
+  stepSegmentActive: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 44 : 30, // Extra safe space for bottom notch/insets
-    width: '100%',
-    maxWidth: Platform.OS === 'web' ? 520 : '100%', // Max width container limit on web browser
-    alignSelf: 'center',
-    shadowColor: '#0A1F5C',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  sheetHandle: {
-    width: 38,
-    height: 4.5,
-    borderRadius: 3,
-    backgroundColor: '#CBD5E1',
-    alignSelf: 'center',
-    marginBottom: 16,
+  stepSegmentDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pickerModalTitle: {
-    fontSize: 17,
+  stepSegmentDotActive: {
+    backgroundColor: '#0052cc',
+  },
+  stepSegmentDotDone: {
+    backgroundColor: '#059669',
+  },
+  stepSegmentDotText: {
+    fontSize: 8,
     fontWeight: '900',
-    color: '#0A1F5C',
-    marginBottom: 16,
-    textAlign: 'center',
-    letterSpacing: 0.2,
+    color: '#FFFFFF',
   },
-  pickerModalItem: {
+  stepSegmentDotTextActive: {
+    color: '#FFFFFF',
+  },
+  stepSegmentText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  stepSegmentTextActive: {
+    color: '#0D1B3E',
+    fontWeight: '800',
+  },
+
+  heroBreadcrumbRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heroSummaryPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  heroSummaryText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    flexShrink: 1,
+  },
+
+  // ── STEP CONTAINERS ──
+  stepContainer: {
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+  stepHeaderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  stepTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  stepDesc: {
+    fontSize: 9.5,
+    color: '#64748B',
+    marginTop: 0.5,
+  },
+  stepBackMiniBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  stepBackMiniBtnText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#0052cc',
+  },
+
+  // Card Container Shell
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardSectionTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  cardSubTitle: {
+    fontSize: 9.5,
+    color: '#64748B',
+    marginTop: 0.5,
+  },
+  countBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  countBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+
+  // 1. Classes List
+  classListRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  classChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.2,
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  classChipActive: {
+    backgroundColor: '#0052cc',
+    borderColor: '#0052cc',
+  },
+  classChipText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  classChipTextActive: {
+    color: '#FFFFFF',
+  },
+  activeDot: {
+    width: 4.5,
+    height: 4.5,
+    borderRadius: 2.25,
+    backgroundColor: '#34D399',
+    marginLeft: 4,
+  },
+
+  // Loader Box
+  loaderBox: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 5,
+  },
+  loaderText: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+
+  // 2. Courses Grid
+  coursesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  courseGridCard: {
+    width: '48.5%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 7,
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    position: 'relative',
+    minHeight: 58,
+    justifyContent: 'center',
+  },
+  courseGridCardActive: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  courseIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 3,
+  },
+  courseGridTitle: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+    lineHeight: 13,
+  },
+  selectedBadgeCorner: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Action Buttons
+  primaryActionButton: {
+    backgroundColor: '#0052cc',
+    borderRadius: 10,
+    height: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    shadowColor: '#0052cc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  primaryActionButtonText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // ── STEP 2: TERMS & CHAPTERS ──
+  termsRow: {
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 5,
+  },
+  termButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    paddingVertical: 6.5,
+    paddingHorizontal: 6,
+    borderWidth: 1.2,
+  },
+  termButtonActive: {
+    backgroundColor: '#0052cc',
+    borderColor: '#0052cc',
+  },
+  termButtonText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  termButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  termCountPill: {
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 5,
+    marginLeft: 4,
+  },
+  termCountPillActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  termCountPillText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+  },
+  termCountPillTextActive: {
+    color: '#FFFFFF',
+  },
+
+  addChapterToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
+    gap: 2,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  addChapterToggleBtnText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+
+  // Add Chapter Collapsible Form
+  addChapterFormCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    marginBottom: 8,
+  },
+  formSectionHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0D1B3E',
+    marginBottom: 4,
+  },
+  inputLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#475569',
+    marginBottom: 2.5,
+    marginTop: 4,
+  },
+  reqStar: {
+    color: '#EF4444',
+  },
+  subNote: {
+    fontSize: 8,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  formTextInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    height: 32,
+    fontSize: 11,
+    color: '#0D1B3E',
+  },
+  termsCheckboxRow: {
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  checkboxChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    gap: 3,
+  },
+  checkboxChipActive: {
+    borderColor: '#0052cc',
+    backgroundColor: '#EFF6FF',
+  },
+  checkboxChipText: {
+    fontSize: 10,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  checkboxChipTextActive: {
+    color: '#0052cc',
+    fontWeight: '800',
+  },
+  saveChapterButton: {
+    backgroundColor: '#0052cc',
+    borderRadius: 7,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveChapterButtonText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // Chapter List Items
+  chaptersStack: {
+    gap: 5,
+  },
+  chapterListItem: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 7,
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+  },
+  chapterListItemActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0052cc',
+    shadowColor: '#0052cc',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  chapterItemTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chapterNumberBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
+    borderWidth: 1,
+  },
+  chapterNumberBadgeActive: {
+    backgroundColor: '#0052cc',
+    borderColor: '#0052cc',
+  },
+  chapterNumberBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  chapterNumberBadgeTextActive: {
+    color: '#FFFFFF',
+  },
+  chapterItemTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  chapterItemTitleActive: {
+    color: '#0052cc',
+  },
+  chapterItemMeta: {
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 0.5,
+  },
+  deleteChapterIconBtn: {
+    padding: 2,
+  },
+  chapterProgressTrack: {
+    height: 3,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 1.5,
+    overflow: 'hidden',
+  },
+  chapterProgressFill: {
+    height: '100%',
+    borderRadius: 1.5,
+  },
+
+  // Step Navigation Buttons
+  stepNavigationRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 3,
+  },
+  secondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+    height: 36,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  secondaryButtonText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+  primaryButton: {
+    flex: 1.3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0052cc',
+    borderRadius: 8,
+    height: 36,
+    gap: 4,
+  },
+  primaryButtonText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // ── STEP 3: LESSON PLAN & SLOS ──
+  step3HeroCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  step3HeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  step3TagRow: {
+    flexDirection: 'row',
+    gap: 3,
+    marginBottom: 2,
+  },
+  step3BadgePill: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  step3BadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+  },
+  step3ChapterTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#0D1B3E',
+  },
+  changeChapterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
+    gap: 2,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  changeChapterBtnText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+
+  step3ProgressBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 6,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 8,
+  },
+  step3ProgressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  progressStatusText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  progressPctValue: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+  step3ProgressBar: {
+    height: 3.5,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  step3ProgressFill: {
+    height: '100%',
+    backgroundColor: '#059669',
+    borderRadius: 2,
+  },
+
+  subTabsRow: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  subTabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 7,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  subTabButtonActive: {
+    backgroundColor: '#0052cc',
+    borderColor: '#0052cc',
+  },
+  subTabButtonText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  subTabButtonTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // SLO Action Header
+  addSloActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0052cc',
+    paddingHorizontal: 7,
+    paddingVertical: 3.5,
+    borderRadius: 5,
+    gap: 2.5,
+  },
+  addSloActionBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // SLO Cards Stack
+  sloStack: {
+    gap: 6,
+  },
+  sloCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+  },
+  sloCardDone: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+  },
+  sloCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  sloCheckbox: {
+    padding: 1,
+  },
+  weekPill: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  weekPillText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+  bloomBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  bloomBadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+  },
+  iconAction: {
+    padding: 2,
+  },
+  sloTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0D1B3E',
+    marginBottom: 1.5,
+  },
+  sloTitleDone: {
+    textDecorationLine: 'line-through',
+    color: '#64748B',
+  },
+  sloObjective: {
+    fontSize: 9.5,
+    color: '#475569',
+    lineHeight: 13,
+    marginBottom: 4,
+  },
+  sloObjectiveDone: {
+    color: '#94A3B8',
+  },
+  sloDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  sloDateText: {
+    fontSize: 9,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+
+  // Empty Card Shell
+  emptyCardBox: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  emptyCardTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  emptyCardSub: {
+    fontSize: 9.5,
+    color: '#64748B',
+    textAlign: 'center',
+    maxWidth: 200,
+  },
+
+  // Planner Files
+  filesStack: {
+    gap: 5,
+    marginBottom: 8,
+  },
+  fileItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 7,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  fileBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  fileBadgeText: {
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  fileItemTitle: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  fileItemMeta: {
+    fontSize: 9,
+    color: '#64748B',
+  },
+  openFileBtn: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 4,
+    marginRight: 3,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  openFileBtnText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#0052cc',
+  },
+  deleteFileBtn: {
+    padding: 2,
+  },
+
+  addPlannerBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  plannerInputsRow: {
+    flexDirection: 'row',
+    gap: 5,
+    marginBottom: 6,
+  },
+  formDropdown: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    height: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
-  pickerModalItemActive: {
-    backgroundColor: 'rgba(0, 71, 204, 0.06)',
+  formDropdownText: {
+    fontSize: 10,
+    color: '#0D1B3E',
+    fontWeight: '600',
   },
-  pickerModalItemText: {
-    fontSize: 14,
+  uploadPlannerBtn: {
+    backgroundColor: '#0052cc',
+    borderRadius: 7,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadPlannerBtnText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // ── MODALS (Viewport & Alert) ──
+  webModalOverlay: {
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    zIndex: 99999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 14,
+  },
+
+  // Alert Dialog
+  alertModalCard: {
+    width: '100%',
+    maxWidth: 280,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  alertHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 6,
+  },
+  alertIconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertDomainTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+  },
+  alertQuestionText: {
+    fontSize: 11.5,
+    color: '#334155',
+    lineHeight: 15,
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  alertButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 5,
+  },
+  alertOkBtn: {
+    backgroundColor: '#0052cc',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  alertOkBtnText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  alertCancelBtn: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  alertCancelBtnText: {
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#475569',
   },
-  pickerModalItemTextActive: {
-    color: '#003d9b',
-  },
 
-  // VIEWER SCREEN LAYOUT
-  viewerBackdrop: {
-    flex: 1,
-    backgroundColor: '#0A1F5C',
-  },
-  viewerContainer: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  viewerTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  // Add SLO Modal Card
+  addSloModalContainer: {
+    width: '100%',
+    maxWidth: 360,
+    maxHeight: '85%',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    height: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  viewerCloseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  viewerCloseText: {
-    fontSize: 12.5,
-    fontWeight: '900',
-    color: '#0A1F5C',
-    marginLeft: 4,
-  },
-  downloadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0047CC',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  downloadBtnText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#FFFFFF',
-  },
-  printBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#003d9b',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  printBtnText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#003d9b',
-  },
-
-  viewerScrollContent: {
-    padding: 10,
-    paddingBottom: 30,
-  },
-  paperSheet: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  sheetHeaderTitle: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: '#0A1F5C',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  sheetMetaRow: {
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 4,
-  },
-  sheetMetaText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#64748B',
-  },
-  sheetMetaFile: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#003d9b',
-    backgroundColor: 'rgba(0, 61, 155, 0.05)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  sheetDivider: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 10,
-  },
-  sheetSectionTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#0F172A',
-    marginTop: 10,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  sheetParagraphText: {
-    fontSize: 10.5,
-    color: '#334155',
-    fontWeight: '600',
-    lineHeight: 14.5,
-  },
-  bulletRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-    paddingRight: 6,
-  },
-  bulletDot: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#003d9b',
-    marginRight: 6,
-    width: 6,
-    textAlign: 'center',
-  },
-  bulletText: {
-    flex: 1,
-    fontSize: 10.5,
-    color: '#334155',
-    fontWeight: '600',
-    lineHeight: 14.5,
-  },
-
-  // Table styling (Materials Section)
-  tableHeaderRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#CBD5E1',
-    paddingVertical: 5,
-    paddingHorizontal: 6,
-    marginTop: 4,
-  },
-  tableHeaderCell: {
-    fontSize: 9.5,
-    fontWeight: '900',
-    color: '#1E293B',
-    textTransform: 'uppercase',
-  },
-  tableDataRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingVertical: 6,
-    paddingHorizontal: 6,
-    alignItems: 'center',
-  },
-  tableDataCell: {
-    fontSize: 9.5,
-    color: '#1E293B',
-    fontWeight: '600',
-    paddingRight: 4,
-  },
-
-  activityBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 6,
-    padding: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#003d9b',
-    marginBottom: 6,
-  },
-  activityTitleRow: {
+  addSloModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 6,
   },
-  activityTitleText: {
-    fontSize: 11,
+  addSloModalTitle: {
+    fontSize: 13,
     fontWeight: '900',
-    color: '#0A1F5C',
+    color: '#0D1B3E',
   },
-  activityDurationText: {
+  addSloModalSubtitle: {
     fontSize: 9.5,
-    fontWeight: '800',
-    color: '#003d9b',
-    backgroundColor: 'rgba(0, 61, 155, 0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    color: '#64748B',
+    fontWeight: '600',
   },
-
-  // Assessment Rubric
-  rubricHeaderRow: {
+  modalCloseBtn: {
+    padding: 2,
+  },
+  modalScrollArea: {
+    flexGrow: 0,
+  },
+  datePickerRow: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
+    gap: 5,
+  },
+  datePickerButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
     borderColor: '#CBD5E1',
-    paddingVertical: 5,
-    paddingHorizontal: 6,
-    marginTop: 4,
-  },
-  rubricHeaderCell: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#1E293B',
-    textTransform: 'uppercase',
-  },
-  rubricDataRow: {
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    height: 32,
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    gap: 4,
+  },
+  datePickerButtonText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0D1B3E',
+  },
+  bloomOptionsRow: {
+    flexDirection: 'row',
+    gap: 4,
+    marginBottom: 10,
+  },
+  bloomOptionBtn: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 5,
     paddingVertical: 5,
-    paddingHorizontal: 6,
     alignItems: 'center',
   },
-  rubricDataCell: {
+  bloomOptionBtnActive: {
+    backgroundColor: '#0052cc',
+    borderColor: '#0052cc',
+  },
+  bloomOptionBtnText: {
     fontSize: 9,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  bloomOptionBtnTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  saveSloButton: {
+    backgroundColor: '#0052cc',
+    borderRadius: 8,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  saveSloButtonText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // Picker Modal
+  pickerModalCard: {
+    width: '100%',
+    maxWidth: 260,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+  },
+  pickerModalTitle: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0D1B3E',
+    marginBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 4,
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  pickerItemText: {
+    fontSize: 10.5,
+    color: '#334155',
     fontWeight: '600',
-    paddingRight: 4,
+  },
+  pickerItemTextActive: {
+    color: '#0052cc',
+    fontWeight: '800',
   },
 });

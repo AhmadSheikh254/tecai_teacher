@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,8 +8,6 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
-  Animated,
-  Dimensions,
   Platform,
   Pressable,
   Alert
@@ -17,9 +15,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
-
-const { width: screenWidth } = Dimensions.get('window');
+import Svg, { Circle } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface WorksheetScreenProps {
   navigation: any;
@@ -40,6 +37,9 @@ export interface WorksheetData {
 }
 
 export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   // Input Form States
   const [requestInput, setRequestInput] = useState('');
   const [language, setLanguage] = useState('English');
@@ -54,138 +54,12 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStatus, setProgressStatus] = useState('Analyzing request topic...');
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   // Active View Plan Modal State
   const [activeWorksheet, setActiveWorksheet] = useState<WorksheetData | null>(null);
 
-  // Initial Seed Worksheets
-  const [worksheets, setWorksheets] = useState<WorksheetData[]>([
-    {
-      id: 'ws-1',
-      topic: 'States of Matter Mastery',
-      language: 'English',
-      level: 'Level 4',
-      color: '#0D9488',
-      date: 'Aug 12, 2026',
-      instructions: 'Read each section carefully. For Part 1, choose the most appropriate word from the word bank to complete each sentence. For Part 2, select the best answer for each multiple-choice question. For Part 3, answer the questions concisely in the provided space.',
-      wordBank: ['Solid', 'Liquid', 'Gas', 'Volume', 'Temperature', 'Particles', 'Kinetic Energy', 'Condensation', 'Evaporation', 'Sublimation'],
-      fillBlanks: [
-        { id: 1, question: 'In the state of matter known as ________, substances have a definite shape and a definite volume.', answer: 'Solid' },
-        { id: 2, question: 'A ________ takes the shape of its container but maintains a definite volume.', answer: 'Liquid' },
-        { id: 3, question: 'A ________ has no definite shape or volume; it expands to fill its container.', answer: 'Gas' },
-        { id: 4, question: 'The average ________ of the ________ in a substance is directly related to its temperature.', answer: 'Kinetic Energy / Particles' },
-        { id: 5, question: 'The process of a liquid turning into a gas is called ________.', answer: 'Evaporation' }
-      ],
-      mcqs: [
-        {
-          id: 1,
-          question: 'Which of the following best describes the arrangement and movement of particles in a gas?',
-          options: [
-            'Tightly packed in a regular lattice, vibrating in fixed positions.',
-            'Closely packed but able to slide past each other, with random movement.',
-            'Far apart and moving rapidly and randomly, colliding frequently.'
-          ],
-          answerIndex: 2
-        },
-        {
-          id: 2,
-          question: 'What happens to the state of matter when heat is added to a solid, assuming no phase change yet occurs?',
-          options: [
-            'The particles vibrate more vigorously, increasing kinetic energy.',
-            'The particles move closer together, decreasing volume.',
-            'The particles lose energy and slow down.'
-          ],
-          answerIndex: 0
-        },
-        {
-          id: 3,
-          question: 'Which phase transition involves a solid changing directly into a gas, bypassing the liquid state?',
-          options: [
-            'Melting',
-            'Deposition',
-            'Sublimation'
-          ],
-          answerIndex: 2
-        }
-      ],
-      shortAnswers: [
-        { id: 1, question: 'Explain the difference in particle behavior between a liquid and a gas at the molecular level.', lines: 2 },
-        { id: 2, question: 'Describe one everyday example of a substance undergoing a phase change and identify the states of matter involved.', lines: 2 }
-      ]
-    },
-    {
-      id: 'ws-2',
-      topic: 'Solar System Orbits and Scale Model',
-      language: 'English',
-      level: 'Level 5',
-      color: '#0284C7',
-      date: 'Aug 12, 2026',
-      instructions: 'Complete all three sections to demonstrate your understanding of planetary motion, gravitational attraction, and orbital scale.',
-      wordBank: ['Gravity', 'Orbit', 'Sun', 'Elliptical', 'Asteroid Belt', 'Revolution', 'Rotation', 'Terrestrial', 'Gas Giants'],
-      fillBlanks: [
-        { id: 1, question: 'The principal force keeping planets in orbit around the Sun is ________.', answer: 'Gravity' },
-        { id: 2, question: 'Earth takes approximately 365.25 days to complete one full ________ around the Sun.', answer: 'Revolution' },
-        { id: 3, question: 'Planets travel along a curved path called an ________.', answer: 'Orbit' },
-        { id: 4, question: 'The four inner planets (Mercury, Venus, Earth, Mars) are known as ________ planets.', answer: 'Terrestrial' }
-      ],
-      mcqs: [
-        {
-          id: 1,
-          question: 'Which celestial body holds the highest gravitational mass in our solar system?',
-          options: [
-            'Jupiter',
-            'The Sun',
-            'Saturn'
-          ],
-          answerIndex: 1
-        },
-        {
-          id: 2,
-          question: 'Where is the main Asteroid Belt located in our solar system?',
-          options: [
-            'Between Earth and Mars',
-            'Between Mars and Jupiter',
-            'Beyond Neptune'
-          ],
-          answerIndex: 1
-        }
-      ],
-      shortAnswers: [
-        { id: 1, question: 'Why do planets closer to the Sun complete their orbits faster than planets further away?', lines: 2 }
-      ]
-    },
-    {
-      id: 'ws-3',
-      topic: 'Flowers Anatomy & Plant Growth',
-      language: 'English',
-      level: 'Level 3',
-      color: '#059669',
-      date: 'Aug 11, 2026',
-      instructions: 'Identify the structural organs of flowering plants and describe the biological steps involved in pollination and fertilization.',
-      wordBank: ['Petal', 'Stamen', 'Pistil', 'Pollen', 'Photosynthesis', 'Stem', 'Roots', 'Nectar'],
-      fillBlanks: [
-        { id: 1, question: 'The male reproductive organ of a flower is called the ________.', answer: 'Stamen' },
-        { id: 2, question: 'Brightly colored ________ attract bees, butterflies, and other pollinators.', answer: 'Petals' },
-        { id: 3, question: 'Plants absorb water and essential soil minerals through their ________.', answer: 'Roots' }
-      ],
-      mcqs: [
-        {
-          id: 1,
-          question: 'What is the primary role of pollen in flower reproduction?',
-          options: [
-            'To protect the seeds from birds',
-            'To carry male reproductive cells to the ovary',
-            'To store water for photosynthesis'
-          ],
-          answerIndex: 1
-        }
-      ],
-      shortAnswers: [
-        { id: 1, question: 'Describe how insects assist in the process of cross-pollination.', lines: 2 }
-      ]
-    }
-  ]);
+  // Worksheets State
+  const [, setWorksheets] = useState<WorksheetData[]>([]);
 
   // Mock File Selector Action
   const handleToggleMockFile = () => {
@@ -271,19 +145,19 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
 
   if (activeWorksheet) {
     return (
-      <View style={styles.fullScreenModalWrapper}>
-        <SafeAreaView style={styles.sheetSafeArea} edges={['top', 'bottom']}>
+      <View style={[styles.fullScreenModalWrapper, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+        <SafeAreaView style={[styles.sheetSafeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top', 'bottom']}>
           {/* Viewer Navigation Bar */}
-          <View style={styles.sheetNavBar}>
-            <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setActiveWorksheet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="arrow-back" size={20} color="#0E7490" />
+          <View style={[styles.sheetNavBar, { maxWidth: 768, width: '100%', alignSelf: 'center' }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetCloseBtn, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveWorksheet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#0E7490" : appTheme.primary} />
             </TouchableOpacity>
 
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeWorksheet.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeWorksheet.topic}</Text>
 
             <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
               <TouchableOpacity
-                style={styles.sheetDownloadBtn}
+                style={[styles.sheetDownloadBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
                 onPress={() => Alert.alert('Download PDF', 'Worksheet PDF downloaded to your device.')}
                 activeOpacity={0.8}
               >
@@ -292,7 +166,7 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.sheetPrintBtn}
+                style={[styles.sheetPrintBtn, !isDefaultTheme && { backgroundColor: appTheme.accent }]}
                 onPress={() => Alert.alert('Print Worksheet', 'Worksheet sent to print queue as PDF.')}
                 activeOpacity={0.8}
               >
@@ -303,49 +177,49 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
           </View>
 
           {/* Paper Sheet Container */}
-          <ScrollView style={{ flex: 1, width: '100%' }} contentContainerStyle={styles.sheetScrollContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperSheetCard}>
+          <ScrollView style={{ flex: 1, width: '100%' }} contentContainerStyle={[styles.sheetScrollContainer, { maxWidth: 768, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>
+            <View style={[styles.paperSheetCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               
               {/* Paper Top Title Header */}
-              <View style={styles.paperHeader}>
-                <Text style={styles.paperMainTitle}>{activeWorksheet.topic}</Text>
+              <View style={[styles.paperHeader, !isDefaultTheme && { borderBottomColor: appTheme.primary }]}>
+                <Text style={[styles.paperMainTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeWorksheet.topic}</Text>
                 <View style={styles.paperBadgeRow}>
-                  <View style={styles.paperMetaBadge}>
-                    <Text style={styles.paperMetaBadgeText}>{activeWorksheet.language}</Text>
+                  <View style={[styles.paperMetaBadge, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                    <Text style={[styles.paperMetaBadgeText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeWorksheet.language}</Text>
                   </View>
-                  <View style={[styles.paperMetaBadge, { backgroundColor: '#ECFEFF' }]}>
-                    <Text style={[styles.paperMetaBadgeText, { color: '#0E7490' }]}>{activeWorksheet.level}</Text>
+                  <View style={[styles.paperMetaBadge, { backgroundColor: '#ECFEFF' }, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                    <Text style={[styles.paperMetaBadgeText, { color: '#0E7490' }, !isDefaultTheme && { color: appTheme.primary }]}>{activeWorksheet.level}</Text>
                   </View>
                 </View>
 
                 {/* Fillable Student Info Line */}
                 <View style={styles.studentInfoBox}>
-                  <Text style={styles.studentInfoText}>Name: <Text style={styles.studentInfoLine}>___________________________</Text></Text>
-                  <Text style={styles.studentInfoText}>Date: <Text style={styles.studentInfoLine}>____________</Text></Text>
-                  <Text style={styles.studentInfoText}>Score: <Text style={styles.studentInfoLine}>______</Text></Text>
+                  <Text style={[styles.studentInfoText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Name: <Text style={[styles.studentInfoLine, !isDefaultTheme && { color: appTheme.border }]}>___________________________</Text></Text>
+                  <Text style={[styles.studentInfoText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Date: <Text style={[styles.studentInfoLine, !isDefaultTheme && { color: appTheme.border }]}>____________</Text></Text>
+                  <Text style={[styles.studentInfoText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Score: <Text style={[styles.studentInfoLine, !isDefaultTheme && { color: appTheme.border }]}>______</Text></Text>
                 </View>
               </View>
 
               {/* Instructions Box */}
-              <View style={styles.instructionsContainer}>
-                <Text style={styles.instructionsHeading}>Instructions:</Text>
-                <Text style={styles.instructionsBody}>{activeWorksheet.instructions}</Text>
+              <View style={[styles.instructionsContainer, !isDefaultTheme && { backgroundColor: appTheme.surface, borderLeftColor: appTheme.primary }]}>
+                <Text style={[styles.instructionsHeading, !isDefaultTheme && { color: appTheme.primary }]}>Instructions:</Text>
+                <Text style={[styles.instructionsBody, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeWorksheet.instructions}</Text>
               </View>
 
               {/* PART 1: FILL IN THE BLANKS */}
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 1: Fill in the Blanks</Text>
+                <Text style={[styles.sectionHeading, !isDefaultTheme && { color: appTheme.primary, borderBottomColor: appTheme.border }]}>Part 1: Fill in the Blanks</Text>
                 
                 {/* Word Bank Box */}
-                <View style={styles.wordBankCard}>
-                  <Text style={styles.wordBankTitle}>Word Bank:</Text>
-                  <Text style={styles.wordBankWords}>{activeWorksheet.wordBank.join(', ')}</Text>
+                <View style={[styles.wordBankCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <Text style={[styles.wordBankTitle, !isDefaultTheme && { color: appTheme.primary }]}>Word Bank:</Text>
+                  <Text style={[styles.wordBankWords, !isDefaultTheme && { color: appTheme.textSecondary }]}>{activeWorksheet.wordBank.join(', ')}</Text>
                 </View>
 
                 {/* Questions */}
                 {activeWorksheet.fillBlanks.map((q) => (
                   <View key={q.id} style={styles.questionItem}>
-                    <Text style={styles.questionText}>
+                    <Text style={[styles.questionText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                       <Text style={{ fontWeight: '800' }}>{q.id}. </Text>
                       {q.question}
                     </Text>
@@ -355,11 +229,11 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
 
               {/* PART 2: MULTIPLE CHOICE QUESTIONS */}
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 2: Multiple Choice Questions</Text>
+                <Text style={[styles.sectionHeading, !isDefaultTheme && { color: appTheme.primary, borderBottomColor: appTheme.border }]}>Part 2: Multiple Choice Questions</Text>
                 
                 {activeWorksheet.mcqs.map((mcq) => (
                   <View key={mcq.id} style={styles.mcqBlock}>
-                    <Text style={styles.questionText}>
+                    <Text style={[styles.questionText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                       <Text style={{ fontWeight: '800' }}>{mcq.id}. </Text>
                       {mcq.question}
                     </Text>
@@ -369,8 +243,8 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
                         const letter = String.fromCharCode(65 + idx);
                         return (
                           <View key={idx} style={styles.mcqOptionRow}>
-                            <Text style={styles.mcqOptionLetter}>•  {letter}) </Text>
-                            <Text style={styles.mcqOptionText}>{opt}</Text>
+                            <Text style={[styles.mcqOptionLetter, !isDefaultTheme && { color: appTheme.primary }]}>•  {letter}) </Text>
+                            <Text style={[styles.mcqOptionText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{opt}</Text>
                           </View>
                         );
                       })}
@@ -381,18 +255,18 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
 
               {/* PART 3: SHORT ANSWER QUESTIONS */}
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>Part 3: Short Answer Questions</Text>
+                <Text style={[styles.sectionHeading, !isDefaultTheme && { color: appTheme.primary, borderBottomColor: appTheme.border }]}>Part 3: Short Answer Questions</Text>
 
                 {activeWorksheet.shortAnswers.map((sa) => (
                   <View key={sa.id} style={styles.shortAnsBlock}>
-                    <Text style={styles.questionText}>
+                    <Text style={[styles.questionText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                       <Text style={{ fontWeight: '800' }}>{sa.id}. </Text>
                       {sa.question}
                     </Text>
 
                     <View style={styles.answerLinesContainer}>
-                      <View style={styles.writeLine} />
-                      <View style={styles.writeLine} />
+                      <View style={[styles.writeLine, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+                      <View style={[styles.writeLine, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
                     </View>
                   </View>
                 ))}
@@ -406,23 +280,25 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
 
       {/* ── Ambient Mesh Backdrop ── */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
-        <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <Circle cx="105%" cy="-5%" r="320" fill="#06B6D4" opacity={0.07} />
-          <Circle cx="-10%" cy="50%" r="300" fill="#0891B2" opacity={0.06} />
-          <Circle cx="80%" cy="95%" r="340" fill="#22D3EE" opacity={0.06} />
-        </Svg>
-      </View>
+      {isDefaultTheme && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
+          <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <Circle cx="105%" cy="-5%" r="320" fill="#06B6D4" opacity={0.07} />
+            <Circle cx="-10%" cy="50%" r="300" fill="#0891B2" opacity={0.06} />
+            <Circle cx="80%" cy="95%" r="340" fill="#22D3EE" opacity={0.06} />
+          </Svg>
+        </View>
+      )}
 
       {/* ── HEADER BANNER ── */}
-      <LinearGradient colors={['#0E7490', '#06B6D4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
+      <LinearGradient colors={isDefaultTheme ? ['#0E7490', '#06B6D4'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
         <View style={{ position: 'absolute', right: -35, top: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(34, 211, 238, 0.2)' }} />
         <View style={{ position: 'absolute', left: -25, bottom: -45, width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(6, 182, 212, 0.16)' }} />
 
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, { maxWidth: 720, width: '100%', alignSelf: 'center' }]}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
             <View style={styles.backBtnInner}>
               <MaterialIcons name="arrow-back" size={20} color="#fff" />
@@ -442,22 +318,22 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
         </View>
       </LinearGradient>
       {/* Cyan Accent Line */}
-      <LinearGradient colors={['#22D3EE', '#67E8F9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBarGlow} />
+      <LinearGradient colors={isDefaultTheme ? ['#22D3EE', '#67E8F9'] : [appTheme.primary, appTheme.accent, appTheme.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBarGlow} />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContainer, { maxWidth: 720, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>
 
         {/* ── FORM CARD ── */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
 
           {/* YOUR REQUEST */}
           <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.sectionLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.requestTextArea}
+            style={[styles.requestTextArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Describe your worksheet topic… e.g. States of Matter, Fractions, Photosynthesis"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -470,71 +346,71 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
           <View style={styles.gridRow}>
             <View style={styles.gridCol}>
               <View style={styles.fieldHeader}>
-                <View style={styles.fieldDot} />
-                <Text style={styles.sectionLabel}>Level</Text>
+                <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+                <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Level</Text>
               </View>
               <TouchableOpacity
-                style={styles.pickerButton}
+                style={[styles.pickerButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => !generating && setLevelModalVisible(true)}
                 activeOpacity={0.8}
               >
                 <View style={styles.pickerLeft}>
-                  <LinearGradient colors={['#ECFEFF', '#CFFAFE']} style={styles.pickerIconOrb}>
-                    <MaterialIcons name="school" size={15} color="#0891B2" />
+                  <LinearGradient colors={isDefaultTheme ? ['#ECFEFF', '#CFFAFE'] : [appTheme.surface, appTheme.cardBg]} style={styles.pickerIconOrb}>
+                    <MaterialIcons name="school" size={15} color={isDefaultTheme ? "#0891B2" : appTheme.primary} />
                   </LinearGradient>
-                  <Text style={styles.pickerButtonText}>{level}</Text>
+                  <Text style={[styles.pickerButtonText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{level}</Text>
                 </View>
-                <MaterialIcons name="expand-more" size={20} color="#94A3B8" />
+                <MaterialIcons name="expand-more" size={20} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.gridCol}>
               <View style={styles.fieldHeader}>
-                <View style={styles.fieldDot} />
-                <Text style={styles.sectionLabel}>Language</Text>
+                <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+                <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Language</Text>
               </View>
               <TouchableOpacity
-                style={styles.pickerButton}
+                style={[styles.pickerButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}
                 onPress={() => !generating && setLangModalVisible(true)}
                 activeOpacity={0.8}
               >
                 <View style={styles.pickerLeft}>
-                  <LinearGradient colors={['#ECFEFF', '#CFFAFE']} style={styles.pickerIconOrb}>
-                    <MaterialIcons name="translate" size={15} color="#0891B2" />
+                  <LinearGradient colors={isDefaultTheme ? ['#ECFEFF', '#CFFAFE'] : [appTheme.surface, appTheme.cardBg]} style={styles.pickerIconOrb}>
+                    <MaterialIcons name="translate" size={15} color={isDefaultTheme ? "#0891B2" : appTheme.primary} />
                   </LinearGradient>
-                  <Text style={styles.pickerButtonText}>{language}</Text>
+                  <Text style={[styles.pickerButtonText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{language}</Text>
                 </View>
-                <MaterialIcons name="expand-more" size={20} color="#94A3B8" />
+                <MaterialIcons name="expand-more" size={20} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* ATTACH FILE */}
           <View style={styles.fieldHeader}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.sectionLabel}>Attach File  <Text style={{ color: '#94A3B8', fontWeight: '600', textTransform: 'none' }}>optional</Text></Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.sectionLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Attach File  <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '600', textTransform: 'none' }}>optional</Text></Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileAttachmentBox, fileName ? styles.fileAttachmentBoxActive : null]}
+            style={[styles.fileAttachmentBox, fileName ? styles.fileAttachmentBoxActive : null, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: fileName ? appTheme.primary : appTheme.border }]}
             onPress={handleToggleMockFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#CFFAFE', '#ECFEFF'] : ['#F1F5F9', '#F8FAFC']}
+              colors={fileName ? (isDefaultTheme ? ['#CFFAFE', '#ECFEFF'] : [appTheme.surface, appTheme.cardBg]) : (isDefaultTheme ? ['#F1F5F9', '#F8FAFC'] : [appTheme.surface, appTheme.cardBg])}
               style={styles.fileIconOrb}
             >
               <MaterialIcons
                 name={fileName ? "insert-drive-file" : "cloud-upload"}
                 size={18}
-                color={fileName ? "#0891B2" : "#94A3B8"}
+                color={fileName ? (isDefaultTheme ? "#0891B2" : appTheme.primary) : (isDefaultTheme ? "#94A3B8" : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileAttachmentText, fileName ? styles.fileAttachmentTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileAttachmentText, fileName ? styles.fileAttachmentTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName ? fileName : "Tap to choose a file (Image / PDF)"}
             </Text>
             {fileName && (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={17} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={17} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -547,7 +423,7 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#0891B2', '#06B6D4', '#0284C7']}
+                colors={isDefaultTheme ? ['#0891B2', '#06B6D4', '#0284C7'] : [appTheme.primary, appTheme.accent]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.generateBtn}
@@ -576,28 +452,28 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingContainer}>
-              <ActivityIndicator color="#0891B2" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingButtonText}>Generating worksheet…</Text>
+            <View style={[styles.generatingContainer, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.primary }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#0891B2" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingButtonText, !isDefaultTheme && { color: appTheme.primary }]}>Generating worksheet…</Text>
             </View>
           )}
         </View>
 
         {/* ── PROCESSING LOADER ── */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.loaderHeader}>
-              <ActivityIndicator color="#0891B2" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#0891B2" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#0891B2', '#22D3EE']}
+                colors={isDefaultTheme ? ['#0891B2', '#22D3EE'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressBarFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPercentage}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPercentage, !isDefaultTheme && { color: appTheme.textSecondary }]}>{progress}% Complete</Text>
           </View>
         )}
       </ScrollView>
@@ -605,20 +481,20 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
       {/* ── LEVEL SELECTOR PICKER MODAL ── */}
       <Modal visible={levelModalVisible} transparent={true} animationType="slide">
         <PressableModalBackdrop onClose={() => setLevelModalVisible(false)}>
-          <View style={styles.pickerModalContainer}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.pickerModalTitle}>Select Grade Level</Text>
+          <View style={[styles.pickerModalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+            <View style={[styles.sheetHandle, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+            <Text style={[styles.pickerModalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Grade Level</Text>
             {['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8'].map((l) => (
               <TouchableOpacity
                 key={l}
-                style={[styles.pickerModalItem, level === l && styles.pickerModalItemActive]}
+                style={[styles.pickerModalItem, level === l && styles.pickerModalItemActive, !isDefaultTheme && { backgroundColor: level === l ? appTheme.surface : 'transparent' }]}
                 onPress={() => {
                   setLevel(l);
                   setLevelModalVisible(false);
                 }}
               >
-                <Text style={[styles.pickerModalItemText, level === l && styles.pickerModalItemTextActive]}>{l}</Text>
-                {level === l && <MaterialIcons name="check" size={18} color="#0891B2" />}
+                <Text style={[styles.pickerModalItemText, level === l && styles.pickerModalItemTextActive, !isDefaultTheme && { color: level === l ? appTheme.primary : appTheme.textPrimary }]}>{l}</Text>
+                {level === l && <MaterialIcons name="check" size={18} color={isDefaultTheme ? "#0891B2" : appTheme.primary} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -628,20 +504,20 @@ export const WorksheetScreen: React.FC<WorksheetScreenProps> = ({ navigation }) 
       {/* ── LANGUAGE SELECTOR PICKER MODAL ── */}
       <Modal visible={langModalVisible} transparent={true} animationType="slide">
         <PressableModalBackdrop onClose={() => setLangModalVisible(false)}>
-          <View style={styles.pickerModalContainer}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.pickerModalTitle}>Select Language</Text>
+          <View style={[styles.pickerModalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+            <View style={[styles.sheetHandle, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
+            <Text style={[styles.pickerModalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Language</Text>
             {['English', 'Urdu', 'Punjabi', 'Sindhi', 'Pashto'].map((l) => (
               <TouchableOpacity
                 key={l}
-                style={[styles.pickerModalItem, language === l && styles.pickerModalItemActive]}
+                style={[styles.pickerModalItem, language === l && styles.pickerModalItemActive, !isDefaultTheme && { backgroundColor: language === l ? appTheme.surface : 'transparent' }]}
                 onPress={() => {
                   setLanguage(l);
                   setLangModalVisible(false);
                 }}
               >
-                <Text style={[styles.pickerModalItemText, language === l && styles.pickerModalItemTextActive]}>{l}</Text>
-                {language === l && <MaterialIcons name="check" size={18} color="#0891B2" />}
+                <Text style={[styles.pickerModalItemText, language === l && styles.pickerModalItemTextActive, !isDefaultTheme && { color: language === l ? appTheme.primary : appTheme.textPrimary }]}>{l}</Text>
+                {language === l && <MaterialIcons name="check" size={18} color={isDefaultTheme ? "#0891B2" : appTheme.primary} />}
               </TouchableOpacity>
             ))}
           </View>

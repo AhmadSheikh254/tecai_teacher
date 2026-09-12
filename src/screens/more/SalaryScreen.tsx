@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 // @ts-ignore
 import ReactDOM from 'react-dom';
 import { 
@@ -7,15 +7,14 @@ import {
   View, 
   ScrollView, 
   TouchableOpacity, 
-  TextInput, 
   Modal,
-  Platform,
-  useWindowDimensions 
+  Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -59,10 +58,9 @@ type SalaryRecord = {
 };
 
 export const SalaryScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
 
-  // Search Query for payment history
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<SalaryRecord | null>(null);
   const [successToastVisible, setSuccessToastVisible] = useState(false);
 
@@ -82,20 +80,6 @@ export const SalaryScreen = ({ navigation }: any) => {
     }
   ]);
 
-  // Filter history list
-  const filteredRecords = records.filter(item => {
-    const query = searchQuery.toLowerCase();
-    return (
-      item.userName.toLowerCase().includes(query) ||
-      item.gradeName.toLowerCase().includes(query) ||
-      item.netSalary.toString().includes(query)
-    );
-  });
-
-  const handleExportAlert = (format: string) => {
-    alert(`Exported Payment Ledger as ${format} file.`);
-  };
-
   const handleDownloadPaySlip = () => {
     setSelectedRecord(null);
     setSuccessToastVisible(true);
@@ -107,10 +91,10 @@ export const SalaryScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
       {/* ── CLEAN ULTRA-LIGHT OFF-WHITE BG GRADIENT ── */}
       <LinearGradient
-        colors={['#FAFAFA', '#F8FAFC', '#FFFFFF']}
+        colors={isDefaultTheme ? ['#FAFAFA', '#F8FAFC', '#FFFFFF'] : [appTheme.bg, appTheme.bg, appTheme.bg]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -129,17 +113,17 @@ export const SalaryScreen = ({ navigation }: any) => {
         <Path d="M-20,380 Q180,280 400,420 T840,360" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={2} />
       </Svg>
 
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar Header */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={22} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={22} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Salary Payment</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Salary Payment</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="payments" size={22} color="#BE123C" />
+          <TouchableOpacity style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} activeOpacity={0.7}>
+            <MaterialIcons name="payments" size={22} color={isDefaultTheme ? "#BE123C" : appTheme.primary} />
           </TouchableOpacity>
         </View>
 
@@ -154,7 +138,7 @@ export const SalaryScreen = ({ navigation }: any) => {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* MAIN PAYMENT LEDGER CARD */}
-          <View style={styles.ledgerCard}>
+          <View style={[styles.ledgerCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             
             {/* Portal Title Banner */}
             <View style={styles.portalTitleBox}>
@@ -165,7 +149,7 @@ export const SalaryScreen = ({ navigation }: any) => {
             {/* Salary Record Cards */}
             <View style={styles.recordsList}>
               {records.map((item) => (
-                <View key={item.id} style={styles.recordCard}>
+                <View key={item.id} style={[styles.recordCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                   <View style={styles.leftRoseAccent} />
 
                   {/* 1. View Action + User Name + Grade Header */}

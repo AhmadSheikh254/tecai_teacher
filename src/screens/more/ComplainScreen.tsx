@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -7,19 +7,18 @@ import {
   TouchableOpacity, 
   TextInput, 
   Modal,
-  Animated,
-  useWindowDimensions,
   Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export const ComplainScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
 
   // Screen States
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [formVisible, setFormVisible] = useState(false);
   const [successToastVisible, setSuccessToastVisible] = useState(false);
@@ -49,28 +48,6 @@ export const ComplainScreen = ({ navigation }: any) => {
 
   // Active Picker Modal State
   const [activePicker, setActivePicker] = useState<'userType' | 'complainAgainst' | null>(null);
-
-  // Skeleton Pulse Animation
-  const [pulseAnim] = useState(new Animated.Value(0.3));
-
-  useEffect(() => {
-    if (loading) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 0.8,
-            duration: 600,
-            useNativeDriver: false
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 0.3,
-            duration: 600,
-            useNativeDriver: false
-          })
-        ])
-      ).start();
-    }
-  }, [loading]);
 
   // Open form to Create
   const handleOpenCreateForm = () => {
@@ -123,7 +100,6 @@ export const ComplainScreen = ({ navigation }: any) => {
       return;
     }
 
-    const todayStr = '08/06/2026';
     const currentTimeStr = '08/06/2026 11:15 PM';
 
     if (editingComplain) {
@@ -184,16 +160,16 @@ export const ComplainScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* App Bar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
+          <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => navigation.goBack()}>
+            <MaterialIcons name="arrow-back" size={24} color={isDefaultTheme ? theme.colors.onSurface : appTheme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Complain View</Text>
+          <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Complain View</Text>
         </View>
-        <TouchableOpacity style={styles.createFABHeaderBtn} onPress={handleOpenCreateForm}>
+        <TouchableOpacity style={[styles.createFABHeaderBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} onPress={handleOpenCreateForm}>
           <MaterialIcons name="add" size={18} color="#fff" style={{ marginRight: 4 }} />
           <Text style={styles.createFABBtnText}>Create</Text>
         </TouchableOpacity>
@@ -214,32 +190,32 @@ export const ComplainScreen = ({ navigation }: any) => {
         {/* Complain View List Title */}
         <View style={styles.recordsHeaderRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialIcons name="feedback" size={18} color={theme.colors.onSurface} />
-            <Text style={styles.recordsSectionTitle}>Complain List</Text>
+            <MaterialIcons name="feedback" size={18} color={isDefaultTheme ? theme.colors.onSurface : appTheme.primary} />
+            <Text style={[styles.recordsSectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Complain List</Text>
           </View>
 
         </View>
 
         {/* Search input field */}
-        <View style={styles.searchWrapper}>
-          <MaterialIcons name="search" size={20} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
+        <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+          <MaterialIcons name="search" size={20} color={isDefaultTheme ? theme.colors.onSurfaceVariant : appTheme.textSecondary} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
             placeholder="Search complains, type or target..."
-            placeholderTextColor={theme.colors.onSurfaceVariant}
+            placeholderTextColor={isDefaultTheme ? theme.colors.onSurfaceVariant : appTheme.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery !== '' && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <MaterialIcons name="close" size={18} color={theme.colors.onSurfaceVariant} />
+              <MaterialIcons name="close" size={18} color={isDefaultTheme ? theme.colors.onSurfaceVariant : appTheme.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
 
         {/* Complains Cards List rendering */}
         {filteredComplains.length === 0 ? (
-          <View style={[styles.emptyContainer, theme.shadows.level1]}>
+          <View style={[styles.emptyContainer, theme.shadows.level1, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.emptyIconCircle}>
               <MaterialIcons name="feedback" size={48} color={theme.colors.outline} />
             </View>
@@ -251,21 +227,21 @@ export const ComplainScreen = ({ navigation }: any) => {
             {filteredComplains.map((item) => {
               const statusStyle = getStatusColor(item.status);
               return (
-                <View key={item.id} style={[styles.complainCard, theme.shadows.level1]}>
+                <View key={item.id} style={[styles.complainCard, theme.shadows.level1, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                   {/* Accent colored left strip */}
                   <View style={[styles.cardLeftStrip, { backgroundColor: statusStyle.text }]} />
                   
                   {/* Card Content details */}
                   <View style={styles.complainCardContent}>
                     <View style={styles.cardHeaderRow}>
-                      <Text style={styles.complainAgainstText}>{item.complainAgainst}</Text>
+                      <Text style={[styles.complainAgainstText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.complainAgainst}</Text>
                       <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border }]}>
                         <Text style={[styles.statusText, { color: statusStyle.text }]}>{item.status}</Text>
                       </View>
                     </View>
 
-                    <Text style={styles.complainTypeText} numberOfLines={1}>Type: {item.complainType}</Text>
-                    <Text style={styles.complainDescText}>{item.complainDesc}</Text>
+                    <Text style={[styles.complainTypeText, !isDefaultTheme && { color: appTheme.textSecondary }]} numberOfLines={1}>Type: {item.complainType}</Text>
+                    <Text style={[styles.complainDescText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.complainDesc}</Text>
 
                     <View style={styles.complainTimeRow}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -472,6 +448,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   appBar: {
     height: 64,
@@ -711,6 +690,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     maxHeight: '85%',
     paddingBottom: 30,
+    width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
   },
   sheetHandle: {
     width: 40,
@@ -844,7 +826,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerContainer: {
-    width: '80%',
+    width: '88%',
+    maxWidth: 420,
+    alignSelf: 'center',
     backgroundColor: theme.colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 20,

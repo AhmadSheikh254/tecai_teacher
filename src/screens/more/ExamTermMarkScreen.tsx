@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -53,6 +54,9 @@ export type StudentTermMarkRecord = {
 };
 
 export const ExamTermMarkScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   // Search Filter Criteria States
   const [selectedTerm, setSelectedTerm] = useState('1st Assessment');
   const [selectedClass, setSelectedClass] = useState('GRADE-V');
@@ -162,72 +166,91 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
   const pickerData = getPickerOptions();
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar Header */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            <TouchableOpacity 
+              style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+              onPress={() => navigation.goBack()} 
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-back" size={20} color={!isDefaultTheme ? appTheme.textPrimary : '#0F172A'} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exam Term Marks</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Exam Term Marks</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="assignment-turned-in" size={20} color="#0284C7" />
+          <TouchableOpacity 
+            style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="assignment-turned-in" size={20} color={appTheme.primary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* SEARCH CRITERIA CARD FORM */}
-          <View style={styles.filterCard}>
+          <View style={[styles.filterCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.filterCardHeader}>
-              <MaterialIcons name="tune" size={18} color="#0284C7" />
-              <Text style={styles.filterCardTitle}>Select Exam Term Criteria</Text>
+              <MaterialIcons name="tune" size={18} color={appTheme.primary} />
+              <Text style={[styles.filterCardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Exam Term Criteria</Text>
             </View>
 
             {/* Form Fields Grid */}
             <View style={styles.formGrid}>
               {/* 1. Exam Term */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Exam Term <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('term')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#ECFDF5' }]}>
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Exam Term <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity 
+                  style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+                  onPress={() => setPickerModalType('term')} 
+                  activeOpacity={0.75}
+                >
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#ECFDF5' : appTheme.surface }]}>
                     <MaterialIcons name="event" size={16} color="#059669" />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedTerm}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedTerm}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
 
               {/* 2. Class */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Class <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('class')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#EFF6FF' }]}>
-                    <MaterialIcons name="school" size={16} color="#0284C7" />
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Class <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity 
+                  style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+                  onPress={() => setPickerModalType('class')} 
+                  activeOpacity={0.75}
+                >
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#EFF6FF' : appTheme.surface }]}>
+                    <MaterialIcons name="school" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedClass}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedClass}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
 
               {/* 3. Section */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Section <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('section')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#F3E8FF' }]}>
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Section <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity 
+                  style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
+                  onPress={() => setPickerModalType('section')} 
+                  activeOpacity={0.75}
+                >
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#F3E8FF' : appTheme.surface }]}>
                     <MaterialIcons name="grid-view" size={16} color="#7E22CE" />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedSection}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedSection}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Find Button */}
             <TouchableOpacity 
-              style={styles.findButton} 
+              style={[styles.findButton, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
               onPress={() => setIsSearched(true)}
               activeOpacity={0.8}
             >
@@ -239,27 +262,27 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
 
           {/* STUDENT TERM MARKS TABLE LEDGER CARD */}
           {isSearched && (
-            <View style={styles.ledgerCard}>
-              <View style={styles.portalTitleBox}>
-                <MaterialIcons name="assignment" size={18} color="#0284C7" />
-                <Text style={styles.portalTitleText}>Student Term Marks Roster</Text>
+            <View style={[styles.ledgerCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.portalTitleBox, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <MaterialIcons name="assignment" size={18} color={appTheme.primary} />
+                <Text style={[styles.portalTitleText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Student Term Marks Roster</Text>
               </View>
 
               {/* Search Row */}
               <View style={styles.searchRow}>
-                <Text style={styles.searchLabel}>Search:</Text>
-                <View style={styles.searchWrapper}>
-                  <MaterialIcons name="search" size={18} color="#64748B" style={{ marginRight: 6 }} />
+                <Text style={[styles.searchLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Search:</Text>
+                <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="search" size={18} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} style={{ marginRight: 6 }} />
                   <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                     placeholder="Search student name, roll no..."
-                    placeholderTextColor="#64748B"
+                    placeholderTextColor={!isDefaultTheme ? appTheme.textSecondary : '#64748B'}
                     value={tableSearch}
                     onChangeText={setTableSearch}
                   />
                   {tableSearch !== '' && (
                     <TouchableOpacity onPress={() => setTableSearch('')} style={{ padding: 4 }}>
-                      <MaterialIcons name="close" size={16} color="#64748B" />
+                      <MaterialIcons name="close" size={16} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -269,32 +292,32 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
               <View style={styles.studentList}>
                 {filteredStudents.length === 0 ? (
                   <View style={styles.emptyContainer}>
-                    <MaterialIcons name="person-off" size={40} color="#94A3B8" />
-                    <Text style={styles.emptyTitle}>No Students Found</Text>
-                    <Text style={styles.emptyDesc}>Try adjusting the filter criteria or search query.</Text>
+                    <MaterialIcons name="person-off" size={40} color={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'} />
+                    <Text style={[styles.emptyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>No Students Found</Text>
+                    <Text style={[styles.emptyDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>Try adjusting the filter criteria or search query.</Text>
                   </View>
                 ) : (
                   filteredStudents.map((item) => (
-                    <View key={item.rollNo} style={styles.studentCard}>
-                      <View style={styles.leftAccentTag} />
+                    <View key={item.rollNo} style={[styles.studentCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <View style={[styles.leftAccentTag, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
 
                       {/* Header: Student Profile, Actions & Live Percentage Badge */}
-                      <View style={styles.studentCardHeader}>
+                      <View style={[styles.studentCardHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                         <View style={styles.studentProfileInfo}>
-                          <View style={styles.studentAvatar}>
-                            <MaterialIcons name="school" size={18} color="#0284C7" />
+                          <View style={[styles.studentAvatar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                            <MaterialIcons name="school" size={18} color={appTheme.primary} />
                           </View>
                           <View>
-                            <Text style={styles.studentNameText}>{item.name}</Text>
+                            <Text style={[styles.studentNameText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.name}</Text>
                             <View style={styles.rollTagBox}>
-                              <Text style={styles.rollTagText}>Roll No: {item.rollNo}</Text>
+                              <Text style={[styles.rollTagText, !isDefaultTheme && { color: appTheme.primary }]}>Roll No: {item.rollNo}</Text>
                             </View>
                           </View>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           {/* Live Percentage Badge */}
-                          <View style={styles.totalBadgeBox}>
+                          <View style={[styles.totalBadgeBox, !isDefaultTheme && { backgroundColor: isDefaultTheme ? '#F0FDF4' : 'rgba(22, 163, 74, 0.15)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
                             <Text style={styles.totalBadgeLabel}>PERCENTAGE</Text>
                             <Text style={styles.totalScoreObtained}>{item.percentage}</Text>
                           </View>
@@ -302,15 +325,15 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                           {/* Action Buttons */}
                           <View style={styles.headerActionBtns}>
                             <TouchableOpacity 
-                              style={styles.actionIconBtn} 
+                              style={[styles.actionIconBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                               onPress={() => setSelectedStudent(item)}
                               activeOpacity={0.8}
                             >
-                              <MaterialIcons name="visibility" size={15} color="#0284C7" />
+                              <MaterialIcons name="visibility" size={15} color={appTheme.primary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity 
-                              style={styles.actionIconBtn} 
+                              style={[styles.actionIconBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                               onPress={() => setEditingStudent({ ...item })}
                               activeOpacity={0.8}
                             >
@@ -318,7 +341,7 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                             </TouchableOpacity>
 
                             <TouchableOpacity 
-                              style={styles.actionIconBtn} 
+                              style={[styles.actionIconBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                               onPress={() => setDeleteConfirmRoll(item.rollNo)}
                               activeOpacity={0.8}
                             >
@@ -332,22 +355,22 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                       <View style={styles.marksEntrySection}>
                         
                         {/* 1. Obtained Marks Input */}
-                        <View style={styles.markInputCard}>
+                        <View style={[styles.markInputCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                           <View style={styles.markCardHeader}>
-                            <Text style={styles.markSectionTitle}>OBTAINED MARKS</Text>
-                            <View style={styles.lockedMaxBadge}>
-                              <MaterialIcons name="lock" size={11} color="#64748B" />
-                              <Text style={styles.lockedMaxText}>Max: {item.totalMarksMax}</Text>
+                            <Text style={[styles.markSectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>OBTAINED MARKS</Text>
+                            <View style={[styles.lockedMaxBadge, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                              <MaterialIcons name="lock" size={11} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
+                              <Text style={[styles.lockedMaxText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Max: {item.totalMarksMax}</Text>
                             </View>
                           </View>
 
-                          <View style={styles.inputContainerWithUnit}>
+                          <View style={[styles.inputContainerWithUnit, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                             <TextInput 
-                              style={styles.largeMarksInput}
+                              style={[styles.largeMarksInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                               value={item.totalMarksObtained}
                               keyboardType="numeric"
                               placeholder="0"
-                              placeholderTextColor="#94A3B8"
+                              placeholderTextColor={!isDefaultTheme ? appTheme.textSecondary : '#94A3B8'}
                               onChangeText={(text) => {
                                 const obt = parseFloat(text) || 0;
                                 const max = parseFloat(item.totalMarksMax) || 100;
@@ -360,20 +383,20 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                                 } : s));
                               }}
                             />
-                            <Text style={styles.inputUnitLabel}>marks</Text>
+                            <Text style={[styles.inputUnitLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>marks</Text>
                           </View>
                         </View>
 
                         {/* 2. Total Result Summary Box */}
-                        <View style={styles.markInputCard}>
+                        <View style={[styles.markInputCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                           <View style={styles.markCardHeader}>
-                            <Text style={styles.markSectionTitle}>TOTAL SCORE</Text>
-                            <Text style={styles.optionalBadgeText}>Calculated</Text>
+                            <Text style={[styles.markSectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>TOTAL SCORE</Text>
+                            <Text style={[styles.optionalBadgeText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Calculated</Text>
                           </View>
 
-                          <View style={[styles.inputContainerWithUnit, { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
-                            <Text style={[styles.largeMarksInput, { color: '#047857' }]}>
-                              {item.totalMarksObtained || '0'} <Text style={{ fontSize: 13, color: '#64748B' }}>/ {item.totalMarksMax}</Text>
+                          <View style={[styles.inputContainerWithUnit, isDefaultTheme ? { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' } : { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                            <Text style={[styles.largeMarksInput, { color: '#059669' }]}>
+                              {item.totalMarksObtained || '0'} <Text style={{ fontSize: 13, color: !isDefaultTheme ? appTheme.textSecondary : '#64748B' }}>/ {item.totalMarksMax}</Text>
                             </Text>
                           </View>
                         </View>
@@ -385,9 +408,9 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                         
                         {/* Exam Grade Selector */}
                         <View style={styles.selectorCol}>
-                          <Text style={styles.fieldHeadingLabel}>EXAM GRADE</Text>
+                          <Text style={[styles.fieldHeadingLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM GRADE</Text>
                           <TouchableOpacity 
-                            style={styles.premiumDropdownBtn} 
+                            style={[styles.premiumDropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                             onPress={() => {
                               setActiveStudentRoll(item.rollNo);
                               setPickerModalType('grade');
@@ -397,18 +420,18 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                             <View style={styles.gradeIconWrap}>
                               <MaterialIcons name="military-tech" size={16} color="#D97706" />
                             </View>
-                            <Text style={styles.premiumDropdownText}>
+                            <Text style={[styles.premiumDropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                               {item.examGrade || 'Select'}
                             </Text>
-                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                            <MaterialIcons name="arrow-drop-down" size={22} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                           </TouchableOpacity>
                         </View>
 
                         {/* Remark Selector */}
                         <View style={styles.selectorCol}>
-                          <Text style={styles.fieldHeadingLabel}>TEACHER REMARK</Text>
+                          <Text style={[styles.fieldHeadingLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>TEACHER REMARK</Text>
                           <TouchableOpacity 
-                            style={styles.premiumDropdownBtn} 
+                            style={[styles.premiumDropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]} 
                             onPress={() => {
                               setActiveStudentRoll(item.rollNo);
                               setPickerModalType('remark');
@@ -416,12 +439,12 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                             activeOpacity={0.8}
                           >
                             <View style={styles.remarkIconWrap}>
-                              <MaterialIcons name="rate-review" size={15} color="#0284C7" />
+                              <MaterialIcons name="rate-review" size={15} color={appTheme.primary} />
                             </View>
-                            <Text style={styles.premiumDropdownText} numberOfLines={1}>
+                            <Text style={[styles.premiumDropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>
                               {item.remark || 'Select'}
                             </Text>
-                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                            <MaterialIcons name="arrow-drop-down" size={22} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                           </TouchableOpacity>
                         </View>
 
@@ -434,7 +457,7 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
 
               {/* POST MARKS ACTION BUTTON */}
               <TouchableOpacity 
-                style={styles.saveBtn} 
+                style={[styles.saveBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
                 onPress={handlePostMarks}
                 activeOpacity={0.85}
               >
@@ -456,11 +479,11 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
           }}
         >
           {pickerData && (
-            <View style={styles.pickerModalContainer}>
-              <View style={styles.pickerModalHeader}>
-                <Text style={styles.pickerModalTitle}>{pickerData.title}</Text>
+            <View style={[styles.pickerModalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.pickerModalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.pickerModalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{pickerData.title}</Text>
                 <TouchableOpacity onPress={() => setPickerModalType(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
               <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
@@ -469,18 +492,22 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                   return (
                     <TouchableOpacity
                       key={opt}
-                      style={[styles.pickerOptionItem, isSelected && styles.pickerOptionActive]}
+                      style={[
+                        styles.pickerOptionItem,
+                        !isDefaultTheme && { backgroundColor: appTheme.surface },
+                        isSelected && (isDefaultTheme ? styles.pickerOptionActive : { backgroundColor: appTheme.cardBg, borderColor: appTheme.primary, borderWidth: 1 })
+                      ]}
                       onPress={() => {
                         pickerData.onSelect(opt);
                         setPickerModalType(null);
                         setActiveStudentRoll(null);
                       }}
                     >
-                      <Text style={[styles.pickerOptionText, isSelected && styles.pickerOptionTextActive]}>{opt}</Text>
+                      <Text style={[styles.pickerOptionText, !isDefaultTheme && { color: appTheme.textPrimary }, isSelected && { color: appTheme.primary, fontWeight: '900' }]}>{opt}</Text>
                       {isSelected ? (
-                        <MaterialIcons name="check-circle" size={18} color="#0284C7" />
+                        <MaterialIcons name="check-circle" size={18} color={appTheme.primary} />
                       ) : (
-                        <MaterialIcons name="radio-button-unchecked" size={18} color="#CBD5E1" />
+                        <MaterialIcons name="radio-button-unchecked" size={18} color={!isDefaultTheme ? appTheme.border : '#CBD5E1'} />
                       )}
                     </TouchableOpacity>
                   );
@@ -496,69 +523,69 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
           onClose={() => setSelectedStudent(null)}
         >
           {selectedStudent && (
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.modalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <View style={styles.modalIconBox}>
-                    <MaterialIcons name="person" size={20} color="#0284C7" />
+                  <View style={[styles.modalIconBox, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                    <MaterialIcons name="person" size={20} color={appTheme.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.modalTitle}>{selectedStudent.name}</Text>
-                    <Text style={styles.modalSubTitle}>Roll No: {selectedStudent.rollNo}</Text>
+                    <Text style={[styles.modalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedStudent.name}</Text>
+                    <Text style={[styles.modalSubTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Roll No: {selectedStudent.rollNo}</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => setSelectedStudent(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.breakdownTable}>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>STUDENT NAME</Text>
-                  <Text style={styles.tableRowValue}>{selectedStudent.name}</Text>
+              <View style={[styles.breakdownTable, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>STUDENT NAME</Text>
+                  <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedStudent.name}</Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>ROLL NUMBER</Text>
-                  <Text style={styles.tableRowValue}>{selectedStudent.rollNo}</Text>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>ROLL NUMBER</Text>
+                  <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedStudent.rollNo}</Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>EXAM TERM</Text>
-                  <Text style={styles.tableRowValue}>{selectedTerm}</Text>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM TERM</Text>
+                  <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedTerm}</Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>CLASS & SECTION</Text>
-                  <Text style={styles.tableRowValue}>{selectedClass} - {selectedSection}</Text>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>CLASS & SECTION</Text>
+                  <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedClass} - {selectedSection}</Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>OBTAINED / MAX</Text>
-                  <Text style={[styles.tableRowValue, { color: '#0284C7', fontWeight: '800' }]}>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>OBTAINED / MAX</Text>
+                  <Text style={[styles.tableRowValue, { color: appTheme.primary, fontWeight: '800' }]}>
                     {selectedStudent.totalMarksObtained} / {selectedStudent.totalMarksMax}
                   </Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>PERCENTAGE</Text>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>PERCENTAGE</Text>
                   <Text style={[styles.tableRowValue, { color: '#059669', fontWeight: '800' }]}>
                     {selectedStudent.percentage}
                   </Text>
                 </View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableRowLabel}>EXAM GRADE</Text>
+                <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM GRADE</Text>
                   <Text style={[styles.tableRowValue, { color: '#D97706', fontWeight: '800' }]}>
                     {selectedStudent.examGrade}
                   </Text>
                 </View>
                 <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
-                  <Text style={styles.tableRowLabel}>REMARK</Text>
-                  <Text style={styles.tableRowValue}>{selectedStudent.remark}</Text>
+                  <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>REMARK</Text>
+                  <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedStudent.remark}</Text>
                 </View>
               </View>
 
               <TouchableOpacity 
-                style={styles.modalCloseActionButton} 
+                style={[styles.modalCloseActionButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                 onPress={() => setSelectedStudent(null)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalCloseActionText}>Close Details</Text>
+                <Text style={[styles.modalCloseActionText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Close Details</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -570,28 +597,28 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
           onClose={() => setEditingStudent(null)}
         >
           {editingStudent && (
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.modalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <View style={[styles.modalIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <View style={[styles.modalIconBox, { backgroundColor: isDefaultTheme ? '#FEF3C7' : 'rgba(217, 119, 6, 0.15)' }]}>
                     <MaterialIcons name="edit" size={20} color="#D97706" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.modalTitle}>Edit Term Marks</Text>
-                    <Text style={styles.modalSubTitle}>{editingStudent.name} (Roll #{editingStudent.rollNo})</Text>
+                    <Text style={[styles.modalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Edit Term Marks</Text>
+                    <Text style={[styles.modalSubTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>{editingStudent.name} (Roll #{editingStudent.rollNo})</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => setEditingStudent(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
 
               <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
                 <View style={{ gap: 12 }}>
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Student Name</Text>
+                    <Text style={[styles.inputLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Student Name</Text>
                     <TextInput 
-                      style={styles.modalInput} 
+                      style={[styles.modalInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]} 
                       value={editingStudent.name} 
                       onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, name: val } : null)} 
                     />
@@ -599,18 +626,18 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
 
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.inputLabel}>Obtained Marks</Text>
+                      <Text style={[styles.inputLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Obtained Marks</Text>
                       <TextInput 
-                        style={styles.modalInput} 
+                        style={[styles.modalInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]} 
                         value={editingStudent.totalMarksObtained} 
                         keyboardType="numeric"
                         onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, totalMarksObtained: val } : null)} 
                       />
                     </View>
                     <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.inputLabel}>Max Marks</Text>
+                      <Text style={[styles.inputLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Max Marks</Text>
                       <TextInput 
-                        style={styles.modalInput} 
+                        style={[styles.modalInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]} 
                         value={editingStudent.totalMarksMax} 
                         keyboardType="numeric"
                         onChangeText={(val) => setEditingStudent(prev => prev ? { ...prev, totalMarksMax: val } : null)} 
@@ -619,38 +646,54 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Exam Grade</Text>
+                    <Text style={[styles.inputLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Exam Grade</Text>
                     <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                      {gradeOptions.map(g => (
-                        <TouchableOpacity
-                          key={g}
-                          style={[
-                            styles.chipOption,
-                            editingStudent.examGrade === g && styles.chipOptionActive
-                          ]}
-                          onPress={() => setEditingStudent(prev => prev ? { ...prev, examGrade: g } : null)}
-                        >
-                          <Text style={[styles.chipText, editingStudent.examGrade === g && styles.chipTextActive]}>{g}</Text>
-                        </TouchableOpacity>
-                      ))}
+                      {gradeOptions.map(g => {
+                        const isGActive = editingStudent.examGrade === g;
+                        return (
+                          <TouchableOpacity
+                            key={g}
+                            style={[
+                              styles.chipOption,
+                              !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              isGActive && (isDefaultTheme ? styles.chipOptionActive : { backgroundColor: appTheme.primary, borderColor: appTheme.primary })
+                            ]}
+                            onPress={() => setEditingStudent(prev => prev ? { ...prev, examGrade: g } : null)}
+                          >
+                            <Text style={[
+                              styles.chipText, 
+                              !isDefaultTheme && { color: appTheme.textSecondary },
+                              isGActive && (isDefaultTheme ? styles.chipTextActive : { color: '#FFFFFF', fontWeight: '900' })
+                            ]}>{g}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Remarks</Text>
+                    <Text style={[styles.inputLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Remarks</Text>
                     <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                      {remarkOptions.map(r => (
-                        <TouchableOpacity
-                          key={r}
-                          style={[
-                            styles.chipOption,
-                            editingStudent.remark === r && styles.chipOptionActive
-                          ]}
-                          onPress={() => setEditingStudent(prev => prev ? { ...prev, remark: r } : null)}
-                        >
-                          <Text style={[styles.chipText, editingStudent.remark === r && styles.chipTextActive]}>{r}</Text>
-                        </TouchableOpacity>
-                      ))}
+                      {remarkOptions.map(r => {
+                        const isRActive = editingStudent.remark === r;
+                        return (
+                          <TouchableOpacity
+                            key={r}
+                            style={[
+                              styles.chipOption,
+                              !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              isRActive && (isDefaultTheme ? styles.chipOptionActive : { backgroundColor: appTheme.primary, borderColor: appTheme.primary })
+                            ]}
+                            onPress={() => setEditingStudent(prev => prev ? { ...prev, remark: r } : null)}
+                          >
+                            <Text style={[
+                              styles.chipText, 
+                              !isDefaultTheme && { color: appTheme.textSecondary },
+                              isRActive && (isDefaultTheme ? styles.chipTextActive : { color: '#FFFFFF', fontWeight: '900' })
+                            ]}>{r}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
                   </View>
                 </View>
@@ -658,14 +701,14 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
                 <TouchableOpacity 
-                  style={[styles.modalActionBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' }]} 
+                  style={[styles.modalActionBtn, isDefaultTheme ? { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' } : { backgroundColor: appTheme.surface, borderWidth: 1, borderColor: appTheme.border }]} 
                   onPress={() => setEditingStudent(null)}
                 >
-                  <Text style={[styles.modalActionBtnText, { color: '#475569' }]}>Cancel</Text>
+                  <Text style={[styles.modalActionBtnText, { color: !isDefaultTheme ? appTheme.textSecondary : '#475569' }]}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={[styles.modalActionBtn, { backgroundColor: '#0284C7' }]} 
+                  style={[styles.modalActionBtn, { backgroundColor: appTheme.primary }]} 
                   onPress={handleSaveStudentEdit}
                 >
                   <Text style={[styles.modalActionBtnText, { color: '#FFFFFF' }]}>Save Changes</Text>
@@ -681,32 +724,32 @@ export const ExamTermMarkScreen = ({ navigation }: any) => {
           onClose={() => setDeleteConfirmRoll(null)}
         >
           {deleteConfirmRoll && (
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.modalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
+                  <View style={[styles.modalIconBox, { backgroundColor: isDefaultTheme ? '#FEE2E2' : 'rgba(239, 68, 68, 0.15)' }]}>
                     <MaterialIcons name="delete" size={20} color="#EF4444" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.modalTitle}>Delete Record</Text>
-                    <Text style={styles.modalSubTitle}>Roll No: {deleteConfirmRoll}</Text>
+                    <Text style={[styles.modalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Delete Record</Text>
+                    <Text style={[styles.modalSubTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>Roll No: {deleteConfirmRoll}</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => setDeleteConfirmRoll(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={!isDefaultTheme ? appTheme.textSecondary : '#64748B'} />
                 </TouchableOpacity>
               </View>
 
-              <Text style={{ fontSize: 13.5, color: '#475569', lineHeight: 20, marginVertical: 12 }}>
+              <Text style={[{ fontSize: 13.5, color: '#475569', lineHeight: 20, marginVertical: 12 }, !isDefaultTheme && { color: appTheme.textSecondary }]}>
                 Are you sure you want to delete the term marks record for Roll #{deleteConfirmRoll}? This action cannot be undone.
               </Text>
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
                 <TouchableOpacity 
-                  style={[styles.modalActionBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' }]} 
+                  style={[styles.modalActionBtn, isDefaultTheme ? { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' } : { backgroundColor: appTheme.surface, borderWidth: 1, borderColor: appTheme.border }]} 
                   onPress={() => setDeleteConfirmRoll(null)}
                 >
-                  <Text style={[styles.modalActionBtnText, { color: '#475569' }]}>Cancel</Text>
+                  <Text style={[styles.modalActionBtnText, { color: !isDefaultTheme ? appTheme.textSecondary : '#475569' }]}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 

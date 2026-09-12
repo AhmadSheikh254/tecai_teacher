@@ -7,17 +7,13 @@ import {
   TouchableOpacity, 
   TextInput,
   Modal,
-  ActivityIndicator,
-  useWindowDimensions,
-  Dimensions
+  ActivityIndicator
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTheme } from '../../context/ThemeContext';
 import Svg, { Rect, Circle, Path, G, Line, Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText } from 'react-native-svg';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface AIToolkitScreenProps {
   navigation: any;
@@ -507,8 +503,8 @@ const ToolWatermark = ({ toolId, color }: { toolId: string; color: string }) => 
 };
 
 export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) => {
-  const { width } = useWindowDimensions();
-  const isSmallScreen = width < 340;
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -787,29 +783,29 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC', width: '100%' }}>
-      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: isDefaultTheme ? '#F8FAFC' : appTheme.bg, width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
       
       {/* ── APP HEADER ── */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, { maxWidth: 768, width: '100%', alignSelf: 'center' }, appTheme.isDark && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <MaterialIcons name="arrow-back" size={20} color="#003d9b" />
+          <TouchableOpacity style={[styles.backButton, appTheme.isDark && { backgroundColor: appTheme.surface }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <MaterialIcons name="arrow-back" size={20} color={!appTheme.isDark ? "#003d9b" : appTheme.textPrimary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Teacher Toolkit</Text>
+            <Text style={[styles.headerTitle, appTheme.isDark && { color: appTheme.textPrimary }]}>Teacher Toolkit</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-          <MaterialIcons name="auto-awesome" size={20} color="#0052cc" />
+        <TouchableOpacity style={[styles.appBarIconButton, appTheme.isDark && { backgroundColor: appTheme.surface }]} activeOpacity={0.7}>
+          <MaterialIcons name="auto-awesome" size={20} color={!appTheme.isDark ? "#0052cc" : appTheme.primary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { maxWidth: 768, width: '100%', alignSelf: 'center' }]} showsVerticalScrollIndicator={false}>
         
         {/* ── GLOWING AURORA GRADIENT HERO BANNER ── */}
         <LinearGradient 
-          colors={['#0A1938', '#0E2E8C', '#1D4ED8']} // richer, deeper futuristic gradient transition
+          colors={!appTheme.isDark ? ['#0A1938', '#0E2E8C', '#1D4ED8'] : appTheme.bannerGradient} 
           start={{ x: 0, y: 0 }} 
           end={{ x: 1, y: 1 }} 
           style={styles.heroBanner}
@@ -861,20 +857,20 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
         {/* ── SEARCH INPUT ── */}
         <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
+          <View style={[styles.searchBar, appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
             <View style={styles.searchIconBox}>
-              <MaterialIcons name="search" size={18} color="#003d9b" />
+              <MaterialIcons name="search" size={18} color={!appTheme.isDark ? "#003d9b" : appTheme.primary} />
             </View>
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, appTheme.isDark && { color: appTheme.textPrimary }]}
               placeholder="Search AI builders..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={!appTheme.isDark ? "#94A3B8" : appTheme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery !== '' && (
               <TouchableOpacity style={{ padding: 8 }} onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                <MaterialIcons name="close" size={16} color="#64748B" />
+                <MaterialIcons name="close" size={16} color={!appTheme.isDark ? "#64748B" : appTheme.textMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -886,12 +882,19 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
             {filteredTools.map((tool) => (
               <TouchableOpacity 
                 key={tool.id} 
-                style={[styles.toolCard, { shadowColor: tool.color, backgroundColor: tool.cardBg || '#FFFFFF' }]}
+                style={[
+                  styles.toolCard, 
+                  { 
+                    shadowColor: tool.color, 
+                    backgroundColor: !appTheme.isDark ? (tool.cardBg || '#FFFFFF') : appTheme.cardBg,
+                    borderColor: !appTheme.isDark ? '#F1F5F9' : appTheme.border
+                  }
+                ]}
                 activeOpacity={0.85}
                 onPress={() => {
                   const noFrom = { fromScreen: undefined };
                   if (tool.id === 'lesson_plan') {
-                    navigation.navigate('LessonPlan', noFrom);
+                    navigation.navigate('AILessonPlan', noFrom);
                   } else if (tool.id === 'worksheet') {
                     navigation.navigate('Worksheet', noFrom);
                   } else if (tool.id === 'chatbot') {
@@ -919,7 +922,7 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
               >
                 {/* Glowing shadow backdrop gradient */}
                 <LinearGradient
-                  colors={['#FFFFFF', tool.color + '07']}
+                  colors={!appTheme.isDark ? ['#FFFFFF', tool.color + '07'] : [appTheme.cardBg, tool.color + '15']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
@@ -945,15 +948,15 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                 {/* Metadata Content */}
                 <View style={styles.toolMeta}>
-                  <Text style={styles.toolName} numberOfLines={1}>{tool.title}</Text>
+                  <Text style={[styles.toolName, appTheme.isDark && { color: appTheme.textPrimary }]} numberOfLines={1}>{tool.title}</Text>
                 </View>
 
                 {/* Navigation arrow badge */}
                 <LinearGradient
-                  colors={['#FFFFFF', tool.color + '12']}
+                  colors={!appTheme.isDark ? ['#FFFFFF', tool.color + '12'] : [appTheme.surface, tool.color + '22']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[styles.chevronWrapper, { borderColor: tool.color + '45', shadowColor: tool.color }]}
+                  style={[styles.chevronWrapper, { borderColor: !appTheme.isDark ? (tool.color + '45') : (tool.color + '60'), shadowColor: tool.color }]}
                 >
                   <Svg width="30" height="30" viewBox="0 0 42 42">
                     <Circle cx="21" cy="21" r="18" stroke={tool.color} strokeWidth={0.9} strokeDasharray="2.5,3.5" opacity={0.38} fill="none" />
@@ -981,10 +984,10 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
         onRequestClose={() => setActiveTool(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.formContainer}>
+          <View style={[styles.formContainer, appTheme.isDark && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             
             {/* Modal Header */}
-            <LinearGradient colors={['#0A1F5C', '#003d9b']} style={styles.formHeader}>
+            <LinearGradient colors={appTheme.isDark ? ['#1e1b4b', '#312e81'] : ['#0A1F5C', '#003d9b']} style={styles.formHeader}>
               <View style={styles.formHeaderLeft}>
                 <View style={[styles.modalHeaderIconBox, { backgroundColor: activeTool?.bg }]}>
                   <MaterialIcons name={activeTool?.icon as any} size={18} color={activeTool?.color} />
@@ -1004,18 +1007,27 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 <>
                   {/* Focus Area Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Lesson Focus Area</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Lesson Focus Area</Text>
                     <View style={styles.gradeContainer}>
                       {['Conceptual Understanding', 'Practical Application', 'Exam Preparation'].map((f) => {
                         const active = lessonFocus === f;
                         return (
                           <TouchableOpacity 
                             key={f} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setLessonFocus(f)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive, { fontSize: 10.5 }]}>{f}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive, 
+                              { fontSize: 10.5 }
+                            ]}>{f}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1024,18 +1036,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                   {/* Duration Selector */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Lesson Duration</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Lesson Duration</Text>
                     <View style={styles.gradeContainer}>
                       {['30 Mins', '45 Mins', '60 Mins'].map((d) => {
                         const active = lessonDuration === d;
                         return (
                           <TouchableOpacity 
                             key={d} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setLessonDuration(d)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{d}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{d}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1048,18 +1068,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 <>
                   {/* MCQ Count Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Number of MCQs</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Number of MCQs</Text>
                     <View style={styles.gradeContainer}>
                       {['3 Questions', '5 Questions', '10 Questions'].map((c) => {
                         const active = questionCount === c;
                         return (
                           <TouchableOpacity 
                             key={c} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setQuestionCount(c)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{c}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{c}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1068,18 +1096,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                   {/* Difficulty Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Difficulty Level</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Difficulty Level</Text>
                     <View style={styles.gradeContainer}>
                       {['Easy', 'Medium', 'Hard'].map((diff) => {
                         const active = difficultyLevel === diff;
                         return (
                           <TouchableOpacity 
                             key={diff} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setDifficultyLevel(diff)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{diff}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{diff}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1092,18 +1128,27 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 <>
                   {/* Genre Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Story Genre</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Story Genre</Text>
                     <View style={styles.gradeContainer}>
                       {['Adventure', 'Fairy Tale', 'Science Fiction'].map((g) => {
                         const active = storyGenre === g;
                         return (
                           <TouchableOpacity 
                             key={g} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setStoryGenre(g)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive, { fontSize: 10.5 }]}>{g}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive, 
+                              { fontSize: 10.5 }
+                            ]}>{g}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1112,18 +1157,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                   {/* Moral Focus Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Moral Value Focus</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Moral Value Focus</Text>
                     <View style={styles.gradeContainer}>
                       {['Cooperation', 'Kindness', 'Honesty'].map((m) => {
                         const active = moralFocus === m;
                         return (
                           <TouchableOpacity 
                             key={m} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setMoralFocus(m)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{m}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{m}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1136,18 +1189,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 <>
                   {/* Slide Count Selection */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Number of Slides</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Number of Slides</Text>
                     <View style={styles.gradeContainer}>
                       {['3 Slides', '5 Slides', '10 Slides'].map((s) => {
                         const active = slideCount === s;
                         return (
                           <TouchableOpacity 
                             key={s} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setSlideCount(s)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{s}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{s}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1156,18 +1217,27 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                   {/* Presentation Style Theme */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Presentation Style Theme</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Presentation Style Theme</Text>
                     <View style={styles.gradeContainer}>
                       {['Creative Colorful', 'Minimal Academic', 'Clean Professional'].map((style) => {
                         const active = presentationStyle === style;
                         return (
                           <TouchableOpacity 
                             key={style} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setPresentationStyle(style)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive, { fontSize: 10.5 }]}>{style}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive, 
+                              { fontSize: 10.5 }
+                            ]}>{style}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1180,18 +1250,26 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
                 <>
                   {/* Student Count */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Target Student Count</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Target Student Count</Text>
                     <View style={styles.gradeContainer}>
                       {['5 Students', '10 Students', '15 Students'].map((count) => {
                         const active = studentCount === count;
                         return (
                           <TouchableOpacity 
                             key={count} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setStudentCount(count)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{count}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive
+                            ]}>{count}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1200,18 +1278,27 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
                   {/* Sheet Columns Type */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.formLabel}>Grading Sheet Columns</Text>
+                    <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Grading Sheet Columns</Text>
                     <View style={styles.gradeContainer}>
                       {['Grades Summary', 'Weekly Attendance', 'Test Scores'].map((type) => {
                         const active = sheetType === type;
                         return (
                           <TouchableOpacity 
                             key={type} 
-                            style={[styles.gradeChip, active && styles.gradeChipActive]}
+                            style={[
+                              styles.gradeChip, 
+                              appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                              active && styles.gradeChipActive
+                            ]}
                             onPress={() => setSheetType(type)}
                             activeOpacity={0.8}
                           >
-                            <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive, { fontSize: 10.5 }]}>{type}</Text>
+                            <Text style={[
+                              styles.gradeChipText, 
+                              appTheme.isDark && { color: appTheme.textSecondary },
+                              active && styles.gradeChipTextActive, 
+                              { fontSize: 10.5 }
+                            ]}>{type}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -1222,33 +1309,41 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
 
               {/* Prompt Topic field */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>{activeTool?.promptLabel} <Text style={{ color: '#E11D48' }}>*</Text></Text>
+                <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>{activeTool?.promptLabel} <Text style={{ color: '#E11D48' }}>*</Text></Text>
                 <TextInput
-                  style={styles.formTextArea}
+                  style={[styles.formTextArea, appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                   multiline={true}
                   numberOfLines={4}
                   value={topicInput}
                   onChangeText={setTopicInput}
                   placeholder={activeTool?.placeholder}
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={appTheme.isDark ? appTheme.textMuted : "#94A3B8"}
                   textAlignVertical="top"
                 />
               </View>
 
               {/* Grade Level Selector */}
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Target Grade Level</Text>
+                <Text style={[styles.formLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Target Grade Level</Text>
                 <View style={styles.gradeContainer}>
                   {['Grade-I', 'Grade-II', 'Grade-III'].map((g) => {
                     const active = gradeInput === g;
                     return (
                       <TouchableOpacity 
                         key={g} 
-                        style={[styles.gradeChip, active && styles.gradeChipActive]}
+                        style={[
+                          styles.gradeChip, 
+                          appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border },
+                          active && styles.gradeChipActive
+                        ]}
                         onPress={() => setGradeInput(g)}
                         activeOpacity={0.8}
                       >
-                        <Text style={[styles.gradeChipText, active && styles.gradeChipTextActive]}>{g}</Text>
+                        <Text style={[
+                          styles.gradeChipText, 
+                          appTheme.isDark && { color: appTheme.textSecondary },
+                          active && styles.gradeChipTextActive
+                        ]}>{g}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -1280,17 +1375,17 @@ export const AIToolkitScreen: React.FC<AIToolkitScreenProps> = ({ navigation }) 
               {/* AI Result Block */}
               {draftResult && (
                 <View style={styles.resultContainer}>
-                  <Text style={styles.resultLabel}>Generated Draft:</Text>
-                  <View style={styles.resultBox}>
-                    <Text style={styles.resultText}>{draftResult}</Text>
+                  <Text style={[styles.resultLabel, appTheme.isDark && { color: appTheme.textPrimary }]}>Generated Draft:</Text>
+                  <View style={[styles.resultBox, appTheme.isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                    <Text style={[styles.resultText, appTheme.isDark && { color: appTheme.textPrimary }]}>{draftResult}</Text>
                   </View>
                   <TouchableOpacity 
-                    style={styles.copyBtn}
+                    style={[styles.copyBtn, appTheme.isDark && { backgroundColor: appTheme.surfaceVariant }]}
                     onPress={() => alert('Draft copied to clipboard!')}
                     activeOpacity={0.7}
                   >
-                    <MaterialIcons name="content-copy" size={14} color="#0052cc" />
-                    <Text style={styles.copyBtnText}>Copy Draft</Text>
+                    <MaterialIcons name="content-copy" size={14} color={appTheme.isDark ? appTheme.primary : "#0052cc"} />
+                    <Text style={[styles.copyBtnText, appTheme.isDark && { color: appTheme.primary }]}>Copy Draft</Text>
                   </TouchableOpacity>
                 </View>
               )}

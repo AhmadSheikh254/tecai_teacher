@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface QABuilderScreenProps {
   navigation: any;
@@ -91,6 +92,7 @@ const formatText = (set: QASet): string => {
 };
 
 export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) => {
+  const { appTheme, isDefaultTheme } = useAppTheme();
   const [requestInput, setRequestInput] = useState('');
   const [fileName, setFileName] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -102,11 +104,11 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleToggleFile = () =>
-    setFileName(f => f ? '' : 'Study_Material.pdf');
+    setFileName(f => f ? '' : 'StudyMaterial.pdf');
 
   const handleGenerate = () => {
     if (!requestInput.trim()) {
-      Alert.alert('Missing Input', 'Please enter your topic or paragraph text.');
+      Alert.alert('Missing Input', 'Please enter your study paragraph or topic.');
       return;
     }
     setGenerating(true);
@@ -141,7 +143,7 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Background decoration */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -159,7 +161,7 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
 
       {/* HEADER */}
       <LinearGradient
-        colors={['#2E1065', '#5B21B6', '#8B5CF6']}
+        colors={isDefaultTheme ? ['#2E1065', '#5B21B6', '#8B5CF6'] : appTheme.bannerGradient}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={styles.header}
       >
@@ -182,19 +184,23 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
           </View>
         </View>
       </LinearGradient>
-      <LinearGradient colors={['#C4B5FD', '#8B5CF6', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerGlow} />
+      <LinearGradient
+        colors={isDefaultTheme ? ['#C4B5FD', '#8B5CF6', '#5B21B6'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={styles.headerGlow}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* INPUT CARD */}
-        <View style={styles.card}>
+        <View style={[styles.card, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>Your Request</Text>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>Your Request</Text>
           </View>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
             placeholder="Enter paragraph or topic here…"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -204,33 +210,40 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
           />
 
           <View style={styles.fieldRow}>
-            <View style={styles.fieldDot} />
-            <Text style={styles.fieldLabel}>
+            <View style={[styles.fieldDot, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
+            <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textPrimary }]}>
               Attach a file{'  '}
-              <Text style={{ color: '#94A3B8', fontWeight: '500', textTransform: 'none' }}>optional</Text>
+              <Text style={{ color: isDefaultTheme ? '#94A3B8' : appTheme.textMuted, fontWeight: '500', textTransform: 'none' }}>optional</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.fileBox, fileName ? styles.fileBoxActive : null]}
+            style={[
+              styles.fileBox,
+              fileName ? styles.fileBoxActive : null,
+              !isDefaultTheme && {
+                backgroundColor: appTheme.surface,
+                borderColor: fileName ? appTheme.primary : appTheme.border,
+              },
+            ]}
             onPress={handleToggleFile}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={fileName ? ['#EDE9FE', '#DDD6FE'] : ['#F8FAFC', '#F1F5F9']}
+              colors={fileName ? (isDefaultTheme ? ['#EDE9FE', '#DDD6FE'] : [appTheme.primaryLight, appTheme.surface]) : (isDefaultTheme ? ['#F8FAFC', '#F1F5F9'] : [appTheme.surface, appTheme.bg])}
               style={styles.fileOrb}
             >
               <MaterialIcons
                 name={fileName ? 'insert-drive-file' : 'cloud-upload'}
                 size={18}
-                color={fileName ? '#8B5CF6' : '#94A3B8'}
+                color={fileName ? (isDefaultTheme ? '#8B5CF6' : appTheme.primary) : (isDefaultTheme ? '#94A3B8' : appTheme.textMuted)}
               />
             </LinearGradient>
-            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null]} numberOfLines={1}>
+            <Text style={[styles.fileText, fileName ? styles.fileTextActive : null, !isDefaultTheme && { color: fileName ? appTheme.primary : appTheme.textMuted }]} numberOfLines={1}>
               {fileName || 'No file chosen'}
             </Text>
             {fileName ? (
               <TouchableOpacity onPress={() => setFileName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <MaterialIcons name="close" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+                <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#94A3B8" : appTheme.textMuted} style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -238,7 +251,7 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
           {!generating ? (
             <TouchableOpacity style={styles.genBtnWrap} onPress={handleGenerate} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#2E1065', '#5B21B6', '#8B5CF6']}
+                colors={isDefaultTheme ? ['#2E1065', '#5B21B6', '#8B5CF6'] : [appTheme.primary, appTheme.accent, appTheme.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.genBtn}
               >
@@ -261,37 +274,37 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <View style={styles.generatingState}>
-              <ActivityIndicator color="#8B5CF6" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.generatingText}>Generating Q&A study sheet…</Text>
+            <View style={[styles.generatingState, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+              <ActivityIndicator color={isDefaultTheme ? "#8B5CF6" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.generatingText, !isDefaultTheme && { color: appTheme.primary }]}>Generating Q&A study sheet…</Text>
             </View>
           )}
         </View>
 
         {/* PROGRESS LOADER */}
         {generating && (
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator color="#8B5CF6" size="small" style={{ marginRight: 10 }} />
-              <Text style={styles.loaderStatus}>{progressStatus}</Text>
+              <ActivityIndicator color={isDefaultTheme ? "#8B5CF6" : appTheme.primary} size="small" style={{ marginRight: 10 }} />
+              <Text style={[styles.loaderStatus, !isDefaultTheme && { color: appTheme.textPrimary }]}>{progressStatus}</Text>
             </View>
-            <View style={styles.progressBg}>
+            <View style={[styles.progressBg, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
               <LinearGradient
-                colors={['#5B21B6', '#A78BFA']}
+                colors={isDefaultTheme ? ['#5B21B6', '#A78BFA'] : appTheme.primaryGradient}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` as any }]}
               />
             </View>
-            <Text style={styles.loaderPct}>{progress}% Complete</Text>
+            <Text style={[styles.loaderPct, !isDefaultTheme && { color: appTheme.textMuted }]}>{progress}% Complete</Text>
           </View>
         )}
 
         {/* RESULTS HEADER */}
         {sets.length > 0 && (
           <View style={styles.sectionHeaderRow}>
-            <LinearGradient colors={['#8B5CF6', '#5B21B6']} style={styles.sectionBar} />
-            <Text style={styles.sectionTitle}>View Q&A Sets</Text>
-            <View style={styles.countBadge}>
+            <LinearGradient colors={isDefaultTheme ? ['#8B5CF6', '#5B21B6'] : appTheme.primaryGradient} style={styles.sectionBar} />
+            <Text style={[styles.sectionTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>View Q&A Sets</Text>
+            <View style={[styles.countBadge, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
               <Text style={styles.countBadgeText}>{sets.length}</Text>
             </View>
           </View>
@@ -302,21 +315,21 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
           {sets.map((set) => {
             const revealed = !!revealedIds[set.id];
             return (
-              <View key={set.id} style={styles.resultCard}>
-                <LinearGradient colors={['#2E1065', '#8B5CF6', '#C4B5FD']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
+              <View key={set.id} style={[styles.resultCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                <LinearGradient colors={isDefaultTheme ? ['#2E1065', '#8B5CF6', '#C4B5FD'] : appTheme.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.resultStrip} />
 
                 {/* Meta header */}
                 <View style={styles.resultMeta}>
-                  <LinearGradient colors={['#EDE9FE', '#DDD6FE']} style={styles.resultIconOrb}>
-                    <MaterialIcons name="question-answer" size={17} color="#8B5CF6" />
+                  <LinearGradient colors={isDefaultTheme ? ['#EDE9FE', '#DDD6FE'] : [appTheme.surface, appTheme.cardBg]} style={styles.resultIconOrb}>
+                    <MaterialIcons name="question-answer" size={17} color={isDefaultTheme ? '#8B5CF6' : appTheme.primary} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultTopic} numberOfLines={1}>{set.topic}</Text>
-                    <Text style={styles.resultDate}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
+                    <Text style={[styles.resultTopic, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{set.topic}</Text>
+                    <Text style={[styles.resultDate, !isDefaultTheme && { color: appTheme.textSecondary }]}>{set.date}{set.fileName ? ` · ${set.fileName}` : ''}</Text>
                   </View>
                   <TouchableOpacity onPress={() => setActiveSet(set)} activeOpacity={0.8}>
-                    <View style={styles.eyeOuter}>
-                      <LinearGradient colors={['#8B5CF6', '#5B21B6']} style={styles.eyeCore}>
+                    <View style={[styles.eyeOuter, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                      <LinearGradient colors={isDefaultTheme ? ['#8B5CF6', '#5B21B6'] : appTheme.primaryGradient} style={styles.eyeCore}>
                         <View style={styles.eyeGloss} />
                         <MaterialIcons name="remove-red-eye" size={17} color="#fff" />
                       </LinearGradient>
@@ -326,22 +339,22 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
 
                 {/* Q&A Cards List */}
                 <View style={styles.qaBlock}>
-                  <Text style={styles.puzzleTitle}>{set.title}</Text>
+                  <Text style={[styles.puzzleTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{set.title}</Text>
                   
                   {set.items.map((item) => (
-                    <View key={item.id} style={styles.qaItemRow}>
+                    <View key={item.id} style={[styles.qaItemRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={styles.questionSection}>
-                        <LinearGradient colors={['#5B21B6', '#8B5CF6']} style={styles.qaBadge}>
+                        <LinearGradient colors={isDefaultTheme ? ['#5B21B6', '#8B5CF6'] : appTheme.primaryGradient} style={styles.qaBadge}>
                           <Text style={styles.qaBadgeText}>Q{item.id}</Text>
                         </LinearGradient>
-                        <Text style={styles.questionText}>{item.question}</Text>
+                        <Text style={[styles.questionText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.question}</Text>
                       </View>
                       
-                      <View style={[styles.answerSection, !revealed && styles.answerSectionObscured]}>
-                        <LinearGradient colors={['#475569', '#64748B']} style={styles.qaBadge}>
+                      <View style={[styles.answerSection, !revealed && styles.answerSectionObscured, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                        <LinearGradient colors={isDefaultTheme ? ['#475569', '#64748B'] : [appTheme.primary, appTheme.accent]} style={styles.qaBadge}>
                           <Text style={styles.qaBadgeText}>A{item.id}</Text>
                         </LinearGradient>
-                        <Text style={[styles.answerText, !revealed && styles.answerTextObscured]}>
+                        <Text style={[styles.answerText, !revealed && styles.answerTextObscured, !isDefaultTheme && { color: revealed ? appTheme.textSecondary : appTheme.accent }]}>
                           {revealed ? item.answer : '•••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                         </Text>
                       </View>
@@ -356,7 +369,7 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#8B5CF6']}
+                    colors={copiedId === set.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#8B5CF6'] : [appTheme.primary, appTheme.accent])}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={styles.copyBtnGrad}
                   >
@@ -371,10 +384,10 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
                 </TouchableOpacity>
 
                 {/* Footer toolbar */}
-                <View style={styles.resultFooter}>
+                <View style={[styles.resultFooter, !isDefaultTheme && { backgroundColor: appTheme.surface, borderTopColor: appTheme.border }]}>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => setActiveSet(set)}>
-                    <MaterialIcons name="open-in-full" size={13} color="#8B5CF6" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerBtnText}>Full View</Text>
+                    <MaterialIcons name="open-in-full" size={13} color={isDefaultTheme ? '#8B5CF6' : appTheme.primary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.primary }]}>Full View</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => toggleReveal(set.id)}>
                     <MaterialIcons name={revealed ? 'visibility-off' : 'vpn-key'} size={13} color="#B45309" style={{ marginRight: 4 }} />
@@ -383,8 +396,8 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerBtn} onPress={() => Alert.alert('Print', 'Sent to printer.')}>
-                    <MaterialIcons name="print" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                    <Text style={[styles.footerBtnText, { color: '#64748B' }]}>Print</Text>
+                    <MaterialIcons name="print" size={13} color={isDefaultTheme ? '#64748B' : appTheme.textMuted} style={{ marginRight: 4 }} />
+                    <Text style={[styles.footerBtnText, !isDefaultTheme && { color: appTheme.textMuted }]}>Print</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -395,14 +408,14 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
 
       {/* FULL VIEW MODAL */}
       <Modal visible={activeSet !== null} transparent={false} animationType="slide">
-        <SafeAreaView style={styles.sheetSafe} edges={['top']}>
-          <View style={styles.sheetNav}>
-            <TouchableOpacity style={styles.sheetClose} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
-              <MaterialIcons name="close" size={20} color="#8B5CF6" />
+        <SafeAreaView style={[styles.sheetSafe, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
+          <View style={[styles.sheetNav, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
+            <TouchableOpacity style={[styles.sheetClose, !isDefaultTheme && { backgroundColor: appTheme.surface }]} onPress={() => setActiveSet(null)} activeOpacity={0.8}>
+              <MaterialIcons name="close" size={20} color={isDefaultTheme ? '#8B5CF6' : appTheme.primary} />
             </TouchableOpacity>
-            <Text style={styles.sheetNavTitle} numberOfLines={1}>{activeSet?.topic}</Text>
+            <Text style={[styles.sheetNavTitle, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{activeSet?.topic}</Text>
             <TouchableOpacity
-              style={styles.sheetCopyBtn}
+              style={[styles.sheetCopyBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]}
               onPress={() => { if (activeSet) handleCopy(activeSet); }}
               activeOpacity={0.8}
             >
@@ -421,8 +434,8 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
           </View>
 
           <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.paperCard}>
-              <LinearGradient colors={['#2E1065', '#5B21B6']} style={styles.paperDocHeader}>
+            <View style={[styles.paperCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <LinearGradient colors={isDefaultTheme ? ['#2E1065', '#5B21B6'] : appTheme.primaryGradient} style={styles.paperDocHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.paperDocIcon}>
                     <MaterialIcons name="question-answer" size={18} color="#fff" />
@@ -435,23 +448,23 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
               </LinearGradient>
 
               {/* Topic */}
-              <View style={topicStyles.topicRow}>
-                <Text style={topicStyles.topicLabel}>TOPIC</Text>
-                <Text style={topicStyles.topicTitle}>{activeSet?.topic}</Text>
+              <View style={[topicStyles.topicRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                <Text style={[topicStyles.topicLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOPIC</Text>
+                <Text style={[topicStyles.topicTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{activeSet?.topic}</Text>
               </View>
 
               {/* Questions list */}
               <View style={styles.modalCluesBlock}>
-                <Text style={styles.modalHeading}>Questions & Answers</Text>
+                <Text style={[styles.modalHeading, !isDefaultTheme && { color: appTheme.textPrimary, borderBottomColor: appTheme.border }]}>Questions & Answers</Text>
                 {activeSet?.items.map((item) => (
-                  <View key={item.id} style={styles.modalQAItem}>
+                  <View key={item.id} style={[styles.modalQAItem, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                     <View style={styles.modalQRow}>
-                      <Text style={styles.modalQLabel}>Q{item.id}.</Text>
-                      <Text style={styles.modalQText}>{item.question}</Text>
+                      <Text style={[styles.modalQLabel, !isDefaultTheme && { color: appTheme.primary }]}>Q{item.id}.</Text>
+                      <Text style={[styles.modalQText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.question}</Text>
                     </View>
                     <View style={styles.modalARow}>
-                      <Text style={styles.modalALabel}>A{item.id}.</Text>
-                      <Text style={styles.modalAText}>{item.answer}</Text>
+                      <Text style={[styles.modalALabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>A{item.id}.</Text>
+                      <Text style={[styles.modalAText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.answer}</Text>
                     </View>
                   </View>
                 ))}
@@ -464,7 +477,7 @@ export const QABuilderScreen: React.FC<QABuilderScreenProps> = ({ navigation }) 
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : ['#5B21B6', '#8B5CF6']}
+                  colors={activeSet && copiedId === activeSet.id ? ['#15803D', '#16A34A'] : (isDefaultTheme ? ['#5B21B6', '#8B5CF6'] : [appTheme.primary, appTheme.accent])}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.modalCopyBtnGrad}
                 >
@@ -492,7 +505,7 @@ const topicStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FAF5FF' },
+  safeArea: { flex: 1, backgroundColor: '#FAF5FF', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   header: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12 },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
@@ -762,7 +775,7 @@ const styles = StyleSheet.create({
   footerBtn: { flexDirection: 'row', alignItems: 'center' },
   footerBtnText: { fontSize: 11.5, fontWeight: '800', color: '#5B21B6' },
 
-  sheetSafe: { flex: 1, backgroundColor: '#FAF5FF' },
+  sheetSafe: { flex: 1, backgroundColor: '#FAF5FF', width: '100%', maxWidth: 720, alignSelf: 'center' },
   sheetNav: {
     height: 56, flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', gap: 8,

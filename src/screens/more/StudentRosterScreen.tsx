@@ -10,12 +10,11 @@ import {
   TextInput, 
   Modal,
   Animated,
-  useWindowDimensions,
   Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -84,7 +83,8 @@ type Student = {
 };
 
 export const StudentRosterScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
 
   // Screen States
   const [loading, setLoading] = useState(false);
@@ -171,40 +171,40 @@ export const StudentRosterScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Students View</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Students View</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="groups" size={22} color="#2563EB" />
+          <TouchableOpacity style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface }]} activeOpacity={0.7}>
+            <MaterialIcons name="groups" size={22} color={isDefaultTheme ? "#2563EB" : appTheme.primary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* Solid Filter Card */}
-          <View style={styles.filterCard}>
+          <View style={[styles.filterCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.filterCardHeader}>
-              <MaterialIcons name="filter-alt" size={18} color="#2563EB" />
-              <Text style={styles.filterCardTitle}>Filter Roster</Text>
+              <MaterialIcons name="filter-alt" size={18} color={isDefaultTheme ? "#2563EB" : appTheme.primary} />
+              <Text style={[styles.filterCardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Filter Roster</Text>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Class *</Text>
-              <TouchableOpacity style={styles.formDropdown} onPress={() => setClassPickerVisible(true)} activeOpacity={0.75}>
-                <Text style={styles.dropdownValueText}>{selectedClass || 'Select Class'}</Text>
-                <MaterialIcons name="keyboard-arrow-down" size={20} color="#64748B" />
+              <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Class *</Text>
+              <TouchableOpacity style={[styles.formDropdown, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setClassPickerVisible(true)} activeOpacity={0.75}>
+                <Text style={[styles.dropdownValueText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedClass || 'Select Class'}</Text>
+                <MaterialIcons name="keyboard-arrow-down" size={20} color={appTheme.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
-              style={styles.filterBtn} 
+              style={[styles.filterBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
               onPress={handleApplyFilter}
               activeOpacity={0.8}
             >
@@ -224,18 +224,18 @@ export const StudentRosterScreen = ({ navigation }: any) => {
           </View>
 
           {/* Search bar input */}
-          <View style={styles.searchWrapper}>
-            <MaterialIcons name="search" size={20} color="#64748B" style={styles.searchIcon} />
+          <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+            <MaterialIcons name="search" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
               placeholder="Search name, father name or reg no..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery !== '' && (
               <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                <MaterialIcons name="close" size={18} color="#64748B" />
+                <MaterialIcons name="close" size={18} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
               </TouchableOpacity>
             )}
           </View>
@@ -257,11 +257,11 @@ export const StudentRosterScreen = ({ navigation }: any) => {
             </View>
           ) : (
             <View style={styles.rosterList}>
-              {filteredStudents.map((student, index) => {
+              {filteredStudents.map((student) => {
                 return (
                   <TouchableOpacity
                     key={student.id}
-                    style={styles.studentCard}
+                    style={[styles.studentCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}
                     activeOpacity={0.85}
                     onPress={() => setSelectedStudent(student)}
                   >
@@ -275,8 +275,8 @@ export const StudentRosterScreen = ({ navigation }: any) => {
 
                     {/* Center Details Block */}
                     <View style={styles.studentInfoCol}>
-                      <Text style={styles.studentName} numberOfLines={1}>{student.name}</Text>
-                      <Text style={styles.studentFather} numberOfLines={1}>Father: {student.father}</Text>
+                      <Text style={[styles.studentName, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>{student.name}</Text>
+                      <Text style={[styles.studentFather, !isDefaultTheme && { color: appTheme.textSecondary }]} numberOfLines={1}>Father: {student.father}</Text>
                       
                       <View style={styles.metaBadgeRow}>
                         <View style={styles.regNoBadge}>
@@ -461,7 +461,7 @@ export const StudentRosterScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F8FAFC' },
-  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
+  safeArea: { flex: 1, backgroundColor: '#F8FAFC', width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   // App Bar
   appBar: {

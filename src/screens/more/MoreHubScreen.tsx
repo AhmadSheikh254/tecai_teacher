@@ -5,21 +5,19 @@ import {
   View, 
   ScrollView, 
   TouchableOpacity, 
-  Image,
-  useWindowDimensions
+  Image
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MoreHubScreenProps {
   navigation: any;
 }
 
 const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) => {
-  const { width } = useWindowDimensions();
-  const isSmallScreen = width < 340;
+  const { appTheme, isDefaultTheme } = useAppTheme();
 
   const safeNavigate = (target: string) => {
     navigation.navigate(target);
@@ -92,6 +90,28 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
       meta: 'Payroll & Slips', 
       badge: 'Paid',
       code: 'SYS-SL08'
+    },
+    { 
+      title: 'Notice Board', 
+      icon: 'campaign', 
+      target: 'Notice', 
+      color: '#ea580c', // Sunset Coral / Flame
+      bg: 'rgba(234, 88, 12, 0.1)', 
+      cardBg: '#FFF7ED', // Light warm peach/coral tint
+      meta: 'Circulars & Alerts', 
+      badge: 'Broadcast',
+      code: 'SYS-NB09'
+    },
+    { 
+      title: 'Theme & Appearance', 
+      icon: 'palette', 
+      target: 'ThemeSettings', 
+      color: '#7c3aed', // Royal Purple / Violet
+      bg: 'rgba(124, 58, 237, 0.1)', 
+      cardBg: '#F5F3FF', // Light purple tint
+      meta: 'Dark / Light & Colors', 
+      badge: 'Theme',
+      code: 'SYS-TH10'
     }
   ];
 
@@ -105,32 +125,40 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f8fafc', width: '100%' }}>
-      <SafeAreaView style={[styles.safeArea, { alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: isDefaultTheme ? '#f8fafc' : appTheme.bg, width: '100%' }}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: isDefaultTheme ? '#f8fafc' : appTheme.bg, alignSelf: 'center', width: '100%', maxWidth: 720 }]} edges={['top']}>
       {/* Ambient background glows for 3D depth */}
-      <View style={styles.bgGlow1} pointerEvents="none" />
-      <View style={styles.bgGlow2} pointerEvents="none" />
-      <View style={styles.bgGlow3} pointerEvents="none" />
+      <View style={[styles.bgGlow1, { backgroundColor: appTheme.primary, opacity: appTheme.isDark ? 0.09 : 0.04 }]} pointerEvents="none" />
+      <View style={[styles.bgGlow2, { backgroundColor: appTheme.accent, opacity: appTheme.isDark ? 0.09 : 0.03 }]} pointerEvents="none" />
+      <View style={[styles.bgGlow3, { backgroundColor: appTheme.primary, opacity: appTheme.isDark ? 0.07 : 0.02 }]} pointerEvents="none" />
 
       {/* Upgraded Premium Header Bar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
         <View style={styles.headerLeft}>
-          <View style={styles.avatarBorderRing}>
+          <TouchableOpacity 
+            style={[styles.avatarBorderRing, !isDefaultTheme && { borderColor: appTheme.primary }]}
+            activeOpacity={0.7}
+            onPress={() => safeNavigate('ThemeSettings')}
+          >
             <Image 
               source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCP8Fes6Wf9DdkJS-k33oTvc53T3DDc43ixr_T8hwh_pr7sY__yCD2W_7u82_wSOmxr5bh8BWjPCpfyruGFXgrPxwBnxu3LTADJnrW1Pyal-Qu22X6blXtzKTJ1Qq9MSu3lKFCjAiSBqPq2uZCCOWWLFfJ_afO1UosCa0JnsAyjMZTLqPq-T2HkOCTCMpG_U0QCY9cje_vqA6rxLx33tk9UUSBSy0TQyKocGDGSGQPP-eLL9BRYsDjQTw' }}
               style={styles.profilePic}
             />
             <View style={styles.activeIndicatorDot} />
-          </View>
+          </TouchableOpacity>
           <View style={{ marginLeft: 2 }}>
-            <Text style={styles.headerWelcome}>Welcome back,</Text>
-            <Text style={styles.headerTitle}>Teacher Hub</Text>
+            <Text style={[styles.headerWelcome, !isDefaultTheme && { color: appTheme.textMuted }]}>Welcome back,</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Teacher Hub</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={[styles.notificationButton, !isDefaultTheme && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]} 
+          activeOpacity={0.7}
+          onPress={() => safeNavigate('Notice')}
+        >
           <View style={styles.notificationWrapper}>
-            <MaterialIcons name="notifications-none" size={24} color="#0052cc" />
+            <MaterialIcons name="notifications-none" size={24} color={isDefaultTheme ? '#0052cc' : appTheme.primary} />
             <View style={styles.notificationBadgeDot} />
           </View>
         </TouchableOpacity>
@@ -368,7 +396,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       {/* Bottom Row: Title Block + Halo Action Orb */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Exam Management</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Exam Management</Text>
                         </View>
 
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(0, 82, 204, 0.18)' }]}>
@@ -386,8 +414,6 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                     </TouchableOpacity>
                   );
                 }
-
-
 
                 // SPECIAL DETAILED 2-COLUMN CARD 3: Lesson Planner
                 if (item.target === 'LessonPlan') {
@@ -480,7 +506,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                        {/* Bottom Row: Title + Arrow */}
                        <View style={styles.gridCardBottomRow}>
                          <View style={styles.gridTitleBlock}>
-                           <Text style={styles.gridCardTitle} numberOfLines={1}>Lesson Planner</Text>
+                           <Text style={styles.gridCardTitle} numberOfLines={2}>Lesson Planner</Text>
                          </View>
                          <View style={[styles.gridActionHalo, { borderColor: 'rgba(217,119,6,0.18)' }]}>
                            <View style={styles.gridActionOrbGlass}>
@@ -529,13 +555,12 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
 
                       {/* Premium Student Network Illustration */}
                       <View style={styles.studentNetworkBg} pointerEvents="none">
-
-                        {/* Primary connected lines perfectly aligned to node centers (signs corrected for screen space) */}
+                        {/* Primary connected lines */}
                         <View style={[styles.studentNetworkLine, { top: 38, right: 37, width: 55, transform: [{ rotate: '-27deg' }] }]} />
                         <View style={[styles.studentNetworkLine, { top: 65, right: 42, width: 52, transform: [{ rotate: '35deg' }] }]} />
                         <View style={[styles.studentNetworkLine, { top: 53, right: 16, width: 55, transform: [{ rotate: '-83deg' }] }]} />
 
-                        {/* Secondary helper lines for detailed connection density */}
+                        {/* Secondary helper lines */}
                         <View style={[styles.studentNetworkLineSub, { top: 22, right: 70, width: 34, transform: [{ rotate: '12deg' }] }]} />
                         <View style={[styles.studentNetworkLineSub, { top: 62, right: 90, width: 28, transform: [{ rotate: '-55deg' }] }]} />
                         <View style={[styles.studentNetworkLineSub, { top: 88, right: 22, width: 30, transform: [{ rotate: '-20deg' }] }]} />
@@ -599,7 +624,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       {/* Bottom Row: Title block + Action arrow */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Students</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Students</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(5,150,105,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -661,7 +686,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                         <View style={styles.attendanceProgressRingInner} />
                         {/* Active progress arc */}
                         <View style={styles.attendanceProgressArc} />
-                        {/* Active arc indicator head dot at bottom right (approx end of 94% arc) */}
+                        {/* Active arc indicator head dot */}
                         <View style={styles.attendanceProgressHeadDot} />
                         {/* Frosted glass inner core */}
                         <View style={styles.attendanceProgressCenter}>
@@ -699,7 +724,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       {/* Bottom Row: Title block + Action arrow */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Daily Attendance</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Daily Attendance</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(6,182,212,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -759,12 +784,12 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                         <LinearGradient
                           colors={['rgba(255, 255, 255, 0.35)', 'rgba(255, 255, 255, 0)']}
                           start={{ x: 0, y: 0 }}
-                          end={{ x: 0, y: 1 }}
+                          end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFill}
                         />
                         {/* Vertical timeline divider line */}
                         <View style={styles.timetableTimelineLine} />
-                        {/* Hours list rows with premium split gradient cells */}
+                        {/* Hours list rows */}
                         <View style={styles.timetableRow}>
                           <Text style={styles.timetableHour}>08 AM</Text>
                           <View style={styles.timetableRowDot} />
@@ -892,7 +917,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       {/* Bottom Row: Title block + Action arrow */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Class Time Table</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Class Time Table</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(139,92,246,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -1014,7 +1039,7 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       {/* Bottom Row: Title block + Action arrow */}
                       <View style={styles.gridCardBottomRow}>
                         <View style={styles.gridTitleBlock}>
-                          <Text style={styles.gridCardTitle} numberOfLines={1}>Salary Payment</Text>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Salary Payment</Text>
                         </View>
                         <View style={[styles.gridActionHalo, { borderColor: 'rgba(225,29,72,0.18)' }]}>
                           <View style={styles.gridActionOrbGlass}>
@@ -1032,7 +1057,222 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                   );
                 }
 
-                // STANDARD 2-COLUMN GRID CARD for remaining modules
+                // SPECIAL DETAILED 2-COLUMN CARD 7: Notice Board
+                if (item.target === 'Notice') {
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.card, styles.noticeGridCard]}
+                      activeOpacity={0.8}
+                      onPress={() => safeNavigate('Notice')}
+                    >
+                      {/* Warm Sunset Coral Gradient Background */}
+                      <LinearGradient
+                        colors={['#FFF7ED', '#FFEDD5', '#FED7AA']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      {/* Glass Sheen Glare */}
+                      <LinearGradient
+                        colors={['rgba(255, 255, 255, 0.65)', 'rgba(255, 255, 255, 0)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
+                      />
+                      {/* Corner Glow Mesh */}
+                      <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(234,88,12,0.14)' }]} pointerEvents="none" />
+                      {/* Left Accent Border */}
+                      <View style={[styles.gridLeftBorder, { backgroundColor: '#ea580c' }]} />
+
+                      {/* Premium Notice Bulletin Document & Sound Wave Illustration */}
+                      <View style={styles.noticeVisualContainer} pointerEvents="none">
+                        {/* Notice Sheet */}
+                        <View style={styles.noticeVisualSheet}>
+                          <LinearGradient
+                            colors={['rgba(255, 255, 255, 0.94)', 'rgba(254, 237, 213, 0.5)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                            pointerEvents="none"
+                          />
+                          {/* Push Pin Header */}
+                          <View style={styles.noticeDocHeader}>
+                            <View style={styles.noticeDocPinDot} />
+                            <View style={styles.noticeDocHeaderLine} />
+                            <View style={styles.noticeDocLiveTag}>
+                              <Text style={styles.noticeDocLiveTagText}>NEW</Text>
+                            </View>
+                          </View>
+                          <View style={styles.noticeDocDivider} />
+                          {/* Notice Line Rows with Speaker Waves */}
+                          <View style={styles.noticeDocRow}>
+                            <MaterialIcons name="campaign" size={10} color="#ea580c" />
+                            <View style={styles.noticeDocLineLong} />
+                          </View>
+                          <View style={styles.noticeDocRow}>
+                            <View style={styles.noticeDocBullet} />
+                            <View style={styles.noticeDocLineMedium} />
+                          </View>
+                          <View style={styles.noticeDocRow}>
+                            <View style={styles.noticeDocBullet} />
+                            <View style={styles.noticeDocLineShort} />
+                          </View>
+                        </View>
+
+                        {/* Broadcast Wave Pulse Ring */}
+                        <View style={styles.noticeWaveRingOuter} />
+                        <View style={styles.noticeWaveRingInner} />
+                      </View>
+
+                      {/* Dot Matrix */}
+                      <View style={styles.gridDotMatrix} pointerEvents="none">
+                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                        <View style={styles.dotRow}><View style={styles.dotOrange} /><View style={styles.dotOrange} /><View style={styles.dotOrange} /></View>
+                      </View>
+
+                      {/* Top Row: Icon tile only - Clean, NO overlapping badge */}
+                      <View style={styles.gridCardTopRow}>
+                        <View style={styles.noticeGridIconTile}>
+                          <LinearGradient
+                            colors={['#ea580c', '#f97316']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                          />
+                          <View style={styles.iconGlassShine} />
+                          <MaterialIcons name="campaign" size={20} color="#ffffff" />
+                        </View>
+                        <View style={styles.gridCardTopRight} />
+                      </View>
+
+                      {/* Bottom Row: Title block + Action arrow */}
+                      <View style={styles.gridCardBottomRow}>
+                        <View style={styles.gridTitleBlock}>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Notice Board</Text>
+                        </View>
+                        <View style={[styles.gridActionHalo, { borderColor: 'rgba(234,88,12,0.18)' }]}>
+                          <View style={styles.gridActionOrbGlass}>
+                            <LinearGradient
+                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(254, 237, 213, 0.7)']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={StyleSheet.absoluteFill}
+                            />
+                            <MaterialIcons name="arrow-forward" size={13} color="#ea580c" />
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }
+
+                // SPECIAL DETAILED 2-COLUMN CARD 8: Theme & Appearance (Matching alignment & visual style)
+                if (item.target === 'ThemeSettings') {
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.card, styles.themeGridCard]}
+                      activeOpacity={0.8}
+                      onPress={() => safeNavigate('ThemeSettings')}
+                    >
+                      {/* Violet/Purple Gradient Background */}
+                      <LinearGradient
+                        colors={['#FAF5FF', '#F3E8FF', '#E9D5FF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      {/* Glass Sheen Glare */}
+                      <LinearGradient
+                        colors={['rgba(255, 255, 255, 0.65)', 'rgba(255, 255, 255, 0)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
+                      />
+                      {/* Corner Glow Mesh */}
+                      <View style={[styles.cardMeshGlow, { backgroundColor: 'rgba(124, 58, 237, 0.14)' }]} pointerEvents="none" />
+                      {/* Left Accent Border */}
+                      <View style={[styles.gridLeftBorder, { backgroundColor: '#7c3aed' }]} />
+
+                      {/* Premium Theme & Swatches Palette Illustration */}
+                      <View style={styles.themePaletteSheet} pointerEvents="none">
+                        <LinearGradient
+                          colors={['rgba(255, 255, 255, 0.94)', 'rgba(243, 232, 255, 0.5)']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 0, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                          pointerEvents="none"
+                        />
+                        {/* Header */}
+                        <View style={styles.themeSheetHeader}>
+                          <View style={styles.themeSheetHeaderDot} />
+                          <View style={styles.themeSheetHeaderLine} />
+                          <MaterialIcons name="auto-awesome" size={9} color="#7c3aed" />
+                        </View>
+                        {/* Mini Dark/Light Mode Switch */}
+                        <View style={styles.themeTogglePill}>
+                          <MaterialIcons name="light-mode" size={9} color="#eab308" />
+                          <View style={styles.themeToggleThumb}>
+                            <MaterialIcons name="dark-mode" size={8} color="#ffffff" />
+                          </View>
+                        </View>
+                        {/* Color Swatch Dots */}
+                        <View style={styles.themeSwatchesRow}>
+                          <View style={[styles.themeSwatchCircle, { backgroundColor: '#0052cc' }]} />
+                          <View style={[styles.themeSwatchCircle, { backgroundColor: '#7c3aed' }]} />
+                          <View style={[styles.themeSwatchCircle, { backgroundColor: '#059669' }]} />
+                          <View style={[styles.themeSwatchCircle, { backgroundColor: '#ea580c' }]} />
+                        </View>
+                      </View>
+
+                      {/* Dot Matrix */}
+                      <View style={styles.gridDotMatrix} pointerEvents="none">
+                        <View style={styles.dotRow}><View style={styles.dotViolet} /><View style={styles.dotViolet} /><View style={styles.dotViolet} /></View>
+                        <View style={styles.dotRow}><View style={styles.dotViolet} /><View style={styles.dotViolet} /><View style={styles.dotViolet} /></View>
+                        <View style={styles.dotRow}><View style={styles.dotViolet} /><View style={styles.dotViolet} /><View style={styles.dotViolet} /></View>
+                      </View>
+
+                      {/* Top Row: Icon tile only - matching all other cards */}
+                      <View style={styles.gridCardTopRow}>
+                        <View style={styles.themeGridIconTile}>
+                          <LinearGradient
+                            colors={['#7c3aed', '#9333ea']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                          />
+                          <View style={styles.iconGlassShine} />
+                          <MaterialIcons name="palette" size={20} color="#ffffff" />
+                        </View>
+                        <View style={styles.gridCardTopRight} />
+                      </View>
+
+                      {/* Bottom Row: Title block + Action arrow */}
+                      <View style={styles.gridCardBottomRow}>
+                        <View style={styles.gridTitleBlock}>
+                          <Text style={styles.gridCardTitle} numberOfLines={2}>Theme & Appearance</Text>
+                        </View>
+                        <View style={[styles.gridActionHalo, { borderColor: 'rgba(124, 58, 237, 0.18)' }]}>
+                          <View style={styles.gridActionOrbGlass}>
+                            <LinearGradient
+                              colors={['rgba(255, 255, 255, 0.95)', 'rgba(243, 232, 255, 0.7)']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={StyleSheet.absoluteFill}
+                            />
+                            <MaterialIcons name="arrow-forward" size={13} color="#7c3aed" />
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }
+
+                // STANDARD 2-COLUMN GRID CARD for any other future modules
                 return (
                   <TouchableOpacity 
                     key={index} 
@@ -1040,11 +1280,12 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                       styles.card, 
                       { 
                         shadowColor: item.color,
-                        backgroundColor: item.cardBg, // Premium custom pastel background
-                        borderLeftColor: item.color,   // Left color tag
-                        borderLeftWidth: 4.5,          // Bold left accent line
-                        paddingVertical: isSmallScreen ? 14 : 18,
-                        paddingHorizontal: 16,
+                        backgroundColor: item.cardBg,
+                        borderLeftColor: item.color,
+                        borderLeftWidth: 4.5,
+                        padding: 14,
+                        minHeight: 148,
+                        justifyContent: 'space-between',
                       }
                     ]}
                     activeOpacity={0.78}
@@ -1062,54 +1303,30 @@ const MoreHubScreenComponent: React.FC<MoreHubScreenProps> = ({ navigation }) =>
                     {/* Subtle Theme Color Mesh Glow in corner */}
                     <View style={[styles.cardMeshGlow, { backgroundColor: `${item.color}15` }]} pointerEvents="none" />
 
-                    {/* CAD Blueprint Layout Guide Lines */}
-                    <View style={styles.blueprintGridH} pointerEvents="none" />
-                    <View style={styles.blueprintGridV} pointerEvents="none" />
-
-                    {/* Monospace System Coordinate Code Tag */}
-                    <Text style={[styles.moduleCode, { color: `${item.color}45` }]}>{item.code}</Text>
-
-                    {/* SVG/Vector icon watermark in corner */}
-                    <View style={styles.watermarkWrapper} pointerEvents="none">
-                      <MaterialIcons 
-                        name={item.icon as any} 
-                        size={84} 
-                        color={item.color} 
-                        style={styles.cardWatermark} 
-                      />
-                    </View>
-
-                    {/* Top Row: Glass Icon Box + Pill Badge */}
-                    <View style={styles.cardTopRow}>
-                      <View style={[styles.iconContainer, { borderColor: `${item.color}25` }]}>
-                        {/* Internal Glass Reflection overlay */}
-                        <LinearGradient
-                          colors={['rgba(255, 255, 255, 0.5)', 'rgba(255, 255, 255, 0)']}
-                          style={StyleSheet.absoluteFill}
-                        />
+                    {/* Top Row: Icon tile */}
+                    <View style={styles.gridCardTopRow}>
+                      <View style={[styles.examGridIconTile, { backgroundColor: item.color }]}>
                         <MaterialIcons 
                           name={item.icon as any} 
-                          size={isSmallScreen ? 20 : 22} 
-                          color={item.color} 
+                          size={20} 
+                          color="#ffffff" 
                         />
                       </View>
-                      {item.badge && (
-                        <View style={[styles.cardBadge, { backgroundColor: 'rgba(255, 255, 255, 0.85)', borderColor: `${item.color}35` }]}>
-                          <Text style={[styles.cardBadgeText, { color: item.color }]}>{item.badge}</Text>
+                      <View style={styles.gridCardTopRight} />
+                    </View>
+
+                    {/* Bottom Area: Title block + Action Halo button */}
+                    <View style={styles.gridCardBottomRow}>
+                      <View style={styles.gridTitleBlock}>
+                        <Text style={styles.gridCardTitle} numberOfLines={2}>
+                          {item.title}
+                        </Text>
+                      </View>
+                      <View style={[styles.gridActionHalo, { borderColor: `${item.color}25` }]}>
+                        <View style={styles.gridActionOrbGlass}>
+                          <MaterialIcons name="arrow-forward" size={13} color={item.color} />
                         </View>
-                      )}
-                    </View>
-
-                    {/* Bottom Area: Large Title */}
-                    <View style={styles.cardInfo}>
-                      <Text style={styles.cardText} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                    </View>
-
-                    {/* Mini Glassmorphic Action Button */}
-                    <View style={[styles.cardMiniActionButton, { borderColor: `${item.color}30` }]}>
-                      <MaterialIcons name="arrow-forward" size={12} color={item.color} />
+                      </View>
                     </View>
                   </TouchableOpacity>
                 );
@@ -2136,6 +2353,28 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderColor: 'rgba(225, 29, 72, 0.16)',
   },
+  noticeGridCard: {
+    padding: 14,
+    minHeight: 148,
+    justifyContent: 'space-between',
+    shadowColor: '#ea580c',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    elevation: 6,
+    borderColor: 'rgba(234, 88, 12, 0.16)',
+  },
+  themeGridCard: {
+    padding: 14,
+    minHeight: 148,
+    justifyContent: 'space-between',
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    elevation: 6,
+    borderColor: 'rgba(124, 58, 237, 0.16)',
+  },
   complaintGridCard: {
     padding: 14,
     minHeight: 148,
@@ -2727,6 +2966,133 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  noticeVisualContainer: {
+    position: 'absolute',
+    right: 8,
+    top: 14,
+    width: 110,
+    height: 95,
+    overflow: 'visible',
+  },
+  noticeVisualSheet: {
+    position: 'absolute',
+    left: 4,
+    top: 2,
+    width: 84,
+    height: 72,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 12,
+    padding: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 88, 12, 0.12)',
+    transform: [{ rotate: '-6deg' }],
+    opacity: 0.88,
+    shadowColor: '#ea580c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    gap: 4,
+    overflow: 'hidden',
+  },
+  noticeDocHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  noticeDocPinDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ea580c',
+  },
+  noticeDocHeaderLine: {
+    flex: 1,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(234, 88, 12, 0.2)',
+  },
+  noticeDocLiveTag: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    backgroundColor: '#ea580c',
+  },
+  noticeDocLiveTagText: {
+    fontSize: 5,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  noticeDocDivider: {
+    height: 1,
+    backgroundColor: 'rgba(234, 88, 12, 0.1)',
+    borderRadius: 1,
+  },
+  noticeDocRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  noticeDocBullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#fb923c',
+  },
+  noticeDocLineLong: {
+    flex: 1,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(234, 88, 12, 0.22)',
+  },
+  noticeDocLineMedium: {
+    width: 46,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(234, 88, 12, 0.14)',
+  },
+  noticeDocLineShort: {
+    width: 30,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(234, 88, 12, 0.1)',
+  },
+  noticeWaveRingOuter: {
+    position: 'absolute',
+    right: 6,
+    bottom: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 88, 12, 0.18)',
+    borderStyle: 'dashed',
+  },
+  noticeWaveRingInner: {
+    position: 'absolute',
+    right: 12,
+    bottom: 18,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 88, 12, 0.3)',
+  },
+  noticeGridIconTile: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#ea580c',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 8,
+    elevation: 5,
+  },
   complaintVisualContainer: {
     position: 'absolute',
     right: 10,
@@ -3194,6 +3560,96 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  themeGridIconTile: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  themePaletteSheet: {
+    position: 'absolute',
+    right: 8,
+    top: 14,
+    width: 104,
+    height: 88,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 14,
+    padding: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.12)',
+    transform: [{ rotate: '5deg' }],
+    opacity: 0.88,
+    overflow: 'hidden',
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
+    elevation: 3,
+    gap: 5,
+  },
+  themeSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  themeSheetHeaderDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#7c3aed',
+  },
+  themeSheetHeaderLine: {
+    flex: 1,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(124, 58, 237, 0.18)',
+  },
+  themeTogglePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    borderRadius: 10,
+    padding: 2.5,
+    paddingHorizontal: 5,
+  },
+  themeToggleThumb: {
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
+    backgroundColor: '#7c3aed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  themeSwatchesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 3,
+  },
+  themeSwatchCircle: {
+    width: 13,
+    height: 13,
+    borderRadius: 6.5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+  },
   gridCardTopRight: {
     alignItems: 'flex-end',
     gap: 3,
@@ -3219,14 +3675,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   gridTitleBlock: {
-    maxWidth: '72%',
+    flex: 1,
+    paddingRight: 6,
     zIndex: 10,
+    justifyContent: 'center',
   },
   gridCardTitle: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '900',
-    color: '#000000',
-    letterSpacing: -0.25,
+    color: '#0d1b3e',
+    letterSpacing: -0.2,
+    lineHeight: 16.5,
   },
   gridCardSubtitle: {
     fontSize: 10,
@@ -3241,6 +3700,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     zIndex: 10,
+    marginTop: 4,
   },
   gridInfoCapsule: {
     flexDirection: 'row',

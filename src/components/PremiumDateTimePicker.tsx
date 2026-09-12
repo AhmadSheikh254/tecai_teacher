@@ -14,6 +14,7 @@ import Svg, { Circle, Path, Defs, Stop, LinearGradient as SvgLinearGradient } fr
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 
 const ViewportModal: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; zIndex?: number }> = ({ visible, onClose, children, zIndex = 2000000 }) => {
   if (!visible) return null;
@@ -78,6 +79,9 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
   showTime = true,
   mode = 'datetime',
 }) => {
+  const { appTheme } = useAppTheme();
+  const isDark = appTheme.isDark;
+
   const isTimeOnly = mode === 'time';
   const isDateOnly = mode === 'date' || (mode === 'datetime' && !showTime);
   const isDateTime = mode === 'datetime' && showTime;
@@ -181,20 +185,23 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
       return;
     }
 
-    const formattedDay = selectedDay < 10 ? `0${selectedDay}` : `${selectedDay}`;
-    const formattedMonth = MONTHS_SHORT[currentMonth];
-    const result = isDateTime 
-      ? `${formattedDay} ${formattedMonth} ${currentYear}, ${selectedHour}:${selectedMinute} ${selectedAmPm}`
-      : `${formattedDay} ${formattedMonth} ${currentYear}`;
+    const dayFormatted = String(selectedDay).padStart(2, '0');
+    if (isDateOnly) {
+      onSelect(`${dayFormatted} ${MONTHS_SHORT[currentMonth]} ${currentYear}`);
+      onClose();
+      return;
+    }
+
+    const result = `${dayFormatted} ${MONTHS_SHORT[currentMonth]} ${currentYear}, ${selectedHour}:${selectedMinute} ${selectedAmPm}`;
     onSelect(result);
     onClose();
   };
 
-  // Generate calendar days grid
+  // Render calendar days grid
   const renderCalendarDays = () => {
     const gridItems = [];
     
-    // Empty boxes for days of previous month
+    // Empty cells before month start
     for (let i = 0; i < firstDayIndex; i++) {
       gridItems.push(<View key={`empty-${i}`} style={styles.calendarDayCellEmpty} />);
     }
@@ -211,13 +218,13 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
         >
           {isSelected ? (
             <LinearGradient
-              colors={['#0052cc', '#003d9b']}
+              colors={isDark ? [appTheme.primary, '#0284C7'] : ['#0052cc', '#003d9b']}
               style={styles.selectedDayGradient}
             >
               <Text style={styles.calendarDayTextActive}>{day}</Text>
             </LinearGradient>
           ) : (
-            <Text style={styles.calendarDayText}>{day}</Text>
+            <Text style={[styles.calendarDayText, isDark && { color: appTheme.textPrimary }]}>{day}</Text>
           )}
         </TouchableOpacity>
       );
@@ -233,33 +240,41 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
   return (
     <ViewportModal visible={visible} onClose={onClose} zIndex={2000000}>
-        <View style={[styles.sheetContainer, theme.shadows.level2]}>
+        <View style={[
+          styles.sheetContainer, 
+          theme.shadows.level2,
+          isDark && { 
+            backgroundColor: appTheme.cardBg, 
+            borderWidth: 1.5, 
+            borderColor: appTheme.border 
+          }
+        ]}>
           
           {/* Premium picker background waves */}
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
               <Defs>
                 <SvgLinearGradient id="pickerGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <Stop offset="0%" stopColor="#0052cc" stopOpacity={0.035} />
+                  <Stop offset="0%" stopColor={isDark ? appTheme.primary : "#0052cc"} stopOpacity={isDark ? 0.08 : 0.035} />
                   <Stop offset="100%" stopColor="#00D8F6" stopOpacity={0.015} />
                 </SvgLinearGradient>
               </Defs>
               <Circle cx="10%" cy="10%" r="140" fill="url(#pickerGlow)" />
               <Circle cx="90%" cy="90%" r="160" fill="url(#pickerGlow)" />
-              <Path d="M -20,120 Q 80,70 120,180 T 320,140" stroke="#0052cc" strokeWidth={0.8} fill="none" opacity={0.05} />
+              <Path d="M -20,120 Q 80,70 120,180 T 320,140" stroke={isDark ? appTheme.primary : "#0052cc"} strokeWidth={0.8} fill="none" opacity={isDark ? 0.1 : 0.05} />
             </Svg>
           </View>
           
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, isDark && { borderBottomColor: appTheme.border }]}>
             <View style={styles.headerTitleRow}>
-              <View style={styles.headerIconBox}>
-                <MaterialIcons name={isTimeOnly ? "schedule" : "event-note"} size={20} color="#0052cc" />
+              <View style={[styles.headerIconBox, isDark && { backgroundColor: `${appTheme.primary}20` }]}>
+                <MaterialIcons name={isTimeOnly ? "schedule" : "event-note"} size={20} color={isDark ? appTheme.primary : "#0052cc"} />
               </View>
-              <Text style={styles.headerTitle}>{displayTitle}</Text>
+              <Text style={[styles.headerTitle, isDark && { color: appTheme.textPrimary }]}>{displayTitle}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <MaterialIcons name="close" size={20} color="#737685" />
+              <MaterialIcons name="close" size={20} color={isDark ? appTheme.textMuted : "#737685"} />
             </TouchableOpacity>
           </View>
 
@@ -267,19 +282,19 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
             
             {/* Live Selection Preview Banner */}
             <View style={{
-              backgroundColor: '#F0FDFA',
+              backgroundColor: isDark ? `${appTheme.primary}18` : '#F0FDFA',
               borderWidth: 1.5,
-              borderColor: '#99F6E4',
+              borderColor: isDark ? `${appTheme.primary}45` : '#99F6E4',
               borderRadius: 14,
               paddingVertical: 9,
               paddingHorizontal: 14,
               alignItems: 'center',
               marginBottom: 4,
             }}>
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#0D9488', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: isDark ? appTheme.primary : '#0D9488', textTransform: 'uppercase', letterSpacing: 0.6 }}>
                 {isTimeOnly ? 'Selected Time' : isDateOnly ? 'Selected Date' : 'Selected Date & Time'}
               </Text>
-              <Text style={{ fontSize: 15, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: isDark ? '#FFFFFF' : '#0F172A', marginTop: 2 }}>
                 {isTimeOnly 
                   ? `${selectedHour}:${selectedMinute} ${selectedAmPm}`
                   : isDateOnly
@@ -291,21 +306,21 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
             {/* 1. CALENDAR VIEW (If not time-only) */}
             {!isTimeOnly && (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                 <View style={styles.monthSelectorRow}>
                   <TouchableOpacity onPress={handlePrevMonth} style={styles.arrowBtn}>
-                    <MaterialIcons name="chevron-left" size={26} color="#0F172A" />
+                    <MaterialIcons name="chevron-left" size={26} color={isDark ? appTheme.textPrimary : "#0F172A"} />
                   </TouchableOpacity>
-                  <Text style={styles.monthYearText}>{MONTHS[currentMonth]} {currentYear}</Text>
+                  <Text style={[styles.monthYearText, isDark && { color: appTheme.textPrimary }]}>{MONTHS[currentMonth]} {currentYear}</Text>
                   <TouchableOpacity onPress={handleNextMonth} style={styles.arrowBtn}>
-                    <MaterialIcons name="chevron-right" size={26} color="#0F172A" />
+                    <MaterialIcons name="chevron-right" size={26} color={isDark ? appTheme.textPrimary : "#0F172A"} />
                   </TouchableOpacity>
                 </View>
 
                 {/* Week Days Names */}
                 <View style={styles.weekDaysRow}>
                   {DAYS_OF_WEEK.map((d, i) => (
-                    <Text key={i} style={styles.weekDayText}>{d}</Text>
+                    <Text key={i} style={[styles.weekDayText, isDark && { color: appTheme.textMuted }]}>{d}</Text>
                   ))}
                 </View>
 
@@ -318,24 +333,32 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
             {/* 2. TIME SELECTOR (If time-only or showTime is true) */}
             {(isTimeOnly || isDateTime) && (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, isDark && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                 <View style={styles.timeSectionHeader}>
-                  <MaterialIcons name="schedule" size={17} color="#0052cc" style={{ marginRight: 6 }} />
-                  <Text style={styles.timeSectionTitle}>Select Time</Text>
+                  <MaterialIcons name="schedule" size={17} color={isDark ? appTheme.primary : "#0052cc"} style={{ marginRight: 6 }} />
+                  <Text style={[styles.timeSectionTitle, isDark && { color: appTheme.textPrimary }]}>Select Time</Text>
                 </View>
 
                 <View style={styles.timeSelectionRow}>
                   {/* Hour */}
                   <View style={styles.pickerCol}>
-                    <Text style={styles.pickerLabel}>Hour</Text>
+                    <Text style={[styles.pickerLabel, isDark && { color: appTheme.textMuted }]}>Hour</Text>
                     <View style={styles.segmentList}>
                       {hoursList.map(h => (
                         <TouchableOpacity
                           key={h}
-                          style={[styles.segmentBtn, selectedHour === h && styles.segmentBtnActive]}
+                          style={[
+                            styles.segmentBtn, 
+                            isDark && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border },
+                            selectedHour === h && (isDark ? { backgroundColor: appTheme.primary, borderColor: appTheme.primary } : styles.segmentBtnActive)
+                          ]}
                           onPress={() => setSelectedHour(h)}
                         >
-                          <Text style={[styles.segmentText, selectedHour === h && styles.segmentTextActive]}>{h}</Text>
+                          <Text style={[
+                            styles.segmentText, 
+                            isDark && { color: appTheme.textSecondary },
+                            selectedHour === h && (isDark ? { color: '#ffffff' } : styles.segmentTextActive)
+                          ]}>{h}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -343,16 +366,24 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
                   {/* Minute */}
                   <View style={styles.pickerCol}>
-                    <Text style={styles.pickerLabel}>Min</Text>
+                    <Text style={[styles.pickerLabel, isDark && { color: appTheme.textMuted }]}>Min</Text>
                     <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
                       <View style={styles.segmentList}>
                         {minutesList.map(m => (
                           <TouchableOpacity
                             key={m}
-                            style={[styles.segmentBtn, selectedMinute === m && styles.segmentBtnActive]}
+                            style={[
+                              styles.segmentBtn, 
+                              isDark && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border },
+                              selectedMinute === m && (isDark ? { backgroundColor: appTheme.primary, borderColor: appTheme.primary } : styles.segmentBtnActive)
+                            ]}
                             onPress={() => setSelectedMinute(m)}
                           >
-                            <Text style={[styles.segmentText, selectedMinute === m && styles.segmentTextActive]}>{m}</Text>
+                            <Text style={[
+                              styles.segmentText, 
+                              isDark && { color: appTheme.textSecondary },
+                              selectedMinute === m && (isDark ? { color: '#ffffff' } : styles.segmentTextActive)
+                            ]}>{m}</Text>
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -361,19 +392,35 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
                   {/* AM/PM */}
                   <View style={[styles.pickerCol, { flex: 0.85 }]}>
-                    <Text style={styles.pickerLabel}>Period</Text>
+                    <Text style={[styles.pickerLabel, isDark && { color: appTheme.textMuted }]}>Period</Text>
                     <View style={styles.ampmContainer}>
                       <TouchableOpacity
-                        style={[styles.ampmBtn, selectedAmPm === 'AM' && styles.ampmBtnActive]}
+                        style={[
+                          styles.ampmBtn, 
+                          isDark && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border },
+                          selectedAmPm === 'AM' && (isDark ? { backgroundColor: appTheme.primary, borderColor: appTheme.primary } : styles.ampmBtnActive)
+                        ]}
                         onPress={() => setSelectedAmPm('AM')}
                       >
-                        <Text style={[styles.ampmText, selectedAmPm === 'AM' && styles.ampmTextActive]}>AM</Text>
+                        <Text style={[
+                          styles.ampmText, 
+                          isDark && { color: appTheme.textSecondary },
+                          selectedAmPm === 'AM' && (isDark ? { color: '#ffffff' } : styles.ampmTextActive)
+                        ]}>AM</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.ampmBtn, selectedAmPm === 'PM' && styles.ampmBtnActive]}
+                        style={[
+                          styles.ampmBtn, 
+                          isDark && { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border },
+                          selectedAmPm === 'PM' && (isDark ? { backgroundColor: appTheme.primary, borderColor: appTheme.primary } : styles.ampmBtnActive)
+                        ]}
                         onPress={() => setSelectedAmPm('PM')}
                       >
-                        <Text style={[styles.ampmText, selectedAmPm === 'PM' && styles.ampmTextActive]}>PM</Text>
+                        <Text style={[
+                          styles.ampmText, 
+                          isDark && { color: appTheme.textSecondary },
+                          selectedAmPm === 'PM' && (isDark ? { color: '#ffffff' } : styles.ampmTextActive)
+                        ]}>PM</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -383,12 +430,12 @@ export const PremiumDateTimePicker: React.FC<PremiumDateTimePickerProps> = ({
 
             {/* Save Actions */}
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+              <TouchableOpacity style={[styles.cancelBtn, isDark && { backgroundColor: appTheme.surfaceVariant }]} onPress={onClose}>
+                <Text style={[styles.cancelBtnText, isDark && { color: appTheme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
                 <LinearGradient
-                  colors={['#0052cc', '#003d9b']}
+                  colors={isDark ? [appTheme.primary, '#0284C7'] : ['#0052cc', '#003d9b']}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.saveBtnGrad}
                 >

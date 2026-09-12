@@ -34,6 +34,7 @@ import { ExamFinalMarkScreen }   from '../screens/more/ExamFinalMarkScreen';
 import { ExamReportScreen }      from '../screens/more/ExamReportScreen';
 
 import { LessonPlanScreen }      from '../screens/more/LessonPlanScreen';
+import { AILessonPlanScreen }    from '../screens/more/AILessonPlanScreen';
 import { WorksheetScreen }       from '../screens/more/WorksheetScreen';
 import { ChatbotScreen }         from '../screens/more/ChatbotScreen';
 import { MCQsScreen }            from '../screens/more/MCQsScreen';
@@ -48,6 +49,14 @@ import { StudentRosterScreen }   from '../screens/more/StudentRosterScreen';
 import { AttendanceScreen }      from '../screens/more/AttendanceScreen';
 import { TimeTableScreen }       from '../screens/more/TimeTableScreen';
 import { SalaryScreen }          from '../screens/more/SalaryScreen';
+import { NoticeScreen }          from '../screens/more/NoticeScreen';
+import { MyAttendanceScreen }    from '../screens/more/MyAttendanceScreen';
+import { ThemeSettingsScreen }   from '../screens/more/ThemeSettingsScreen';
+import { ComplainScreen }        from '../screens/more/ComplainScreen';
+import { IssueScreen }           from '../screens/more/IssueScreen';
+import { CBTSHubScreen }         from '../screens/cbts/CBTSHubScreen';
+import { CBTSExamScreen }        from '../screens/cbts/CBTSExamScreen';
+import { QuestionBankScreen }    from '../screens/cbts/QuestionBankScreen';
 
 
 // ─── Stacks ───────────────────────────────────────────────────────────────────
@@ -55,44 +64,59 @@ const AssignmentStack = createNativeStackNavigator();
 const MoreStack       = createNativeStackNavigator();
 const Tab             = createBottomTabNavigator();
 
-const AssignmentStackNavigator = () => (
-  <AssignmentStack.Navigator screenOptions={{ headerShown: false }}>
-    <AssignmentStack.Screen name="AssignmentHub"   component={AssignmentHubScreen} />
-    <AssignmentStack.Screen name="Activity"        component={ActivityScreen} />
-    <AssignmentStack.Screen name="ReadingCoach"    component={ReadingCoachScreen} />
-    <AssignmentStack.Screen name="MCQBuilder"      component={MCQBuilderScreen} />
-    <AssignmentStack.Screen name="AISpeakingBuddy" component={AISpeakingBuddyScreen} />
-  </AssignmentStack.Navigator>
-);
+const AssignmentStackNavigator = () => {
+  const { theme } = useAppTheme();
+  return (
+    <AssignmentStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }}>
+      <AssignmentStack.Screen name="AssignmentHub"   component={AssignmentHubScreen} />
+      <AssignmentStack.Screen name="Activity"        component={ActivityScreen} />
+      <AssignmentStack.Screen name="ReadingCoach"    component={ReadingCoachScreen} />
+      <AssignmentStack.Screen name="MCQBuilder"      component={MCQBuilderScreen} />
+      <AssignmentStack.Screen name="AISpeakingBuddy" component={AISpeakingBuddyScreen} />
+    </AssignmentStack.Navigator>
+  );
+};
 
-const MoreStackNavigator = () => (
-  <MoreStack.Navigator screenOptions={{ headerShown: false }}>
-    <MoreStack.Screen name="MoreHub"        component={MoreHubScreen} />
-    <MoreStack.Screen name="AIToolkit"      component={AIToolkitScreen} />
-    <MoreStack.Screen name="Exam"           component={ExamScreen} />
-    <MoreStack.Screen name="ExamSchedule"   component={ExamScheduleScreen} />
-    <MoreStack.Screen name="ExamAttendance" component={ExamAttendanceScreen} />
-    <MoreStack.Screen name="ExamMarks"      component={ExamMarksScreen} />
-    <MoreStack.Screen name="ExamTermMark"   component={ExamTermMarkScreen} />
-    <MoreStack.Screen name="ExamFinalMark"  component={ExamFinalMarkScreen} />
-    <MoreStack.Screen name="ExamReport"     component={ExamReportScreen} />
-    <MoreStack.Screen name="LessonPlan"     component={LessonPlanScreen} />
-    <MoreStack.Screen name="Worksheet"    component={WorksheetScreen} />
-    <MoreStack.Screen name="Chatbot"      component={ChatbotScreen} />
-    <MoreStack.Screen name="MCQs"         component={MCQsScreen} />
-    <MoreStack.Screen name="FillBlanks"   component={FillBlanksScreen} />
-    <MoreStack.Screen name="TrueFalse"    component={TrueFalseScreen} />
-    <MoreStack.Screen name="MatchColumn"  component={MatchColumnScreen} />
-    <MoreStack.Screen name="Crossword"    component={CrosswordScreen} />
-    <MoreStack.Screen name="QABuilder"    component={QABuilderScreen} />
-    <MoreStack.Screen name="ExcelGen"     component={ExcelGenScreen} />
-    <MoreStack.Screen name="Presentation" component={PresentationScreen} />
-    <MoreStack.Screen name="Students"     component={StudentRosterScreen} />
-    <MoreStack.Screen name="Attendance"   component={AttendanceScreen} />
-    <MoreStack.Screen name="TimeTable"    component={TimeTableScreen} />
-    <MoreStack.Screen name="Salary"       component={SalaryScreen} />
-  </MoreStack.Navigator>
-);
+const MoreStackNavigator = () => {
+  const { theme } = useAppTheme();
+  return (
+    <MoreStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }}>
+      <MoreStack.Screen name="MoreHub"        component={MoreHubScreen} />
+      <MoreStack.Screen name="AIToolkit"      component={AIToolkitScreen} />
+      <MoreStack.Screen name="Exam"           component={ExamScreen} />
+      <MoreStack.Screen name="ExamSchedule"   component={ExamScheduleScreen} />
+      <MoreStack.Screen name="ExamAttendance" component={ExamAttendanceScreen} />
+      <MoreStack.Screen name="ExamMarks"      component={ExamMarksScreen} />
+      <MoreStack.Screen name="ExamTermMark"   component={ExamTermMarkScreen} />
+      <MoreStack.Screen name="ExamFinalMark"  component={ExamFinalMarkScreen} />
+      <MoreStack.Screen name="ExamReport"     component={ExamReportScreen} />
+      <MoreStack.Screen name="LessonPlan"     component={LessonPlanScreen} />
+      <MoreStack.Screen name="AILessonPlan"   component={AILessonPlanScreen} />
+      <MoreStack.Screen name="Worksheet"    component={WorksheetScreen} />
+      <MoreStack.Screen name="Chatbot"      component={ChatbotScreen} />
+      <MoreStack.Screen name="MCQs"         component={MCQsScreen} />
+      <MoreStack.Screen name="FillBlanks"   component={FillBlanksScreen} />
+      <MoreStack.Screen name="TrueFalse"    component={TrueFalseScreen} />
+      <MoreStack.Screen name="MatchColumn"  component={MatchColumnScreen} />
+      <MoreStack.Screen name="Crossword"    component={CrosswordScreen} />
+      <MoreStack.Screen name="QABuilder"    component={QABuilderScreen} />
+      <MoreStack.Screen name="ExcelGen"     component={ExcelGenScreen} />
+      <MoreStack.Screen name="Presentation" component={PresentationScreen} />
+      <MoreStack.Screen name="Students"     component={StudentRosterScreen} />
+      <MoreStack.Screen name="Attendance"   component={AttendanceScreen} />
+      <MoreStack.Screen name="TimeTable"    component={TimeTableScreen} />
+      <MoreStack.Screen name="Salary"       component={SalaryScreen} />
+      <MoreStack.Screen name="Notice"       component={NoticeScreen} />
+      <MoreStack.Screen name="MyAttendance" component={MyAttendanceScreen} />
+      <MoreStack.Screen name="ThemeSettings" component={ThemeSettingsScreen} />
+      <MoreStack.Screen name="Complain"     component={ComplainScreen} />
+      <MoreStack.Screen name="Issue"        component={IssueScreen} />
+      <MoreStack.Screen name="CBTSHub"      component={CBTSHubScreen} />
+      <MoreStack.Screen name="CBTSExam"     component={CBTSExamScreen} />
+      <MoreStack.Screen name="QuestionBank" component={QuestionBankScreen} />
+    </MoreStack.Navigator>
+  );
+};
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const BRAND     = '#0047CC';   // richer darker premium blue
@@ -109,6 +133,8 @@ const TABS = [
   { name: 'More',       label: 'More',       icon: 'dots-horizontal-circle', iconActive: 'dots-horizontal-circle' },
 ] as const;
 
+import { useAppTheme } from '../context/ThemeContext';
+
 // ─── Single Tab Item with self-contained pill animation ───────────────────────
 const TabItem = React.memo(({
   tab,
@@ -119,6 +145,7 @@ const TabItem = React.memo(({
   focused: boolean;
   onPress: () => void;
 }) => {
+  const { theme } = useAppTheme();
   // 0 = inactive, 1 = active
   const anim = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
@@ -138,7 +165,7 @@ const TabItem = React.memo(({
     >
       <Animated.View
         style={[
-          focused ? styles.pill : styles.inactiveOrb,
+          focused ? [styles.pill, { backgroundColor: theme.primary, shadowColor: theme.primary }] : [styles.inactiveOrb, { backgroundColor: theme.surface, borderColor: theme.border }],
           { 
             transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] 
           },
@@ -147,7 +174,7 @@ const TabItem = React.memo(({
         <MaterialCommunityIcons
           name={(focused ? tab.iconActive : tab.icon) as any}
           size={focused ? 20 : 21}
-          color={focused ? '#FFFFFF' : '#475569'}
+          color={focused ? '#FFFFFF' : theme.isDark ? '#94A3B8' : '#475569'}
         />
 
         {focused && (
@@ -162,6 +189,7 @@ const TabItem = React.memo(({
 
 // ─── Premium Tab Bar Container ────────────────────────────────────────────────
 const PremiumTabBar = React.memo(({ state, navigation, descriptors }: BottomTabBarProps) => {
+  const { theme } = useAppTheme();
   const currentRoute = state.routes[state.index];
   const focusedRouteName = getFocusedRouteNameFromRoute(currentRoute);
 
@@ -176,8 +204,8 @@ const PremiumTabBar = React.memo(({ state, navigation, descriptors }: BottomTabB
   }
 
   return (
-    <View style={{ backgroundColor: '#F1F5F9', width: '100%', alignItems: 'center' }}>
-      <View style={[styles.bar, { paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
+    <View style={{ backgroundColor: theme.bg, width: '100%', alignItems: 'center' }}>
+      <View style={[styles.bar, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: SAFE_B, height: BAR_H + SAFE_B }]}>
         {TABS.map((tab, i) => {
           const focused = state.index === i;
           return (

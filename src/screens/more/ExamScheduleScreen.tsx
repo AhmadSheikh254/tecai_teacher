@@ -14,6 +14,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PremiumDateTimePicker } from '../../components/PremiumDateTimePicker';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -61,6 +62,9 @@ export type ScheduleRecord = {
 };
 
 export const ExamScheduleScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   // Search & Modal States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<ScheduleRecord | null>(null);
@@ -151,47 +155,47 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar Header */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exam Schedule</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Exam Schedule</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="event-note" size={20} color="#0284C7" />
+          <TouchableOpacity style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} activeOpacity={0.7}>
+            <MaterialIcons name="event-note" size={20} color={appTheme.primary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* MAIN EXAM SCHEDULE CONTAINER */}
-          <View style={styles.ledgerCard}>
+          <View style={[styles.ledgerCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             
             {/* Header Title Banner */}
-            <View style={styles.portalTitleBox}>
-              <MaterialIcons name="calendar-today" size={18} color="#0284C7" />
-              <Text style={styles.portalTitleText}>Timetable & Exam Schedule</Text>
+            <View style={[styles.portalTitleBox, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+              <MaterialIcons name="calendar-today" size={18} color={appTheme.primary} />
+              <Text style={[styles.portalTitleText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Timetable & Exam Schedule</Text>
             </View>
 
             {/* Search Input */}
             <View style={styles.searchRow}>
-              <Text style={styles.searchLabel}>Search:</Text>
-              <View style={styles.searchWrapper}>
-                <MaterialIcons name="search" size={18} color="#64748B" style={{ marginRight: 6 }} />
+              <Text style={[styles.searchLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Search:</Text>
+              <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                <MaterialIcons name="search" size={18} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} style={{ marginRight: 6 }} />
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                   placeholder="Search subject, class, room..."
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={isDefaultTheme ? "#64748B" : appTheme.textSecondary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
                 {searchQuery !== '' && (
                   <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                    <MaterialIcons name="close" size={16} color="#64748B" />
+                    <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -201,102 +205,102 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
             <View style={styles.recordsList}>
               {filteredSchedules.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <MaterialIcons name="event-busy" size={40} color="#94A3B8" />
-                  <Text style={styles.emptyTitle}>No Exam Schedules Found</Text>
-                  <Text style={styles.emptyDesc}>Try searching with a different subject or room.</Text>
+                  <MaterialIcons name="event-busy" size={40} color={isDefaultTheme ? "#94A3B8" : appTheme.textSecondary} />
+                  <Text style={[styles.emptyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>No Exam Schedules Found</Text>
+                  <Text style={[styles.emptyDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>Try searching with a different subject or room.</Text>
                 </View>
               ) : (
                 filteredSchedules.map((item) => (
-                  <View key={item.id} style={styles.sharpRecordCard}>
+                  <View key={item.id} style={[styles.sharpRecordCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {/* Left Accent indicator line */}
-                    <View style={styles.leftBlueTag} />
+                    <View style={[styles.leftBlueTag, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
 
                     {/* 1. Header: Course Title & Actions */}
                     <View style={styles.sharpCardHeader}>
                       <View style={{ flex: 1, gap: 4 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <Text style={styles.courseTitleText}>{item.course}</Text>
-                          <View style={styles.classPill}>
-                            <Text style={styles.classPillText}>{item.className}</Text>
+                          <Text style={[styles.courseTitleText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.course}</Text>
+                          <View style={[styles.classPill, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                            <Text style={[styles.classPillText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.className}</Text>
                           </View>
                         </View>
-                        <Text style={styles.termSubText}>{item.term} • Grading: {item.isGrade}</Text>
+                        <Text style={[styles.termSubText, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.term} • Grading: {item.isGrade}</Text>
                       </View>
 
                       {/* Action Button: View Only */}
                       <View style={styles.cardActionsRow}>
                         <TouchableOpacity 
-                          style={styles.actionBtnView} 
+                          style={[styles.actionBtnView, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                           onPress={() => setSelectedRecord(item)}
                           activeOpacity={0.8}
                         >
-                          <MaterialIcons name="visibility" size={15} color="#0284C7" />
-                          <Text style={styles.actionBtnViewText}>View</Text>
+                          <MaterialIcons name="visibility" size={15} color={appTheme.primary} />
+                          <Text style={[styles.actionBtnViewText, !isDefaultTheme && { color: appTheme.primary }]}>View</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
 
                     {/* 2. Structured Info Grid (Date, Time, Room) */}
-                    <View style={styles.structuredInfoBox}>
+                    <View style={[styles.structuredInfoBox, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={styles.infoRowItem}>
-                        <View style={styles.infoIconBox}>
-                          <MaterialIcons name="event" size={16} color="#0284C7" />
+                        <View style={[styles.infoIconBox, !isDefaultTheme && { backgroundColor: appTheme.primary + '18' }]}>
+                          <MaterialIcons name="event" size={16} color={appTheme.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.infoLabel}>EXAM DATE</Text>
-                          <Text style={styles.infoValueDark}>{item.examDate}</Text>
+                          <Text style={[styles.infoLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM DATE</Text>
+                          <Text style={[styles.infoValueDark, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.examDate}</Text>
                         </View>
                       </View>
 
-                      <View style={styles.infoRowDivider} />
+                      <View style={[styles.infoRowDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                       <View style={styles.infoRowItem}>
-                        <View style={styles.infoIconBox}>
-                          <MaterialIcons name="schedule" size={16} color="#7E22CE" />
+                        <View style={[styles.infoIconBox, !isDefaultTheme && { backgroundColor: appTheme.accent + '18' }]}>
+                          <MaterialIcons name="schedule" size={16} color={isDefaultTheme ? "#7E22CE" : appTheme.accent} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.infoLabel}>TIMING</Text>
-                          <Text style={styles.infoValueDark}>{item.startTime} - {item.endTime}</Text>
+                          <Text style={[styles.infoLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>TIMING</Text>
+                          <Text style={[styles.infoValueDark, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.startTime} - {item.endTime}</Text>
                         </View>
                       </View>
 
-                      <View style={styles.infoRowDivider} />
+                      <View style={[styles.infoRowDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
 
                       <View style={styles.infoRowItem}>
-                        <View style={styles.infoIconBox}>
-                          <MaterialIcons name="meeting-room" size={16} color="#059669" />
+                        <View style={[styles.infoIconBox, !isDefaultTheme && { backgroundColor: isDefaultTheme ? '#ECFDF5' : appTheme.primary + '18' }]}>
+                          <MaterialIcons name="meeting-room" size={16} color={isDefaultTheme ? "#059669" : appTheme.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.infoLabel}>ROOM</Text>
-                          <Text style={[styles.infoValueDark, { color: '#059669' }]}>Room {item.roomNo}</Text>
+                          <Text style={[styles.infoLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>ROOM</Text>
+                          <Text style={[styles.infoValueDark, { color: isDefaultTheme ? '#059669' : appTheme.primary }]}>Room {item.roomNo}</Text>
                         </View>
                       </View>
                     </View>
 
                     {/* 3. Clean Marks Summary Row */}
-                    <View style={styles.marksSummaryStrip}>
+                    <View style={[styles.marksSummaryStrip, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                       <View style={styles.markCol}>
-                        <Text style={styles.markColLabel}>WRITTEN</Text>
-                        <Text style={[styles.markColValue, { color: '#0284C7' }]}>{item.writtenMark}</Text>
+                        <Text style={[styles.markColLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>WRITTEN</Text>
+                        <Text style={[styles.markColValue, { color: isDefaultTheme ? '#0284C7' : appTheme.primary }]}>{item.writtenMark}</Text>
                       </View>
-                      <View style={styles.markDivider} />
+                      <View style={[styles.markDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
                       <View style={styles.markCol}>
-                        <Text style={styles.markColLabel}>PRACTICAL</Text>
-                        <Text style={[styles.markColValue, { color: item.practicalMark !== '-' ? '#D97706' : '#64748B' }]}>
+                        <Text style={[styles.markColLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>PRACTICAL</Text>
+                        <Text style={[styles.markColValue, { color: item.practicalMark !== '-' ? (isDefaultTheme ? '#D97706' : appTheme.accent) : (isDefaultTheme ? '#64748B' : appTheme.textSecondary) }]}>
                           {item.practicalMark}
                         </Text>
                       </View>
-                      <View style={styles.markDivider} />
+                      <View style={[styles.markDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
                       <View style={styles.markCol}>
-                        <Text style={styles.markColLabel}>THEORY</Text>
-                        <Text style={[styles.markColValue, { color: item.theoryMark !== '-' ? '#4F46E5' : '#64748B' }]}>
+                        <Text style={[styles.markColLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>THEORY</Text>
+                        <Text style={[styles.markColValue, { color: item.theoryMark !== '-' ? (isDefaultTheme ? '#4F46E5' : appTheme.primary) : (isDefaultTheme ? '#64748B' : appTheme.textSecondary) }]}>
                           {item.theoryMark}
                         </Text>
                       </View>
-                      <View style={styles.markDivider} />
+                      <View style={[styles.markDivider, !isDefaultTheme && { backgroundColor: appTheme.border }]} />
                       <View style={styles.markCol}>
-                        <Text style={styles.markColLabel}>VIVA</Text>
-                        <Text style={[styles.markColValue, { color: item.vivaMark !== '-' ? '#059669' : '#64748B' }]}>
+                        <Text style={[styles.markColLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>VIVA</Text>
+                        <Text style={[styles.markColValue, { color: item.vivaMark !== '-' ? (isDefaultTheme ? '#059669' : appTheme.primary) : (isDefaultTheme ? '#64748B' : appTheme.textSecondary) }]}>
                           {item.vivaMark}
                         </Text>
                       </View>
@@ -308,17 +312,17 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
             </View>
 
             {/* Pagination Controls Footer */}
-            <View style={styles.paginationRow}>
-              <Text style={styles.entriesText}>Showing 1 to {filteredSchedules.length} of {schedules.length} entries</Text>
+            <View style={[styles.paginationRow, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
+              <Text style={[styles.entriesText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Showing 1 to {filteredSchedules.length} of {schedules.length} entries</Text>
               <View style={styles.paginationBtns}>
-                <TouchableOpacity style={styles.pageBtnDisabled} disabled={true}>
-                  <Text style={styles.pageBtnTextDisabled}>Prev</Text>
+                <TouchableOpacity style={[styles.pageBtnDisabled, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} disabled={true}>
+                  <Text style={[styles.pageBtnTextDisabled, !isDefaultTheme && { color: appTheme.textSecondary }]}>Prev</Text>
                 </TouchableOpacity>
-                <View style={styles.pageBtnActive}>
+                <View style={[styles.pageBtnActive, !isDefaultTheme && { backgroundColor: appTheme.primary }]}>
                   <Text style={styles.pageBtnTextActive}>1</Text>
                 </View>
-                <TouchableOpacity style={styles.pageBtnDisabled} disabled={true}>
-                  <Text style={styles.pageBtnTextDisabled}>Next</Text>
+                <TouchableOpacity style={[styles.pageBtnDisabled, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} disabled={true}>
+                  <Text style={[styles.pageBtnTextDisabled, !isDefaultTheme && { color: appTheme.textSecondary }]}>Next</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -332,67 +336,67 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
           onClose={() => setSelectedRecord(null)}
         >
           {selectedRecord && (
-            <View style={styles.modalContainer}>
+            <View style={[styles.modalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               {/* Modal Header */}
-              <View style={styles.modalHeader}>
+              <View style={[styles.modalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <View style={styles.modalIconBox}>
-                    <MaterialIcons name="event-available" size={22} color="#0284C7" />
+                  <View style={[styles.modalIconBox, !isDefaultTheme && { backgroundColor: appTheme.primary + '18' }]}>
+                    <MaterialIcons name="event-available" size={22} color={appTheme.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.modalTitle}>{selectedRecord.course} Timetable</Text>
-                    <Text style={styles.modalSubTitle}>{selectedRecord.className} • {selectedRecord.term}</Text>
+                    <Text style={[styles.modalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedRecord.course} Timetable</Text>
+                    <Text style={[styles.modalSubTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>{selectedRecord.className} • {selectedRecord.term}</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => setSelectedRecord(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={20} color="#64748B" />
+                  <MaterialIcons name="close" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                <View style={styles.breakdownTable}>
-                  <View style={styles.tableHeaderRow}>
-                    <Text style={styles.tableHeaderTitle}>Schedule Information</Text>
+                <View style={[styles.breakdownTable, !isDefaultTheme && { borderColor: appTheme.border }]}>
+                  <View style={[styles.tableHeaderRow, !isDefaultTheme && { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableHeaderTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Schedule Information</Text>
                   </View>
                   
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableRowLabel}>EXAM DATE</Text>
-                    <Text style={[styles.tableRowValue, { color: '#0284C7', fontWeight: '900' }]}>{selectedRecord.examDate}</Text>
+                  <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM DATE</Text>
+                    <Text style={[styles.tableRowValue, { color: isDefaultTheme ? '#0284C7' : appTheme.primary, fontWeight: '900' }]}>{selectedRecord.examDate}</Text>
                   </View>
 
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableRowLabel}>SHIFT TIMING</Text>
-                    <Text style={[styles.tableRowValue, { fontWeight: '900' }]}>{selectedRecord.startTime} - {selectedRecord.endTime}</Text>
+                  <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>SHIFT TIMING</Text>
+                    <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }, { fontWeight: '900' }]}>{selectedRecord.startTime} - {selectedRecord.endTime}</Text>
                   </View>
 
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableRowLabel}>ROOM NUMBER</Text>
-                    <Text style={[styles.tableRowValue, { color: '#059669', fontWeight: '900' }]}>Room {selectedRecord.roomNo}</Text>
+                  <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>ROOM NUMBER</Text>
+                    <Text style={[styles.tableRowValue, { color: isDefaultTheme ? '#059669' : appTheme.primary, fontWeight: '900' }]}>Room {selectedRecord.roomNo}</Text>
                   </View>
 
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableRowLabel}>WRITTEN MARK</Text>
-                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.writtenMark} Marks</Text>
+                  <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>WRITTEN MARK</Text>
+                    <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }, { fontWeight: '800' }]}>{selectedRecord.writtenMark} Marks</Text>
                   </View>
 
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableRowLabel}>PRACTICAL MARK</Text>
-                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.practicalMark}</Text>
+                  <View style={[styles.tableRow, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>PRACTICAL MARK</Text>
+                    <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }, { fontWeight: '800' }]}>{selectedRecord.practicalMark}</Text>
                   </View>
 
                   <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
-                    <Text style={styles.tableRowLabel}>IS GRADE APPLICABLE</Text>
-                    <Text style={[styles.tableRowValue, { fontWeight: '800' }]}>{selectedRecord.isGrade}</Text>
+                    <Text style={[styles.tableRowLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>IS GRADE APPLICABLE</Text>
+                    <Text style={[styles.tableRowValue, !isDefaultTheme && { color: appTheme.textPrimary }, { fontWeight: '800' }]}>{selectedRecord.isGrade}</Text>
                   </View>
                 </View>
 
-                <Text style={styles.modalTimestampText}>Created: {selectedRecord.createdAt}</Text>
+                <Text style={[styles.modalTimestampText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Created: {selectedRecord.createdAt}</Text>
               </ScrollView>
 
               {/* Modal Footer Actions */}
-              <View style={styles.modalFooter}>
+              <View style={[styles.modalFooter, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                 <TouchableOpacity 
-                  style={styles.modalActionEditBtn} 
+                  style={[styles.modalActionEditBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
                   onPress={() => {
                     setEditingRecord({ ...selectedRecord });
                     setSelectedRecord(null);
@@ -404,7 +408,7 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={styles.downloadBtn} 
+                  style={[styles.downloadBtn, !isDefaultTheme && { backgroundColor: isDefaultTheme ? '#059669' : appTheme.accent }]} 
                   onPress={() => {
                     alert('Exported Exam Schedule & Syllabus PDF successfully.');
                     setSelectedRecord(null);
@@ -425,16 +429,16 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
           onClose={() => setEditingRecord(null)}
         >
           {editingRecord && (
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.modalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <View style={[styles.modalIconBox, { backgroundColor: '#FFFBEB' }]}>
-                    <MaterialIcons name="edit" size={20} color="#D97706" />
+                  <View style={[styles.modalIconBox, { backgroundColor: isDefaultTheme ? '#FFFBEB' : appTheme.accent + '18' }]}>
+                    <MaterialIcons name="edit" size={20} color={isDefaultTheme ? "#D97706" : appTheme.accent} />
                   </View>
-                  <Text style={styles.modalTitle}>Edit {editingRecord.course} Schedule</Text>
+                  <Text style={[styles.modalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Edit {editingRecord.course} Schedule</Text>
                 </View>
                 <TouchableOpacity onPress={() => setEditingRecord(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -442,58 +446,58 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
                 
                 {/* 1. Exam Date Picker Button (Global PremiumDateTimePicker) */}
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Exam Date</Text>
+                  <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Exam Date</Text>
                   <TouchableOpacity 
-                    style={styles.pickerFieldButton} 
+                    style={[styles.pickerFieldButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                     onPress={() => setIsDatePickerOpen(true)}
                     activeOpacity={0.8}
                   >
                     <View style={styles.pickerFieldLeft}>
-                      <MaterialIcons name="event" size={18} color="#0284C7" />
-                      <Text style={styles.pickerFieldValue}>{editingRecord.examDate}</Text>
+                      <MaterialIcons name="event" size={18} color={appTheme.primary} />
+                      <Text style={[styles.pickerFieldValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{editingRecord.examDate}</Text>
                     </View>
-                    <MaterialIcons name="calendar-today" size={18} color="#0284C7" />
+                    <MaterialIcons name="calendar-today" size={18} color={appTheme.primary} />
                   </TouchableOpacity>
                 </View>
 
                 {/* 2. Start Time & End Time Picker Buttons (Global PremiumDateTimePicker) */}
                 <View style={styles.formRow}>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={styles.formLabel}>Start Time</Text>
+                    <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Start Time</Text>
                     <TouchableOpacity 
-                      style={styles.pickerFieldButton} 
+                      style={[styles.pickerFieldButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                       onPress={() => setTimePickerTarget('start')}
                       activeOpacity={0.8}
                     >
                       <View style={styles.pickerFieldLeft}>
-                        <MaterialIcons name="access-time" size={18} color="#7E22CE" />
-                        <Text style={styles.pickerFieldValue}>{editingRecord.startTime}</Text>
+                        <MaterialIcons name="access-time" size={18} color={isDefaultTheme ? "#7E22CE" : appTheme.accent} />
+                        <Text style={[styles.pickerFieldValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{editingRecord.startTime}</Text>
                       </View>
-                      <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                      <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                     </TouchableOpacity>
                   </View>
 
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={styles.formLabel}>End Time</Text>
+                    <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>End Time</Text>
                     <TouchableOpacity 
-                      style={styles.pickerFieldButton} 
+                      style={[styles.pickerFieldButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                       onPress={() => setTimePickerTarget('end')}
                       activeOpacity={0.8}
                     >
                       <View style={styles.pickerFieldLeft}>
-                        <MaterialIcons name="access-time" size={18} color="#7E22CE" />
-                        <Text style={styles.pickerFieldValue}>{editingRecord.endTime}</Text>
+                        <MaterialIcons name="access-time" size={18} color={isDefaultTheme ? "#7E22CE" : appTheme.accent} />
+                        <Text style={[styles.pickerFieldValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{editingRecord.endTime}</Text>
                       </View>
-                      <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                      <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* 3. Room Number */}
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Room Number</Text>
+                  <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Room Number</Text>
                   <TextInput
-                    style={styles.formInput}
+                    style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                     value={editingRecord.roomNo}
                     onChangeText={(val) => setEditingRecord({ ...editingRecord, roomNo: val })}
                   />
@@ -501,9 +505,9 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
 
                 {/* 4. Written Marks */}
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Written Marks</Text>
+                  <Text style={[styles.formLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Written Marks</Text>
                   <TextInput
-                    style={styles.formInput}
+                    style={[styles.formInput, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border, color: appTheme.textPrimary }]}
                     keyboardType="numeric"
                     value={editingRecord.writtenMark.toString()}
                     onChangeText={(val) => setEditingRecord({ ...editingRecord, writtenMark: parseInt(val) || 0 })}
@@ -511,16 +515,16 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
                 </View>
               </ScrollView>
 
-              <View style={styles.modalFooter}>
+              <View style={[styles.modalFooter, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                 <TouchableOpacity 
-                  style={styles.modalCancelBtn} 
+                  style={[styles.modalCancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                   onPress={() => setEditingRecord(null)}
                 >
-                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                  <Text style={[styles.modalCancelBtnText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={styles.modalSaveBtn} 
+                  style={[styles.modalSaveBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
                   onPress={handleSaveEdit}
                 >
                   <MaterialIcons name="check" size={16} color="#FFFFFF" />
@@ -572,19 +576,19 @@ export const ExamScheduleScreen = ({ navigation }: any) => {
           onClose={() => setDeleteConfirmId(null)}
         >
           {deleteConfirmId && (
-            <View style={[styles.modalContainer, { maxWidth: 380 }]}>
+            <View style={[styles.modalContainer, { maxWidth: 380 }, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
               <View style={styles.deleteConfirmIconBox}>
                 <MaterialIcons name="delete-forever" size={32} color="#EF4444" />
               </View>
-              <Text style={styles.deleteConfirmTitle}>Delete Exam Schedule?</Text>
-              <Text style={styles.deleteConfirmDesc}>Are you sure you want to delete this exam schedule record? This action cannot be undone.</Text>
+              <Text style={[styles.deleteConfirmTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Delete Exam Schedule?</Text>
+              <Text style={[styles.deleteConfirmDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>Are you sure you want to delete this exam schedule record? This action cannot be undone.</Text>
               
-              <View style={styles.modalFooter}>
+              <View style={[styles.modalFooter, !isDefaultTheme && { borderTopColor: appTheme.border }]}>
                 <TouchableOpacity 
-                  style={styles.modalCancelBtn} 
+                  style={[styles.modalCancelBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                   onPress={() => setDeleteConfirmId(null)}
                 >
-                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                  <Text style={[styles.modalCancelBtnText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 

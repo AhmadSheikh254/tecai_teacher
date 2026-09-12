@@ -8,14 +8,13 @@ import {
   ScrollView, 
   TouchableOpacity, 
   TextInput, 
-  Modal,
-  Animated,
-  useWindowDimensions,
+  Modal, 
+  Animated, 
   Platform
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -56,7 +55,7 @@ type AttendanceRecord = {
 };
 
 export const AttendanceScreen = ({ navigation }: any) => {
-  const { width } = useWindowDimensions();
+  const { theme: appTheme } = useAppTheme();
 
   // Primary Tab state: 'view' or 'create' (Mark Attendance)
   const [activeTab, setActiveTab] = useState<'view' | 'create'>('view');
@@ -194,18 +193,18 @@ export const AttendanceScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: appTheme.bg }]} edges={['top']}>
         {/* App Bar */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color={appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Attendance Portal</Text>
+            <Text style={[styles.headerTitle, { color: appTheme.textPrimary }]}>Attendance Portal</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="how-to-reg" size={22} color="#2563EB" />
+          <TouchableOpacity style={[styles.appBarIconButton, { backgroundColor: appTheme.accentBg, borderColor: appTheme.border }]} activeOpacity={0.7}>
+            <MaterialIcons name="how-to-reg" size={22} color={appTheme.primary} />
           </TouchableOpacity>
         </View>
 
@@ -218,22 +217,22 @@ export const AttendanceScreen = ({ navigation }: any) => {
         )}
 
         {/* Tab Buttons */}
-        <View style={styles.tabsWrapper}>
+        <View style={[styles.tabsWrapper, { backgroundColor: appTheme.surface, borderBottomColor: appTheme.border }]}>
           <View style={styles.tabsContainer}>
             <TouchableOpacity 
-              style={[styles.tabButton, activeTab === 'view' && styles.tabButtonActive]}
+              style={[styles.tabButton, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }, activeTab === 'view' && [styles.tabButtonActive, { backgroundColor: appTheme.primary, borderColor: appTheme.primary }]]}
               onPress={() => setActiveTab('view')}
               activeOpacity={0.8}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'view' && styles.tabButtonTextActive]}>View Attendance</Text>
+              <Text style={[styles.tabButtonText, { color: appTheme.textMuted }, activeTab === 'view' && styles.tabButtonTextActive]}>View Attendance</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.tabButton, activeTab === 'create' && styles.tabButtonActive]}
+              style={[styles.tabButton, { backgroundColor: appTheme.surfaceVariant, borderColor: appTheme.border }, activeTab === 'create' && [styles.tabButtonActive, { backgroundColor: appTheme.primary, borderColor: appTheme.primary }]]}
               onPress={() => setActiveTab('create')}
               activeOpacity={0.8}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'create' && styles.tabButtonTextActive]}>Mark Attendance</Text>
+              <Text style={[styles.tabButtonText, { color: appTheme.textMuted }, activeTab === 'create' && styles.tabButtonTextActive]}>Mark Attendance</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -241,14 +240,14 @@ export const AttendanceScreen = ({ navigation }: any) => {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* SEARCH CRITERIA / FILTER FORM CARD */}
-          <View style={styles.filterCard}>
-            <View style={styles.filterCardHeader}>
-              <View style={styles.headerIconBadge}>
-                <MaterialIcons name="tune" size={18} color="#2563EB" />
+          <View style={[styles.filterCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+            <View style={[styles.filterCardHeader, { borderBottomColor: appTheme.border }]}>
+              <View style={[styles.headerIconBadge, { backgroundColor: appTheme.accentBg, borderColor: appTheme.border }]}>
+                <MaterialIcons name="tune" size={18} color={appTheme.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.filterCardTitle}>Search Criteria</Text>
-                <Text style={styles.filterCardSubtitle}>Filter records by Class, Section & Date</Text>
+                <Text style={[styles.filterCardTitle, { color: appTheme.textPrimary }]}>Search Criteria</Text>
+                <Text style={[styles.filterCardSubtitle, { color: appTheme.textMuted }]}>Filter records by Class, Section & Date</Text>
               </View>
             </View>
 
@@ -385,7 +384,7 @@ export const AttendanceScreen = ({ navigation }: any) => {
               {filteredRecords.map((item) => {
                 const s = getStatusColor(item.status);
                 return (
-                  <View key={item.id} style={styles.studentCard}>
+                  <View key={item.id} style={[styles.studentCard, { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                     {/* Left Accent indicator line */}
                     <View style={[styles.cardAccentBar, { backgroundColor: s.text }]} />
 
@@ -395,8 +394,8 @@ export const AttendanceScreen = ({ navigation }: any) => {
                         <Text style={[styles.avatarText, { color: s.text }]}>{getInitials(item.name)}</Text>
                       </View>
                       <View style={styles.studentInfoCol}>
-                        <Text style={styles.studentName} numberOfLines={1}>{item.name}</Text>
-                        <Text style={styles.studentFather} numberOfLines={1}>Father: {item.father}</Text>
+                        <Text style={[styles.studentName, { color: appTheme.textPrimary }]} numberOfLines={1}>{item.name}</Text>
+                        <Text style={[styles.studentFather, { color: appTheme.textMuted }]} numberOfLines={1}>Father: {item.father}</Text>
                         
                         <View style={styles.metaBadgeRow}>
                           <View style={styles.classBadge}>

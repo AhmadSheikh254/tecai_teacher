@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface SubModulePlaceholderProps {
   title: string;
@@ -11,28 +12,31 @@ interface SubModulePlaceholderProps {
 }
 
 export const SubModulePlaceholder: React.FC<SubModulePlaceholderProps> = ({ title, icon, navigation }) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: appTheme.bg }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderBottomColor: appTheme.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={isDefaultTheme ? theme.colors.onSurface : appTheme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{title}</Text>
         <View style={styles.placeholderButton} />
       </View>
 
       {/* Content */}
       <View style={styles.container}>
-        <View style={styles.iconCircle}>
-          <MaterialIcons name={icon as any} size={48} color={theme.colors.primary} />
+        <View style={[styles.iconCircle, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+          <MaterialIcons name={icon as any} size={48} color={isDefaultTheme ? theme.colors.primary : appTheme.primary} />
         </View>
-        <Text style={styles.titleText}>{title} Module</Text>
-        <Text style={styles.subtitleText}>
+        <Text style={[styles.titleText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{title} Module</Text>
+        <Text style={[styles.subtitleText, !isDefaultTheme && { color: appTheme.textSecondary }]}>
           This is the {title.toLowerCase()} screen. The premium mobile interface is being developed.
         </Text>
         
-        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.button, !isDefaultTheme && { backgroundColor: appTheme.primary }]} onPress={() => navigation.goBack()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -44,6 +48,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   header: {
     height: 64,

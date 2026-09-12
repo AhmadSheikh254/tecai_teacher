@@ -74,6 +74,8 @@ const initialMetrics = Platform.OS === 'web' ? {
   insets: { top: 0, left: 0, right: 0, bottom: 0 },
 } : undefined;
 
+import { ThemeProvider } from './src/context/ThemeContext';
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     ...MaterialIcons.font,
@@ -91,7 +93,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
-        <AppNavigator />
+        <ThemeProvider>
+          <AppNavigator />
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

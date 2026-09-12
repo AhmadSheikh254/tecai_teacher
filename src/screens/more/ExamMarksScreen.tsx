@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Universal Full-Viewport Modal for Web & Mobile
 const ViewportModal: React.FC<{
@@ -55,6 +56,9 @@ export type StudentMarkRecord = {
 };
 
 export const ExamMarksScreen = ({ navigation }: any) => {
+  const { theme: appTheme, themeMode } = useAppTheme();
+  const isDefaultTheme = themeMode === 'light';
+
   // Search Filter Criteria States
   const [selectedTerm, setSelectedTerm] = useState('1st Assessment');
   const [selectedClass, setSelectedClass] = useState('GRADE-V');
@@ -219,84 +223,84 @@ export const ExamMarksScreen = ({ navigation }: any) => {
   const pickerData = getPickerOptions();
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.root, !isDefaultTheme && { backgroundColor: appTheme.bg }]}>
+      <SafeAreaView style={[styles.safeArea, !isDefaultTheme && { backgroundColor: 'transparent' }]} edges={['top']}>
         {/* App Bar Header */}
-        <View style={styles.appBar}>
+        <View style={[styles.appBar, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-              <MaterialIcons name="arrow-back" size={20} color="#0F172A" />
+            <TouchableOpacity style={[styles.backButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <MaterialIcons name="arrow-back" size={20} color={isDefaultTheme ? "#0F172A" : appTheme.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Exam Mark Entry</Text>
+            <Text style={[styles.headerTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Exam Mark Entry</Text>
           </View>
-          <TouchableOpacity style={styles.appBarIconButton} activeOpacity={0.7}>
-            <MaterialIcons name="edit-note" size={20} color="#0284C7" />
+          <TouchableOpacity style={[styles.appBarIconButton, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} activeOpacity={0.7}>
+            <MaterialIcons name="edit-note" size={20} color={appTheme.primary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* SEARCH CRITERIA CARD FORM */}
-          <View style={styles.filterCard}>
+          <View style={[styles.filterCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
             <View style={styles.filterCardHeader}>
-              <MaterialIcons name="tune" size={18} color="#0284C7" />
-              <Text style={styles.filterCardTitle}>Select Exam Mark Criteria</Text>
+              <MaterialIcons name="tune" size={18} color={appTheme.primary} />
+              <Text style={[styles.filterCardTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>Select Exam Mark Criteria</Text>
             </View>
 
             {/* Form Fields Grid */}
             <View style={styles.formGrid}>
               {/* 1. Exam Term */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Exam Term <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('term')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#ECFDF5' }]}>
-                    <MaterialIcons name="event" size={16} color="#059669" />
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Exam Term <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setPickerModalType('term')} activeOpacity={0.75}>
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#ECFDF5' : appTheme.primary + '18' }]}>
+                    <MaterialIcons name="event" size={16} color={isDefaultTheme ? "#059669" : appTheme.primary} />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedTerm}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedTerm}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               {/* 2. Class */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Class <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('class')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#EFF6FF' }]}>
-                    <MaterialIcons name="school" size={16} color="#0284C7" />
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Class <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setPickerModalType('class')} activeOpacity={0.75}>
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#EFF6FF' : appTheme.primary + '18' }]}>
+                    <MaterialIcons name="school" size={16} color={appTheme.primary} />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedClass}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedClass}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               {/* 3. Section */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Section <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('section')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#F3E8FF' }]}>
-                    <MaterialIcons name="grid-view" size={16} color="#7E22CE" />
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Section <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setPickerModalType('section')} activeOpacity={0.75}>
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#F3E8FF' : appTheme.accent + '18' }]}>
+                    <MaterialIcons name="grid-view" size={16} color={isDefaultTheme ? "#7E22CE" : appTheme.accent} />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedSection}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedSection}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               {/* 4. Course */}
               <View style={styles.fieldCol}>
-                <Text style={styles.fieldLabel}>Course <Text style={styles.reqStar}>*</Text></Text>
-                <TouchableOpacity style={styles.dropdownBtn} onPress={() => setPickerModalType('course')} activeOpacity={0.75}>
-                  <View style={[styles.dropdownLeftBox, { backgroundColor: '#FFFBEB' }]}>
-                    <MaterialIcons name="menu-book" size={16} color="#D97706" />
+                <Text style={[styles.fieldLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Course <Text style={styles.reqStar}>*</Text></Text>
+                <TouchableOpacity style={[styles.dropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} onPress={() => setPickerModalType('course')} activeOpacity={0.75}>
+                  <View style={[styles.dropdownLeftBox, { backgroundColor: isDefaultTheme ? '#FFFBEB' : appTheme.accent + '18' }]}>
+                    <MaterialIcons name="menu-book" size={16} color={isDefaultTheme ? "#D97706" : appTheme.accent} />
                   </View>
-                  <Text style={styles.dropdownValue}>{selectedCourse}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={20} color="#64748B" />
+                  <Text style={[styles.dropdownValue, !isDefaultTheme && { color: appTheme.textPrimary }]}>{selectedCourse}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Find Button */}
             <TouchableOpacity 
-              style={styles.findButton} 
+              style={[styles.findButton, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
               onPress={() => setIsSearched(true)}
               activeOpacity={0.8}
             >
@@ -308,27 +312,27 @@ export const ExamMarksScreen = ({ navigation }: any) => {
 
           {/* STUDENT MARKS ENTRY TABLE LEDGER CARD */}
           {isSearched && (
-            <View style={styles.ledgerCard}>
-              <View style={styles.portalTitleBox}>
-                <MaterialIcons name="assignment" size={18} color="#0284C7" />
-                <Text style={styles.portalTitleText}>Student Marks Sheet</Text>
+            <View style={[styles.ledgerCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.portalTitleBox, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <MaterialIcons name="assignment" size={18} color={appTheme.primary} />
+                <Text style={[styles.portalTitleText, !isDefaultTheme && { color: appTheme.textPrimary }]}>Student Marks Sheet</Text>
               </View>
 
               {/* Search Row */}
               <View style={styles.searchRow}>
-                <Text style={styles.searchLabel}>Search:</Text>
-                <View style={styles.searchWrapper}>
-                  <MaterialIcons name="search" size={18} color="#64748B" style={{ marginRight: 6 }} />
+                <Text style={[styles.searchLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>Search:</Text>
+                <View style={[styles.searchWrapper, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+                  <MaterialIcons name="search" size={18} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} style={{ marginRight: 6 }} />
                   <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                     placeholder="Search student name, roll no..."
-                    placeholderTextColor="#64748B"
+                    placeholderTextColor={isDefaultTheme ? "#64748B" : appTheme.textSecondary}
                     value={tableSearch}
                     onChangeText={setTableSearch}
                   />
                   {tableSearch !== '' && (
                     <TouchableOpacity onPress={() => setTableSearch('')} style={{ padding: 4 }}>
-                      <MaterialIcons name="close" size={16} color="#64748B" />
+                      <MaterialIcons name="close" size={16} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -338,36 +342,36 @@ export const ExamMarksScreen = ({ navigation }: any) => {
               <View style={styles.studentList}>
                 {filteredStudents.length === 0 ? (
                   <View style={styles.emptyContainer}>
-                    <MaterialIcons name="person-off" size={40} color="#94A3B8" />
-                    <Text style={styles.emptyTitle}>No Students Found</Text>
-                    <Text style={styles.emptyDesc}>Try adjusting the filter criteria or search query.</Text>
+                    <MaterialIcons name="person-off" size={40} color={isDefaultTheme ? "#94A3B8" : appTheme.textSecondary} />
+                    <Text style={[styles.emptyTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>No Students Found</Text>
+                    <Text style={[styles.emptyDesc, !isDefaultTheme && { color: appTheme.textSecondary }]}>Try adjusting the filter criteria or search query.</Text>
                   </View>
                 ) : (
                   filteredStudents.map((item) => (
-                    <View key={item.rollNo} style={styles.studentCard}>
-                      <View style={styles.leftAccentTag} />
+                    <View key={item.rollNo} style={[styles.studentCard, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+                      <View style={[styles.leftAccentTag, !isDefaultTheme && { backgroundColor: appTheme.primary }]} />
 
                       {/* Header: Student Profile & Total Marks Live Badge */}
                       <View style={styles.studentCardHeader}>
                         <View style={styles.studentProfileInfo}>
-                          <View style={styles.studentAvatar}>
-                            <MaterialIcons name="school" size={18} color="#0284C7" />
+                          <View style={[styles.studentAvatar, !isDefaultTheme && { backgroundColor: appTheme.primary + '18' }]}>
+                            <MaterialIcons name="school" size={18} color={appTheme.primary} />
                           </View>
                           <View>
-                            <Text style={styles.studentNameText}>{item.name}</Text>
-                            <View style={styles.rollTagBox}>
-                              <Text style={styles.rollTagText}>Roll No: {item.rollNo}</Text>
+                            <Text style={[styles.studentNameText, !isDefaultTheme && { color: appTheme.textPrimary }]}>{item.name}</Text>
+                            <View style={[styles.rollTagBox, !isDefaultTheme && { backgroundColor: appTheme.surface }]}>
+                              <Text style={[styles.rollTagText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Roll No: {item.rollNo}</Text>
                             </View>
                           </View>
                         </View>
 
                         {/* Prominent Live Calculated Total */}
-                        <View style={styles.totalBadgeBox}>
-                          <Text style={styles.totalBadgeLabel}>TOTAL MARKS</Text>
+                        <View style={[styles.totalBadgeBox, !isDefaultTheme && { backgroundColor: appTheme.primary + '18', borderColor: appTheme.primary + '40' }]}>
+                          <Text style={[styles.totalBadgeLabel, !isDefaultTheme && { color: appTheme.primary }]}>TOTAL MARKS</Text>
                           <View style={styles.totalScoreRow}>
-                            <Text style={styles.totalScoreObtained}>{item.totalObtained}</Text>
-                            <Text style={styles.totalScoreSlash}>/</Text>
-                            <Text style={styles.totalScoreMax}>{item.totalMax}</Text>
+                            <Text style={[styles.totalScoreObtained, !isDefaultTheme && { color: appTheme.primary }]}>{item.totalObtained}</Text>
+                            <Text style={[styles.totalScoreSlash, !isDefaultTheme && { color: appTheme.textSecondary }]}>/</Text>
+                            <Text style={[styles.totalScoreMax, !isDefaultTheme && { color: appTheme.textSecondary }]}>{item.totalMax}</Text>
                           </View>
                         </View>
                       </View>
@@ -376,45 +380,45 @@ export const ExamMarksScreen = ({ navigation }: any) => {
                       <View style={styles.marksEntrySection}>
                         
                         {/* 1. Written Exam Marks */}
-                        <View style={styles.markInputCard}>
+                        <View style={[styles.markInputCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                           <View style={styles.markCardHeader}>
-                            <Text style={styles.markSectionTitle}>WRITTEN EXAM</Text>
-                            <View style={styles.lockedMaxBadge}>
-                              <MaterialIcons name="lock" size={11} color="#64748B" />
-                              <Text style={styles.lockedMaxText}>Max: {item.writtenMax}</Text>
+                            <Text style={[styles.markSectionTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>WRITTEN EXAM</Text>
+                            <View style={[styles.lockedMaxBadge, !isDefaultTheme && { backgroundColor: appTheme.cardBg }]}>
+                              <MaterialIcons name="lock" size={11} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
+                              <Text style={[styles.lockedMaxText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Max: {item.writtenMax}</Text>
                             </View>
                           </View>
 
-                          <View style={styles.inputContainerWithUnit}>
+                          <View style={[styles.inputContainerWithUnit, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             <TextInput
-                              style={styles.largeMarksInput}
+                              style={[styles.largeMarksInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                               value={item.writtenObtained}
                               placeholder="0"
-                              placeholderTextColor="#94A3B8"
+                              placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textSecondary}
                               keyboardType="numeric"
                               onChangeText={(val) => updateStudentMarks(item.rollNo, 'writtenObtained', val)}
                             />
-                            <Text style={styles.inputUnitLabel}>marks</Text>
+                            <Text style={[styles.inputUnitLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>marks</Text>
                           </View>
                         </View>
 
                         {/* 2. Grace Mark */}
-                        <View style={styles.markInputCard}>
+                        <View style={[styles.markInputCard, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
                           <View style={styles.markCardHeader}>
-                            <Text style={styles.markSectionTitle}>GRACE MARK</Text>
-                            <Text style={styles.optionalBadgeText}>Optional</Text>
+                            <Text style={[styles.markSectionTitle, !isDefaultTheme && { color: appTheme.textSecondary }]}>GRACE MARK</Text>
+                            <Text style={[styles.optionalBadgeText, !isDefaultTheme && { color: appTheme.textSecondary }]}>Optional</Text>
                           </View>
 
-                          <View style={styles.inputContainerWithUnit}>
+                          <View style={[styles.inputContainerWithUnit, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
                             <TextInput
-                              style={styles.largeMarksInput}
+                              style={[styles.largeMarksInput, !isDefaultTheme && { color: appTheme.textPrimary }]}
                               value={item.graceMark}
                               placeholder="0"
-                              placeholderTextColor="#94A3B8"
+                              placeholderTextColor={isDefaultTheme ? "#94A3B8" : appTheme.textSecondary}
                               keyboardType="numeric"
                               onChangeText={(val) => updateStudentMarks(item.rollNo, 'graceMark', val)}
                             />
-                            <Text style={styles.inputUnitLabel}>grace</Text>
+                            <Text style={[styles.inputUnitLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>grace</Text>
                           </View>
                         </View>
 
@@ -425,43 +429,43 @@ export const ExamMarksScreen = ({ navigation }: any) => {
                         
                         {/* Exam Grade Selector */}
                         <View style={styles.selectorCol}>
-                          <Text style={styles.fieldHeadingLabel}>EXAM GRADE</Text>
+                          <Text style={[styles.fieldHeadingLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>EXAM GRADE</Text>
                           <TouchableOpacity 
-                            style={styles.premiumDropdownBtn} 
+                            style={[styles.premiumDropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                             onPress={() => {
                               setActiveStudentRoll(item.rollNo);
                               setPickerModalType('grade');
                             }}
                             activeOpacity={0.8}
                           >
-                            <View style={styles.gradeIconWrap}>
-                              <MaterialIcons name="military-tech" size={16} color="#D97706" />
+                            <View style={[styles.gradeIconWrap, !isDefaultTheme && { backgroundColor: appTheme.accent + '18' }]}>
+                              <MaterialIcons name="military-tech" size={16} color={isDefaultTheme ? "#D97706" : appTheme.accent} />
                             </View>
-                            <Text style={styles.premiumDropdownText}>
+                            <Text style={[styles.premiumDropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]}>
                               {item.examGrade || 'Select'}
                             </Text>
-                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                            <MaterialIcons name="arrow-drop-down" size={22} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                           </TouchableOpacity>
                         </View>
 
                         {/* Remark Selector */}
                         <View style={styles.selectorCol}>
-                          <Text style={styles.fieldHeadingLabel}>TEACHER REMARK</Text>
+                          <Text style={[styles.fieldHeadingLabel, !isDefaultTheme && { color: appTheme.textSecondary }]}>TEACHER REMARK</Text>
                           <TouchableOpacity 
-                            style={styles.premiumDropdownBtn} 
+                            style={[styles.premiumDropdownBtn, !isDefaultTheme && { backgroundColor: appTheme.surface, borderColor: appTheme.border }]} 
                             onPress={() => {
                               setActiveStudentRoll(item.rollNo);
                               setPickerModalType('remark');
                             }}
                             activeOpacity={0.8}
                           >
-                            <View style={styles.remarkIconWrap}>
-                              <MaterialIcons name="rate-review" size={15} color="#0284C7" />
+                            <View style={[styles.remarkIconWrap, !isDefaultTheme && { backgroundColor: appTheme.primary + '18' }]}>
+                              <MaterialIcons name="rate-review" size={15} color={appTheme.primary} />
                             </View>
-                            <Text style={styles.premiumDropdownText} numberOfLines={1}>
+                            <Text style={[styles.premiumDropdownText, !isDefaultTheme && { color: appTheme.textPrimary }]} numberOfLines={1}>
                               {item.remark || 'Select'}
                             </Text>
-                            <MaterialIcons name="arrow-drop-down" size={22} color="#64748B" />
+                            <MaterialIcons name="arrow-drop-down" size={22} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                           </TouchableOpacity>
                         </View>
 
@@ -474,7 +478,7 @@ export const ExamMarksScreen = ({ navigation }: any) => {
 
               {/* POST MARKS ACTION BUTTON */}
               <TouchableOpacity 
-                style={styles.saveBtn} 
+                style={[styles.saveBtn, !isDefaultTheme && { backgroundColor: appTheme.primary }]} 
                 onPress={handlePostMarks}
                 activeOpacity={0.85}
               >
@@ -496,11 +500,11 @@ export const ExamMarksScreen = ({ navigation }: any) => {
           }}
         >
           {pickerData && (
-            <View style={styles.pickerModalContainer}>
-              <View style={styles.pickerModalHeader}>
-                <Text style={styles.pickerModalTitle}>{pickerData.title}</Text>
+            <View style={[styles.pickerModalContainer, !isDefaultTheme && { backgroundColor: appTheme.cardBg, borderColor: appTheme.border }]}>
+              <View style={[styles.pickerModalHeader, !isDefaultTheme && { borderBottomColor: appTheme.border }]}>
+                <Text style={[styles.pickerModalTitle, !isDefaultTheme && { color: appTheme.textPrimary }]}>{pickerData.title}</Text>
                 <TouchableOpacity onPress={() => setPickerModalType(null)} style={styles.modalCloseBtn}>
-                  <MaterialIcons name="close" size={18} color="#64748B" />
+                  <MaterialIcons name="close" size={18} color={isDefaultTheme ? "#64748B" : appTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
               <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
@@ -509,18 +513,26 @@ export const ExamMarksScreen = ({ navigation }: any) => {
                   return (
                     <TouchableOpacity
                       key={opt}
-                      style={[styles.pickerOptionItem, isSelected && styles.pickerOptionActive]}
+                      style={[
+                        styles.pickerOptionItem, 
+                        !isDefaultTheme && { backgroundColor: appTheme.surface },
+                        isSelected && (isDefaultTheme ? styles.pickerOptionActive : { backgroundColor: appTheme.primary + '18' })
+                      ]}
                       onPress={() => {
                         pickerData.onSelect(opt);
                         setPickerModalType(null);
                         setActiveStudentRoll(null);
                       }}
                     >
-                      <Text style={[styles.pickerOptionText, isSelected && styles.pickerOptionTextActive]}>{opt}</Text>
+                      <Text style={[
+                        styles.pickerOptionText, 
+                        !isDefaultTheme && { color: appTheme.textPrimary },
+                        isSelected && (isDefaultTheme ? styles.pickerOptionTextActive : { color: appTheme.primary, fontWeight: '900' })
+                      ]}>{opt}</Text>
                       {isSelected ? (
-                        <MaterialIcons name="check-circle" size={18} color="#0284C7" />
+                        <MaterialIcons name="check-circle" size={18} color={appTheme.primary} />
                       ) : (
-                        <MaterialIcons name="radio-button-unchecked" size={18} color="#CBD5E1" />
+                        <MaterialIcons name="radio-button-unchecked" size={18} color={isDefaultTheme ? "#CBD5E1" : appTheme.border} />
                       )}
                     </TouchableOpacity>
                   );
